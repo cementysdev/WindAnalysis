@@ -52,7 +52,7 @@ function ValidationSummary({ result }: { result: AnalyzeResponse }) {
 export function RunTestResults({ result }: RunTestResultsProps) {
   // Group charts and tables by category
   const consecutiveHoursCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('consecutive') || c.name.toLowerCase().includes('heatmap')
+    c.name.toLowerCase().includes('consecutive') && !c.name.toLowerCase().includes('heatmap')
   );
   const consecutiveHoursTables = result.tables.filter((t) =>
     t.name.toLowerCase().includes('consecutive')

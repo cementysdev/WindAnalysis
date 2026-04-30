@@ -43,9 +43,25 @@ const ChartContainer = ({ chart }: ChartContainerProps) => {
         // Calculer la hauteur en fonction du type de graphique
         let height = layout.height || 600;
 
+        // Détecter s'il y a plusieurs subplots
+        const hasMultipleSubplots = layout.grid || (layout.xaxis && layout.xaxis2);
+
         // Si c'est un graphique avec plusieurs subplots (grille), augmenter la hauteur
-        if (layout.grid || (layout.xaxis && layout.xaxis2)) {
+        if (hasMultipleSubplots) {
           height = Math.max(height, 800);
+        }
+
+        // Ajuster les marges selon le type de graphique
+        let margins = layout.margin || { l: 60, r: 40, t: 60, b: 80 };
+
+        // Pour les graphiques avec subplots côte à côte, augmenter l'espacement en bas
+        if (hasMultipleSubplots) {
+          margins = {
+            l: margins.l || 60,
+            r: margins.r || 40,
+            t: margins.t || 80,
+            b: Math.max(margins.b || 100, 100), // Au moins 100px en bas pour les labels
+          };
         }
 
         Plotly.newPlot(
@@ -56,7 +72,7 @@ const ChartContainer = ({ chart }: ChartContainerProps) => {
             autosize: false, // Désactiver autosize pour contrôler manuellement
             width: containerWidth, // Forcer la largeur
             height: height,
-            margin: layout.margin || { l: 50, r: 30, t: 50, b: 50 },
+            margin: margins,
           },
           {
             responsive: true,
