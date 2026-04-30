@@ -3,7 +3,7 @@ import { CategoryCard } from '../shared/CategoryCard';
 import { PaginatedTable } from '../shared/PaginatedTable';
 import { ChartViewer } from '../ChartViewer';
 import { DownloadButton } from '../shared/DownloadButton';
-import { CheckCircle, Clock, Zap, RotateCcw, Activity } from 'lucide-react';
+import { CheckCircle, Clock, Zap, RotateCcw, Activity, Wind } from 'lucide-react';
 
 interface RunTestResultsProps {
   result: AnalyzeResponse;
@@ -78,6 +78,11 @@ export function RunTestResults({ result }: RunTestResultsProps) {
 
   const availabilityTables = result.tables.filter((t) =>
     t.name.toLowerCase().includes('availability') || t.name.toLowerCase().includes('disponibilit')
+  );
+
+  // Wind Rose Charts
+  const windRoseCharts = result.charts.filter((c) =>
+    c.name.toLowerCase().includes('wind_rose') || c.name.toLowerCase().includes('rose_chart')
   );
 
   // Summary table (first table usually)
@@ -178,6 +183,19 @@ export function RunTestResults({ result }: RunTestResultsProps) {
               <div key={idx}>
                 <h4 className="text-md font-semibold mb-3">{table.name}</h4>
                 <PaginatedTable table={table} itemsPerPage={10} />
+              </div>
+            ))}
+          </div>
+        </CategoryCard>
+      )}
+
+      {/* Wind Rose */}
+      {windRoseCharts.length > 0 && (
+        <CategoryCard title="Rose des vents" icon={Wind} defaultOpen={true}>
+          <div className="space-y-6">
+            {windRoseCharts.map((chart, idx) => (
+              <div key={idx} className="mb-6">
+                <ChartViewer charts={[chart]} />
               </div>
             ))}
           </div>

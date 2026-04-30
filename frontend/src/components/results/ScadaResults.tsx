@@ -3,7 +3,7 @@ import { CategoryCard } from '../shared/CategoryCard';
 import { PaginatedTable } from '../shared/PaginatedTable';
 import { ChartViewer } from '../ChartViewer';
 import { DownloadButton } from '../shared/DownloadButton';
-import { Zap, AlertTriangle, Database, Wind, Gauge, TrendingUp } from 'lucide-react';
+import { Zap, AlertTriangle, Database, Wind, Gauge, TrendingUp, Compass } from 'lucide-react';
 
 interface ScadaResultsProps {
   result: AnalyzeResponse;
@@ -49,6 +49,16 @@ export function ScadaResults({ result }: ScadaResultsProps) {
     t.name.toLowerCase().includes('normative') || t.name.toLowerCase().includes('yield')
   );
 
+  // Wind Rose Charts
+  const windRoseCharts = result.charts.filter((c) =>
+    c.name.toLowerCase().includes('wind_rose') && !c.name.toLowerCase().includes('power')
+  );
+
+  // Power Rose Charts
+  const powerRoseCharts = result.charts.filter((c) =>
+    c.name.toLowerCase().includes('power_rose') || c.name.toLowerCase().includes('rose') && c.name.toLowerCase().includes('power')
+  );
+
   // Remaining charts/tables not categorized
   const categorizedChartNames = new Set([
     ...ebaCharts,
@@ -57,6 +67,8 @@ export function ScadaResults({ result }: ScadaResultsProps) {
     ...windDirectionCharts,
     ...tipSpeedCharts,
     ...normativeCharts,
+    ...windRoseCharts,
+    ...powerRoseCharts,
   ].map((c) => c.name));
 
   const otherCharts = result.charts.filter((c) => !categorizedChartNames.has(c.name));
@@ -182,6 +194,32 @@ export function ScadaResults({ result }: ScadaResultsProps) {
               <div key={idx} className="mt-6">
                 <h4 className="text-md font-semibold mb-3">{table.name}</h4>
                 <PaginatedTable table={table} itemsPerPage={10} />
+              </div>
+            ))}
+          </div>
+        </CategoryCard>
+      )}
+
+      {/* Wind Rose */}
+      {windRoseCharts.length > 0 && (
+        <CategoryCard title="Rose des vents" icon={Wind} defaultOpen={true}>
+          <div className="space-y-6">
+            {windRoseCharts.map((chart, idx) => (
+              <div key={idx} className="mb-6">
+                <ChartViewer charts={[chart]} />
+              </div>
+            ))}
+          </div>
+        </CategoryCard>
+      )}
+
+      {/* Power Rose */}
+      {powerRoseCharts.length > 0 && (
+        <CategoryCard title="Rose de puissance" icon={Compass} defaultOpen={true}>
+          <div className="space-y-6">
+            {powerRoseCharts.map((chart, idx) => (
+              <div key={idx} className="mb-6">
+                <ChartViewer charts={[chart]} />
               </div>
             ))}
           </div>
