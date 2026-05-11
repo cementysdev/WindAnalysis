@@ -84,19 +84,22 @@ class ScadaWordPresenter(WordPresenter):
                 tag_content = match.group(1).strip().upper()
                 logger.info(f"Marker found: {tag_content}")
 
-                # Chercher les données
+                # Chercher les données et headers
                 data = None
+                headers = None
                 for k, v in context.items():
                     if k.strip().upper() == tag_content:
                         data = v
-                        break
+                    # Chercher aussi les headers associés (ex: NORMATIVE_YIELD_TABLE_HEADERS)
+                    if k.strip().upper() == f"{tag_content}_HEADERS":
+                        headers = v
 
                 if data and isinstance(data, list) and len(data) > 0:
                     # 1. Créer le tableau à l'endroit du paragraphe
                     new_table = self._insert_table_at_paragraph(doc, para, data)
 
-                    # 2. Remplir le tableau
-                    self._populate_table_dynamically(new_table, data)
+                    # 2. Remplir le tableau avec headers optionnels
+                    self._populate_table_dynamically(new_table, data, headers)
 
                     # 3. Supprimer le paragraphe qui contenait le tag [TABLE:XXX]
                     self._remove_paragraph(para)
@@ -130,13 +133,26 @@ class ScadaWordPresenter(WordPresenter):
         p.getparent().remove(p)
 
     def _populate_table_dynamically(
-        self, table: Table, data: List[Dict[str, Any]]
+        self, table: Table, data: List[Dict[str, Any]], custom_headers: List[str] = None
     ) -> None:
-        headers = list(data[0].keys())
+        # Utiliser les headers fournis ou extraire les clés des données
+        data_keys = list(data[0].keys())
+
+        # Si custom_headers fourni, l'utiliser pour l'affichage (mais garder data_keys pour extraction)
+        if custom_headers and len(custom_headers) == len(data_keys):
+            display_headers = custom_headers
+            logger.info(f"Using custom headers: {display_headers}")
+        else:
+            display_headers = data_keys
+            if custom_headers:
+                logger.warning(
+                    f"Custom headers provided but length mismatch: "
+                    f"{len(custom_headers)} vs {len(data_keys)}. Using data keys."
+                )
 
         # --- STYLE DE L'ENTÊTE (Bleu foncé, Texte blanc) ---
         header_bg_color = "2F5597"  # Bleu pro
-        for i, header_text in enumerate(headers):
+        for i, header_text in enumerate(display_headers):
             cell = table.cell(0, i)
             cell.text = str(header_text)
             # Fond bleu foncé
@@ -156,9 +172,10 @@ class ScadaWordPresenter(WordPresenter):
             # Déterminer si c'est une ligne alternée
             is_alternate = row_idx % 2 == 0  # Changez à 0 ou 1 selon votre préférence
 
-            for col_idx, header_name in enumerate(headers):
+            # Utiliser data_keys pour extraire les valeurs (pas display_headers)
+            for col_idx, data_key in enumerate(data_keys):
                 cell = new_row.cells[col_idx]
-                val = row_dict.get(header_name, "")
+                val = row_dict.get(data_key, "")
 
                 # Injection de la valeur
                 cell.text = f"{val:.2f}" if isinstance(val, float) else str(val)

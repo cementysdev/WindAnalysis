@@ -42,6 +42,7 @@ class BaseTabler(ABC):
             Dict avec:
                 - table_name: Données de tableau formatées
                 - table_name_raw: Données brutes (liste de dicts) pour debug
+                - table_name_headers: En-têtes lisibles pour le template Word
         """
         self._table_data = []
         if result.detailed_results:
@@ -63,6 +64,7 @@ class BaseTabler(ABC):
         return {
             self.table_name: formatted_table,
             f"{self.table_name}_raw": self._table_data,  # Pour debug
+            f"{self.table_name}_headers": self._get_table_headers(),  # Headers lisibles
         }
 
     @abstractmethod
