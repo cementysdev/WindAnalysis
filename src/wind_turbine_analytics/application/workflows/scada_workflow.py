@@ -40,6 +40,7 @@ from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.eba_ma
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.eba_loss_visualizer import (
     EbaLossVisualizer,
 )
+from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.power_curve_chart_visualizer import PowerCurveChartVisualizer
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.power_rose_chart_visualizer import (
     PowerRoseChartVisualizer,
 )
@@ -167,7 +168,7 @@ class ScadaWorkflow(BaseWorkflow):
         # Normative Yield (Power Curve)
         normative_result = DataProcessingStep(
             analyzer=NormativeYieldAnalyzer(),
-            visualizers=None,
+            visualizers=[PowerCurveChartVisualizer()],  # TODO: PowerCurveChartVisualizer si nécessaire
             tabler=[NormativeYieldTabler()],  # TODO: NormativeYieldTabler si nécessaire
         ).execute(self.turbine_sources, self.validation_criteria)
         all_results["normative_yield"] = normative_result

@@ -246,6 +246,11 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
             temperature_col: "temperature"
         })
 
+        # Ajouter des alias pour compatibilité avec PowerCurveChartVisualizer
+        # Ce visualizer est utilisé dans RunTestWorkflow et ScadaWorkflow
+        chart_data["wind_speed"] = chart_data["wind_speed_corrected"]  # Alias pour le visualizer
+        chart_data["power"] = chart_data["activation_power"]  # Alias pour le visualizer
+
         final_count = len(chart_data)
         data_retention = (final_count / original_count * 100) if original_count > 0 else 0.0
 
