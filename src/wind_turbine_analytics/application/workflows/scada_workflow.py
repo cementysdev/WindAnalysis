@@ -25,7 +25,9 @@ from src.wind_turbine_analytics.data_processing.analyzer.logics import (
     CodeErrorAnalyzer,
     NormativeYieldAnalyzer,
 )
-from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_yield_normative import NormativeYieldTabler
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_yield_normative import (
+    NormativeYieldTabler,
+)
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.data_availability_visualizer import (
     DataAvailabilityVisualizer,
 )
@@ -100,7 +102,7 @@ class ScadaWorkflow(BaseWorkflow):
         eba_cutin_result = DataProcessingStep(
             analyzer=EbACutInCutOutAnalyzer(),
             visualizers=[EbaCutInCutOutVisualizer()],
-            tabler=EbaCutInCutOutTabler(),
+            tabler=[EbaCutInCutOutTabler()],
         ).execute(self.turbine_sources, self.validation_criteria)
         all_results["eba_cut_in_cut_out"] = eba_cutin_result
         summary_tabler.add_analysis_result("eba_cut_in_cut_out", eba_cutin_result)

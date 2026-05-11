@@ -60,7 +60,6 @@ class BaseTabler(ABC):
         logger.info(
             f"Tableau '{self.table_name}' généré avec {len(formatted_table)} lignes"
         )
-
         return {
             self.table_name: formatted_table,
             f"{self.table_name}_raw": self._table_data,  # Pour debug

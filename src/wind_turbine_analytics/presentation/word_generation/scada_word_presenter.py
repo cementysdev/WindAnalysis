@@ -99,6 +99,7 @@ class ScadaWordPresenter(WordPresenter):
                     new_table = self._insert_table_at_paragraph(doc, para, data)
 
                     # 2. Remplir le tableau avec headers optionnels
+
                     self._populate_table_dynamically(new_table, data, headers)
 
                     # 3. Supprimer le paragraphe qui contenait le tag [TABLE:XXX]
@@ -137,7 +138,6 @@ class ScadaWordPresenter(WordPresenter):
     ) -> None:
         # Utiliser les headers fournis ou extraire les clés des données
         data_keys = list(data[0].keys())
-
         # Si custom_headers fourni, l'utiliser pour l'affichage (mais garder data_keys pour extraction)
         if custom_headers and len(custom_headers) == len(data_keys):
             display_headers = custom_headers

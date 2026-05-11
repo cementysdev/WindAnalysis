@@ -159,10 +159,11 @@ class ErrorCodeParetoDurationTabler(BaseTabler):
             f"{len(self._all_codes_info)} codes distincts"
         )
 
-        # Retourner le résultat avec les données pivotées
+        # Retourner le résultat avec les données pivotées ET les headers
         return {
             self.table_name: self._format_as_word_table(),
             f"{self.table_name}_raw": self._table_data,
+            f"{self.table_name}_headers": self._get_table_headers(),  # Headers lisibles
         }
 
     def _pivot_code_durations(self) -> None:

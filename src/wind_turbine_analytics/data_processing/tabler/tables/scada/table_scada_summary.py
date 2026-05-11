@@ -59,10 +59,11 @@ class ScadaSummaryTabler(BaseTabler):
         for turbine_id in sorted(all_turbine_ids):
             self._add_summary_row(turbine_id)
 
-        # Retourner le format standard
+        # Retourner le format standard avec headers
         return {
             self.table_name: self._format_as_word_table(),
             f"{self.table_name}_raw": self._table_data,
+            f"{self.table_name}_headers": self._get_table_headers(),  # Headers lisibles
         }
 
     def _get_table_headers(self) -> List[str]:

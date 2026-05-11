@@ -77,7 +77,11 @@ class RunTestSummaryTabler(BaseTabler):
                 "Aucun résultat accumulé pour le tableau récapitulatif. "
                 "Appelez add_analysis_result() avant generate()."
             )
-            return {self.table_name: [], f"{self.table_name}_raw": []}
+            return {
+                self.table_name: [],
+                f"{self.table_name}_raw": [],
+                f"{self.table_name}_headers": self._get_table_headers(),  # Headers même si vide
+            }
 
         logger.info(
             f"Génération du tableau récapitulatif pour {len(self.all_results)} turbines"
@@ -92,6 +96,7 @@ class RunTestSummaryTabler(BaseTabler):
         return {
             self.table_name: formatted_table,
             f"{self.table_name}_raw": self._table_data,
+            f"{self.table_name}_headers": self._get_table_headers(),  # Headers lisibles
         }
 
     def _add_table_row(
