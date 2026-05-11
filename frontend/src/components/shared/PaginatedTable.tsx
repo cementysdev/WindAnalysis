@@ -42,52 +42,52 @@ export function PaginatedTable({ table, itemsPerPage = 10 }: PaginatedTableProps
 
       {/* Pagination Controls */}
       {needsPagination && (
-        <div className="flex items-center justify-between border-t border-gray-200 pt-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 pt-3 sm:pt-4 gap-3 sm:gap-0">
           {/* Info */}
-          <div className="text-sm text-gray-600">
+          <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
             Affichage de {pagination.startIndex + 1} à {pagination.endIndex} sur {table.rows.length} lignes
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <button
               onClick={pagination.goToFirst}
               disabled={!pagination.canGoPrevious}
-              className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               title="Première page"
             >
-              <ChevronsLeft className="w-5 h-5" />
+              <ChevronsLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             <button
               onClick={pagination.goPrevious}
               disabled={!pagination.canGoPrevious}
-              className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               title="Page précédente"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
-            <span className="px-4 py-2 text-sm font-medium text-gray-700">
+            <span className="px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium text-gray-700">
               Page {pagination.currentPage} / {pagination.totalPages}
             </span>
 
             <button
               onClick={pagination.goNext}
               disabled={!pagination.canGoNext}
-              className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               title="Page suivante"
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             <button
               onClick={pagination.goToLast}
               disabled={!pagination.canGoNext}
-              className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               title="Dernière page"
             >
-              <ChevronsRight className="w-5 h-5" />
+              <ChevronsRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>

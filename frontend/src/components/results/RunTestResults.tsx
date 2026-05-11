@@ -3,7 +3,7 @@ import { CategoryCard } from '../shared/CategoryCard';
 import { PaginatedTable } from '../shared/PaginatedTable';
 import { ChartViewer } from '../ChartViewer';
 import { DownloadButton } from '../shared/DownloadButton';
-import { CheckCircle, Clock, Zap, RotateCcw, Activity, Wind } from 'lucide-react';
+import { CheckCircle, Clock, Zap, RotateCcw, Activity, Wind, BarChart3 } from 'lucide-react';
 
 interface RunTestResultsProps {
   result: AnalyzeResponse;
@@ -83,6 +83,11 @@ export function RunTestResults({ result }: RunTestResultsProps) {
   // Wind Rose Charts
   const windRoseCharts = result.charts.filter((c) =>
     c.name.toLowerCase().includes('wind_rose') || c.name.toLowerCase().includes('rose_chart')
+  );
+
+  // Wind Histogram Charts
+  const windHistogramCharts = result.charts.filter((c) =>
+    c.name.toLowerCase().includes('wind_histogram') || c.name.toLowerCase().includes('histogram_chart')
   );
 
   // Summary table (first table usually)
@@ -194,6 +199,19 @@ export function RunTestResults({ result }: RunTestResultsProps) {
         <CategoryCard title="Rose des vents" icon={Wind} defaultOpen={true}>
           <div className="space-y-6">
             {windRoseCharts.map((chart, idx) => (
+              <div key={idx} className="mb-6">
+                <ChartViewer charts={[chart]} />
+              </div>
+            ))}
+          </div>
+        </CategoryCard>
+      )}
+
+      {/* Wind Histogram */}
+      {windHistogramCharts.length > 0 && (
+        <CategoryCard title="Distribution de la vitesse du vent" icon={BarChart3} defaultOpen={true}>
+          <div className="space-y-6">
+            {windHistogramCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
                 <ChartViewer charts={[chart]} />
               </div>

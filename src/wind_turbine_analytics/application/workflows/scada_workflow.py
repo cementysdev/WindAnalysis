@@ -25,6 +25,7 @@ from src.wind_turbine_analytics.data_processing.analyzer.logics import (
     CodeErrorAnalyzer,
     NormativeYieldAnalyzer,
 )
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_yield_normative import NormativeYieldTabler
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.data_availability_visualizer import (
     DataAvailabilityVisualizer,
 )
@@ -161,11 +162,11 @@ class ScadaWorkflow(BaseWorkflow):
         all_results["tip_speed_ratio"] = tsr_result
         summary_tabler.add_analysis_result("tip_speed_ratio", tsr_result)
 
-        # Normative Yield
+        # Normative Yield (Power Curve)
         normative_result = DataProcessingStep(
             analyzer=NormativeYieldAnalyzer(),
             visualizers=None,
-            tabler=None,  # TODO: NormativeYieldTabler si nécessaire
+            tabler=[NormativeYieldTabler()],  # TODO: NormativeYieldTabler si nécessaire
         ).execute(self.turbine_sources, self.validation_criteria)
         all_results["normative_yield"] = normative_result
 

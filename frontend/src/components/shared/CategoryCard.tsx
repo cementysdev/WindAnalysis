@@ -26,23 +26,23 @@ export function CategoryCard({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden mb-4 sm:mb-5 lg:mb-6">
       {/* Header */}
       <div
         className={cn(
-          'bg-primary-dark text-white px-4 py-3 flex items-center justify-between',
+          'bg-primary-dark text-white px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between',
           collapsible && 'cursor-pointer hover:bg-blue-700 transition-colors'
         )}
         onClick={toggleOpen}
       >
-        <div className="flex items-center space-x-3">
-          {Icon && <Icon className="w-6 h-6" />}
-          <h3 className="text-xl font-bold">{title}</h3>
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          {Icon && <Icon className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />}
+          <h3 className="text-base sm:text-lg lg:text-xl font-bold">{title}</h3>
         </div>
 
         {collapsible && (
           <ChevronDown
-            className={cn('w-6 h-6 transition-transform', {
+            className={cn('w-5 h-5 sm:w-6 sm:h-6 transition-transform flex-shrink-0', {
               'transform rotate-180': isOpen,
             })}
           />
@@ -50,7 +50,7 @@ export function CategoryCard({
       </div>
 
       {/* Content */}
-      {isOpen && <div className="p-4">{children}</div>}
+      {isOpen && <div className="p-2 sm:p-3 lg:p-4">{children}</div>}
     </div>
   );
 }
