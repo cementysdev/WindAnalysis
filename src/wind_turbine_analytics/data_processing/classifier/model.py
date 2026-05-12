@@ -1,3 +1,8 @@
+"""
+Code of Boris KRATZ
+Source : https://github.com/cementysdev/scada_owt_fecamp
+"""
+
 import numpy as np
 
 def blade_rotation_speed(x, *theta, y_threshold=1.0):
@@ -68,4 +73,3 @@ def blade_active_power(x, *theta, y_threshold=1.0):
     y[mask_4] = 0.0
 
     return y
-

@@ -1,3 +1,8 @@
+"""
+Code of Boris KRATZ
+Source : https://github.com/cementysdev/scada_owt_fecamp
+"""
+
 import numpy as np
 from scipy.optimize import least_squares
 
@@ -56,4 +61,3 @@ def classifier_operating_regime(x_obs, mask, X0, X1, X2, X3):
     operating_regime[~mask] = 6
     
     return operating_regime
-

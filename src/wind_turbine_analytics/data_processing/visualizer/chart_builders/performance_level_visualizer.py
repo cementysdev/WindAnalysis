@@ -103,7 +103,7 @@ class PerformanceLevelVisualizer(BaseVisualizer):
                 # Subplot 1: Rotation
                 fig.add_trace(
                     go.Scatter(
-                        x=zone_data["wind_speed_norm"],
+                        x=zone_data["wind_speed"],
                         y=zone_data["rpm_norm"],
                         mode="markers",
                         name=name,
@@ -112,7 +112,7 @@ class PerformanceLevelVisualizer(BaseVisualizer):
                         legendgroup=f"zone_{zone}",
                         hovertemplate=(
                             f"{name}<br>"
-                            "Wind speed (norm): %{x:.3f}<br>"
+                            "Wind speed: %{x:.1f} m/s<br>"
                             "RPM (norm): %{y:.3f}<extra></extra>"
                         ),
                     ),
@@ -123,7 +123,7 @@ class PerformanceLevelVisualizer(BaseVisualizer):
                 # Subplot 2: Power
                 fig.add_trace(
                     go.Scatter(
-                        x=zone_data["wind_speed_norm"],
+                        x=zone_data["wind_speed"],
                         y=zone_data["power_norm"],
                         mode="markers",
                         marker=dict(size=3, color=color, opacity=0.6),
@@ -131,7 +131,7 @@ class PerformanceLevelVisualizer(BaseVisualizer):
                         legendgroup=f"zone_{zone}",
                         hovertemplate=(
                             f"{name}<br>"
-                            "Wind speed (norm): %{x:.3f}<br>"
+                            "Wind speed: %{x:.1f} m/s<br>"
                             "Power (norm): %{y:.3f}<extra></extra>"
                         ),
                     ),
@@ -142,7 +142,7 @@ class PerformanceLevelVisualizer(BaseVisualizer):
                 # Subplot 3: Pitch
                 fig.add_trace(
                     go.Scatter(
-                        x=zone_data["wind_speed_norm"],
+                        x=zone_data["wind_speed"],
                         y=zone_data["pitch_norm"],
                         mode="markers",
                         marker=dict(size=3, color=color, opacity=0.6),
@@ -150,7 +150,7 @@ class PerformanceLevelVisualizer(BaseVisualizer):
                         legendgroup=f"zone_{zone}",
                         hovertemplate=(
                             f"{name}<br>"
-                            "Wind speed (norm): %{x:.3f}<br>"
+                            "Wind speed: %{x:.1f} m/s<br>"
                             "Pitch (norm): %{y:.3f}<extra></extra>"
                         ),
                     ),
@@ -203,7 +203,7 @@ class PerformanceLevelVisualizer(BaseVisualizer):
             for turbine_row in range(n_rows):
                 last_row_for_turbine = (turbine_row * 3) + 3
                 fig.update_xaxes(
-                    title_text="Wind Speed (normalized)",
+                    title_text="Wind Speed (m/s)",
                     gridcolor="#f0f0f0",
                     row=last_row_for_turbine,
                     col=col_idx,

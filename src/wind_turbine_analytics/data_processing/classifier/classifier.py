@@ -1,3 +1,8 @@
+"""
+Code of Boris KRATZ
+Source : https://github.com/cementysdev/scada_owt_fecamp
+"""
+
 import numpy as np
 from src.wind_turbine_analytics.data_processing.classifier.model import (
     blade_rotation_speed,

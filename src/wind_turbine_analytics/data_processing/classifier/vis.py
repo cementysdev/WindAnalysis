@@ -1,3 +1,8 @@
+"""
+Code of Boris KRATZ
+Source : https://github.com/cementysdev/scada_owt_fecamp
+"""
+
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import numpy as np
