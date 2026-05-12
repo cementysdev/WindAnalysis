@@ -46,8 +46,8 @@ class PitchVisualizer(BaseVisualizer):
             cols=n_cols,
             subplot_titles=[f"<b>Turbine {tid}</b>" for tid in turbine_ids],
             shared_yaxes=False,
-            horizontal_spacing=0.52,
-            vertical_spacing=0.55,
+            horizontal_spacing=0.12,
+            vertical_spacing=0.15,
         )
 
         # Couleurs fixes pour les 3 pales
@@ -120,7 +120,7 @@ class PitchVisualizer(BaseVisualizer):
             height=height,
             template="plotly_white",
             legend_title_text="Pales",
-            margin=dict(t=100, b=100, l=80, r=50),
+            margin=dict(t=100, b=50, l=80, r=50),
         )
 
         # Mise à jour des axes pour tous les subplots
