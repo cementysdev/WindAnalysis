@@ -107,10 +107,18 @@ class PitchAnalyzer(BaseAnalyzer):
             return {"error": "No data in test period"}
 
         # Convertir les colonnes en numeric
-        test_data[pitch_pale1_col] = pd.to_numeric(test_data[pitch_pale1_col], errors="coerce")
-        test_data[pitch_pale2_col] = pd.to_numeric(test_data[pitch_pale2_col], errors="coerce")
-        test_data[pitch_pale3_col] = pd.to_numeric(test_data[pitch_pale3_col], errors="coerce")
-        test_data[wind_speed_col] = pd.to_numeric(test_data[wind_speed_col], errors="coerce")
+        test_data[pitch_pale1_col] = pd.to_numeric(
+            test_data[pitch_pale1_col], errors="coerce"
+        )
+        test_data[pitch_pale2_col] = pd.to_numeric(
+            test_data[pitch_pale2_col], errors="coerce"
+        )
+        test_data[pitch_pale3_col] = pd.to_numeric(
+            test_data[pitch_pale3_col], errors="coerce"
+        )
+        test_data[wind_speed_col] = pd.to_numeric(
+            test_data[wind_speed_col], errors="coerce"
+        )
 
         # Filtrer les données valides (toutes les pales + wind_speed valides)
         valid_data = test_data[
@@ -138,7 +146,9 @@ class PitchAnalyzer(BaseAnalyzer):
             ].specification[0]
 
         # Ajouter une colonne pour le mois
-        valid_data["month"] = pd.to_datetime(valid_data[timestamp_col]).dt.to_period("M")
+        valid_data["month"] = pd.to_datetime(valid_data[timestamp_col]).dt.to_period(
+            "M"
+        )
 
         # Renommer les colonnes pour uniformité
         valid_data = valid_data.rename(
@@ -159,7 +169,9 @@ class PitchAnalyzer(BaseAnalyzer):
         mean_desync = valid_data["desync"].mean()
 
         # Calculer pitch moyen des 3 pales
-        valid_data["pitch_mean"] = valid_data[["pitch1", "pitch2", "pitch3"]].mean(axis=1)
+        valid_data["pitch_mean"] = valid_data[["pitch1", "pitch2", "pitch3"]].mean(
+            axis=1
+        )
 
         # Données en production (wind_speed > cut_in)
         production_data = valid_data[valid_data["wind_speed"] > cut_in_speed]
@@ -174,8 +186,12 @@ class PitchAnalyzer(BaseAnalyzer):
             }
 
             if len(production_data) > 0:
-                stats["mean_pitch_production"] = round(production_data[blade_col].mean(), 2)
-                stats["std_pitch_production"] = round(production_data[blade_col].std(), 2)
+                stats["mean_pitch_production"] = round(
+                    production_data[blade_col].mean(), 2
+                )
+                stats["std_pitch_production"] = round(
+                    production_data[blade_col].std(), 2
+                )
             else:
                 stats["mean_pitch_production"] = 0.0
                 stats["std_pitch_production"] = 0.0
@@ -230,10 +246,19 @@ class PitchAnalyzer(BaseAnalyzer):
         )
 
         # Préparer chart_data pour visualisation (avec les 3 pales)
-        chart_data_columns = ["wind_speed", "pitch1", "pitch2", "pitch3", "pitch_mean", "timestamp"]
+        chart_data_columns = [
+            "wind_speed",
+            "pitch1",
+            "pitch2",
+            "pitch3",
+            "pitch_mean",
+            "timestamp",
+        ]
 
         if activation_power_col and activation_power_col in valid_data.columns:
-            valid_data = valid_data.rename(columns={activation_power_col: "activation_power"})
+            valid_data = valid_data.rename(
+                columns={activation_power_col: "activation_power"}
+            )
             chart_data_columns.append("activation_power")
 
         chart_data_df = valid_data[chart_data_columns + ["month"]].copy()
