@@ -136,29 +136,33 @@ class PerformanceLevelAnalyzer(BaseAnalyzer):
         power = valid_data[activation_power_col].values
         pitch = valid_data[pitch_col].values
 
-        # Récupérer les valeurs de cut-in et cut-out depuis validation_criteria
+        # Récupérer cut-in depuis validation_criteria
         cut_in_speed = 3.0  # m/s (valeur par défaut)
-        cut_out_speed = 25.0  # m/s (valeur par défaut)
 
         if "cut_in_to_cut_out" in criteria.validation_criterion:
             spec = criteria.validation_criterion["cut_in_to_cut_out"].specification
-            if spec and isinstance(spec, (list, tuple)) and len(spec) >= 2:
+            if spec and isinstance(spec, (list, tuple)) and len(spec) >= 1:
                 cut_in_speed = float(spec[0])
-                cut_out_speed = float(spec[1])
-                logger.info(
-                    f"Turbine {turbine_config.turbine_id}: Using cut-in={cut_in_speed} m/s, "
-                    f"cut-out={cut_out_speed} m/s from config"
-                )
 
-        # Valeurs typiques des seuils en m/s réel pour définir les zones
-        # X0 = cut-in (démarrage turbine)
-        # X1 = fin de montée en rotation (typiquement cut-in + 2-3 m/s)
-        # X2 = début puissance nominale (typiquement 10-12 m/s ou v_rated)
-        # X3 = cut-out (arrêt sécurité)
-        X0_real = cut_in_speed
-        X1_real = min(cut_in_speed + 3.0, cut_out_speed * 0.3)  # ~5-6 m/s
-        X2_real = min(cut_in_speed + 8.0, cut_out_speed * 0.5)  # ~10-12 m/s
-        X3_real = cut_out_speed
+        # Calculer cut_out_speed dynamiquement : vitesse où power >= 98% de P_nominal
+        P_nominal = power.max()  # Puissance nominale = max observé
+        P_threshold_98 = 0.98 * P_nominal  # 98% de la puissance nominale
+
+        # Trouver les points où power >= 98% P_nominal
+        mask_high_power = power >= P_threshold_98
+        if mask_high_power.any():
+            # Prendre le percentile 95 des vitesses de vent à haute puissance
+            # (pour avoir assez de marge pour la zone 4)
+            wind_at_high_power = wind_speed[mask_high_power]
+            cut_out_speed = float(np.percentile(wind_at_high_power, 95))
+        else:
+            # Fallback: prendre le percentile 95 de toutes les vitesses
+            cut_out_speed = float(np.percentile(wind_speed, 95))
+
+        logger.info(
+            f"Turbine {turbine_config.turbine_id}: Using cut-in={cut_in_speed} m/s, "
+            f"cut-out={cut_out_speed:.2f} m/s (calculated at 98% P_nominal={P_nominal:.1f} kW)"
+        )
 
         # Normalisation Min-Max UNIQUEMENT pour rpm, power, pitch (PAS le vent!)
         # Le vent reste en valeurs réelles (m/s)
@@ -166,25 +170,23 @@ class PerformanceLevelAnalyzer(BaseAnalyzer):
         power_norm = (power - power.min()) / (power.max() - power.min() + 1e-8)
         pitch_norm = (pitch - pitch.min()) / (pitch.max() - pitch.min() + 1e-8)
 
-        # Construire les bounds adaptés pour la calibration (en m/s réel)
+        # Construire les bounds pour la calibration (en m/s réel)
+        # Le classifier va calculer automatiquement les X_threshold optimaux
+        # Estimer X1 entre cut_in et cut_out
+        X1_estimate = min(cut_in_speed + 3.0, cut_out_speed * 0.4)
+
         # Bounds pour le modèle de rotation (4 paramètres : a, X0, X1, X3)
-        x0_rot = (0.05, X0_real, X1_real, X3_real)
+        x0_rot = (0.05, cut_in_speed, X1_estimate, cut_out_speed)
         bounds_rot = (
-            (0.0, X0_real * 0.7, X1_real * 0.7, X3_real * 0.8),  # Lower bounds
-            (1.0, X0_real * 1.3, X1_real * 1.3, X3_real * 1.2),  # Upper bounds
+            (0.0, cut_in_speed * 0.7, cut_in_speed + 1.0, cut_out_speed * 0.8),
+            (1.0, cut_in_speed * 1.3, cut_out_speed * 0.6, cut_out_speed * 1.2),
         )
 
         # Bounds pour le modèle de puissance (4 paramètres : a, b, X0, X3)
-        x0_pwer = (1.0, 5.0, X0_real, X3_real)
+        x0_pwer = (1.0, 5.0, cut_in_speed, cut_out_speed)
         bounds_pwer = (
-            (-np.inf, 0, X0_real * 0.7, X3_real * 0.8),  # Lower bounds
-            (np.inf, np.inf, X1_real * 1.3, X3_real * 1.2),  # Upper bounds
-        )
-
-        logger.info(
-            f"Turbine {turbine_config.turbine_id}: Wind thresholds (real values) - "
-            f"X0={X0_real:.1f}m/s, X1={X1_real:.1f}m/s, "
-            f"X2={X2_real:.1f}m/s, X3={X3_real:.1f}m/s"
+            (-np.inf, 0, cut_in_speed * 0.7, cut_out_speed * 0.8),
+            (np.inf, np.inf, cut_out_speed * 0.6, cut_out_speed * 1.2),
         )
 
         # Créer et calibrer le classificateur
