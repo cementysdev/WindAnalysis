@@ -26,6 +26,7 @@ from src.wind_turbine_analytics.data_processing.analyzer.logics import (
     CodeErrorAnalyzer,
     NormativeYieldAnalyzer,
 )
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_wind_direction_calibration import WindDirectionCalibrationTabler
 from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_yield_normative import (
     NormativeYieldTabler,
 )
@@ -157,7 +158,7 @@ class ScadaWorkflow(BaseWorkflow):
                 PowerRoseChartVisualizer(),
                 WindRoseChartVisualizer(),
             ],
-            tabler=None,  # TODO: WindCalibrationTabler si nécessaire
+            tabler=[WindDirectionCalibrationTabler()],  # TODO: WindCalibrationTabler si nécessaire
         ).execute(self.turbine_sources, self.validation_criteria)
         all_results["wind_calibration"] = calibration_result
         summary_tabler.add_analysis_result("wind_calibration", calibration_result)
