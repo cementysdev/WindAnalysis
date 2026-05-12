@@ -9,7 +9,12 @@ from src.wind_turbine_analytics.application.configuration.config_models import (
     ScadaRunnerConfig,
 )
 from src.wind_turbine_analytics.application.workflows.base_workflow import BaseWorkflow
-from src.wind_turbine_analytics.data_processing.analyzer.logics.pitch_analyzer import PitchAnalyzer
+from src.wind_turbine_analytics.data_processing.analyzer.logics.performance_level_analyzer import (
+    PerformanceLevelAnalyzer,
+)
+from src.wind_turbine_analytics.data_processing.analyzer.logics.pitch_analyzer import (
+    PitchAnalyzer,
+)
 from src.wind_turbine_analytics.data_processing.analyzer.logics.tip_speed_ratio import (
     TipSpeedRatioAnalyzer,
 )
@@ -26,11 +31,15 @@ from src.wind_turbine_analytics.data_processing.analyzer.logics import (
     CodeErrorAnalyzer,
     NormativeYieldAnalyzer,
 )
-from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_wind_direction_calibration import WindDirectionCalibrationTabler
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_wind_direction_calibration import (
+    WindDirectionCalibrationTabler,
+)
 from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_yield_normative import (
     NormativeYieldTabler,
 )
-from src.wind_turbine_analytics.data_processing.tabler.tables.scada.tip_speed_ratio import TipSpeedRatioTabler
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.tip_speed_ratio import (
+    TipSpeedRatioTabler,
+)
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.data_availability_visualizer import (
     DataAvailabilityVisualizer,
 )
@@ -42,6 +51,9 @@ from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.eba_ma
 )
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.eba_loss_visualizer import (
     EbaLossVisualizer,
+)
+from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.performance_level_visualizer import (
+    PerformanceLevelVisualizer,
 )
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.power_curve_chart_visualizer import (
     PowerCurveChartVisualizer,
@@ -158,7 +170,9 @@ class ScadaWorkflow(BaseWorkflow):
                 PowerRoseChartVisualizer(),
                 WindRoseChartVisualizer(),
             ],
-            tabler=[WindDirectionCalibrationTabler()],  # TODO: WindCalibrationTabler si nécessaire
+            tabler=[
+                WindDirectionCalibrationTabler()
+            ],  # TODO: WindCalibrationTabler si nécessaire
         ).execute(self.turbine_sources, self.validation_criteria)
         all_results["wind_calibration"] = calibration_result
         summary_tabler.add_analysis_result("wind_calibration", calibration_result)
@@ -191,6 +205,14 @@ class ScadaWorkflow(BaseWorkflow):
         ).execute(self.turbine_sources, self.validation_criteria)
         all_results["pitch_angle"] = pitch_analyzer_result
         summary_tabler.add_analysis_result("pitch_angle", pitch_analyzer_result)
+
+        # Performance Level Analysis (EBA + Normative Yield)
+        performance_level_result = DataProcessingStep(
+            analyzer=PerformanceLevelAnalyzer(),
+            visualizers=[PerformanceLevelVisualizer()],
+            tabler=None,  # TODO: PerformanceLevelTabler() si nécessaire
+        ).execute(self.turbine_sources, self.validation_criteria)
+        all_results["performance_level"] = performance_level_result
 
         # Générer le rapport Word si activé dans la config
         self._render_report(all_results, summary_tabler)
