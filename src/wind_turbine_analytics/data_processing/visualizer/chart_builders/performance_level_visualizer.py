@@ -71,7 +71,7 @@ class PerformanceLevelVisualizer(BaseVisualizer):
             1: "Zone 1: Stop (low wind)",
             2: "Zone 2: Start",
             3: "Zone 3: Max rotation",
-            4: "Zone 4: Max power",
+            4: "Zone 4: Optimal",
             5: "Zone 5: Stop (high wind)",
             6: "Zone 6: Outliers",
         }
