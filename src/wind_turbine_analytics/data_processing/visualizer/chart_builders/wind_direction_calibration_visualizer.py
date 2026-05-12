@@ -13,9 +13,31 @@ logger = get_logger(__name__)
 
 
 class WindDirectionCalibrationVisualizer(BaseVisualizer):
-    # ... (init et create_empty_figure restent identiques)
     def __init__(self):
         super().__init__(chart_name="wind_direction_calibration", use_plotly=True)
+
+    def _create_empty_figure(self) -> go.Figure:
+        """Create an empty figure with an informative message."""
+        fig = go.Figure()
+        fig.update_layout(
+            title={
+                "text": "<b>Analyse de Calibration - Direction du Vent</b>",
+                "x": 0.5,
+            },
+            template="plotly_white",
+            height=400,
+        )
+        fig.add_annotation(
+            text="Aucune donnée disponible pour la calibration de direction du vent.<br>"
+            "Vérifiez que les colonnes wind_direction et nacelle_position sont configurées.",
+            x=0.5,
+            y=0.5,
+            xref="paper",
+            yref="paper",
+            showarrow=False,
+            font=dict(size=14, color="gray"),
+        )
+        return fig
 
     def _calculate_optimal_tickformat(self, timestamps: pd.Series) -> dict:
         """Détermine un formatage lisible sans secondes/minutes inutiles."""
@@ -59,18 +81,33 @@ class WindDirectionCalibrationVisualizer(BaseVisualizer):
         )
 
         all_timestamps = []
+        valid_turbines = []  # Track turbines with valid data
 
         for idx, turbine_id in enumerate(turbine_ids):
             turbine_data = result.detailed_results[turbine_id]
             if "error" in turbine_data:
+                logger.warning(
+                    f"Turbine {turbine_id} has error: {turbine_data['error']}"
+                )
                 continue
 
-            df_daily = pd.DataFrame(turbine_data.get("daily_calibration", []))
+            daily_calibration = turbine_data.get("daily_calibration", [])
+            if not daily_calibration:
+                logger.warning(
+                    f"Turbine {turbine_id} has no daily_calibration data"
+                )
+                continue
+
+            df_daily = pd.DataFrame(daily_calibration)
             if df_daily.empty:
+                logger.warning(
+                    f"Turbine {turbine_id} daily_calibration DataFrame is empty"
+                )
                 continue
 
             df_daily["date"] = pd.to_datetime(df_daily["date"])
             all_timestamps.extend(df_daily["date"].tolist())
+            valid_turbines.append(turbine_id)  # Mark this turbine as having valid data
 
             threshold = turbine_data.get("threshold_degrees", 5.0)
             overall_mean = turbine_data.get("overall_mean_angular_error", 0)
@@ -151,6 +188,11 @@ class WindDirectionCalibrationVisualizer(BaseVisualizer):
                 title_text="Écart (°)", row=row_error, col=1, gridcolor="#eee"
             )
             fig.update_yaxes(title_text="Corr.", row=row_corr, col=1, gridcolor="#eee")
+
+        # Check if we have any valid data
+        if not valid_turbines:
+            logger.error("No turbines with valid calibration data found")
+            return self._create_empty_figure()
 
         # Correction 2: Appliquer le format de date optimal
         tick_config = self._calculate_optimal_tickformat(pd.Series(all_timestamps))

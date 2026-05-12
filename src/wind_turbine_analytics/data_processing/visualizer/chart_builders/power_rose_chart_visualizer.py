@@ -50,7 +50,7 @@ class PowerRoseChartVisualizer(BaseVisualizer):
 
         turbine_ids = list(result.detailed_results.keys())
         n_turbines = len(turbine_ids)
-        n_cols = min(n_turbines, 3)
+        n_cols = min(n_turbines, 2)  # Maximum 2 colonnes
         n_rows = (n_turbines + n_cols - 1) // n_cols
 
         fig = make_subplots(

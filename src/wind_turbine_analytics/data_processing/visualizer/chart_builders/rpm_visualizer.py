@@ -37,17 +37,22 @@ class RPMVisualizer(BaseVisualizer):
             month: colors[i % len(colors)] for i, month in enumerate(all_months)
         }
 
-        # Un subplot par éolienne (organisés en colonnes)
+        # Grille de subplots: maximum 2 colonnes par ligne
+        n_cols = min(2, n_turbines)
+        n_rows = (n_turbines + n_cols - 1) // n_cols  # Division arrondie vers le haut
+
         fig = make_subplots(
-            rows=1,
-            cols=n_turbines,
+            rows=n_rows,
+            cols=n_cols,
             subplot_titles=[f"<b>Turbine {tid}</b>" for tid in turbine_ids],
-            shared_yaxes=True,
-            horizontal_spacing=0.05,
+            shared_yaxes=False,
+            horizontal_spacing=0.12,
+            vertical_spacing=0.15,
         )
 
         for t_idx, turbine_id in enumerate(turbine_ids):
-            col = t_idx + 1
+            row = (t_idx // n_cols) + 1
+            col = (t_idx % n_cols) + 1
             turbine_data = result.detailed_results[turbine_id]
             df = turbine_data.get("chart_data")
 
@@ -97,24 +102,26 @@ class RPMVisualizer(BaseVisualizer):
                             "RPM: %{y:.1f}<extra></extra>"
                         ),
                     ),
-                    row=1,
+                    row=row,
                     col=col,
                 )
 
         # Configuration des axes et du layout
+        height = 400 + (n_rows * 350)  # Hauteur dynamique selon nombre de lignes
         fig.update_layout(
             title={
                 "text": "<b>Analyse RPM par Turbine - Comparaison Mensuelle Superposée</b>",
                 "x": 0.5,
             },
-            height=600,
+            height=height,
             template="plotly_white",
             legend_title_text="Mois",
             margin=dict(t=100, b=50, l=80, r=50),
         )
 
+        # Mise à jour des axes pour tous les subplots
         fig.update_xaxes(title_text="Puissance (kW)", gridcolor="#f0f0f0")
-        fig.update_yaxes(title_text="RPM (tr/min)", gridcolor="#f0f0f0", row=1, col=1)
+        fig.update_yaxes(title_text="RPM (tr/min)", gridcolor="#f0f0f0")
 
         return fig
 

@@ -23,7 +23,8 @@ logger = get_logger(__name__)
 
 class NormativeYieldAnalyzer(BaseAnalyzer):
     """
-    L’analyse des courbes de puissance vise à évaluer la performances des éoliennes en comparant la production électrique en
+    L’analyse des courbes de puissance vise à évaluer la performances
+    des éoliennes en comparant la production électrique en
     fonction de la vitesse du vent, dans des conditions d’exploitation
     homogènes.
 
@@ -31,13 +32,15 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
     éoliennes,ainsi que des situations de sous-performance susceptibles
     d’impacter la production du parc
 
-    La comparaison des courbes de puissance est réalisée conformément aux principes de la norme IEC 61400-12, en s’appuyant sur des données SCADA filtrées afin de garantir des conditions de comparaison homogènes.
+    La comparaison des courbes de puissance est réalisée conformément aux principes de la norme IEC 61400-12,
+    en s’appuyant sur des données SCADA filtrées afin de garantir des conditions de comparaison homogènes.
     Les traitements suivants sont appliqués :
-    	exclusion des périodes affectées par des limitations environnementales (bruit, chauves-souris, etc.),
-    	exclusion des situations de sillage (wake effect),
-    	sélection de périodes communes de fonctionnement (éoliennes en état “run” simultanément),
-    	correction des vitesses de vent à une densité de référence,
-    	homogénéisation des conditions de vent entre éoliennes afin de permettre une comparaison équitable des performances.
+    - exclusion des périodes affectées par des limitations environnementales (bruit, chauves-souris, etc.),
+    - exclusion des situations de sillage (wake effect),
+    - sélection de périodes communes de fonctionnement (éoliennes en état “run” simultanément),
+    - correction des vitesses de vent à une densité de référence,
+    - homogénéisation des conditions de vent entre éoliennes afin de permettre une
+    comparaison équitable des performances.
 
 
     INPUT : Charger les données SCADA (Vitesse vent, Puissance, Direction, Température, Pression, Statut).
@@ -62,8 +65,8 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
         Implémente l'analyse normative selon IEC 61400-12-2.
 
         Pipeline de traitement :
-        1. Nettoyage : Filtrer périodes "Run" (wind_speed > cut-in, power > 1% P_nom)
-        2. Environnement : Exclure bridage acoustique (code FM733)
+        1. Operating Period Filter : Filtrer périodes "Run" (wind_speed > cut-in, power > 1% P_nom)
+        2. Environmental Filter : Exclure bridage acoustique (code FM733)
         3. Sillage : Ignoré dans cette version
         4. Physique : Corriger vitesse du vent à densité de référence
         5. Synchro : Retourner timestamps valides pour intersection externe
@@ -82,8 +85,8 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
         RHO_REF = 1.225  # kg/m³ - Densité de référence IEC
         P0 = 101325  # Pa - Pression atmosphérique standard (niveau mer)
 
-        # ========== ÉTAPE 1 : NETTOYAGE - Filtrer périodes "Run" ==========
-        logger.info(f"STEP 1: Filtrage périodes 'Run' pour turbine {turbine_config.turbine_id}")
+        # ========== ÉTAPE 1 : OPERATING PERIOD FILTER - Filtrer périodes "Run" ==========
+        logger.info(f"STEP 1 - Operating Period Filter: Filtrage périodes 'Run' pour turbine {turbine_config.turbine_id}")
 
         # Extraire colonnes et configuration
         mapping = turbine_config.mapping_operation_data
@@ -145,11 +148,11 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
         # Critère "Run" : cut-in et production effective
         mask_run = (df[wind_speed_col] > v_cut_in) & (df[power_col] > 0.01 * P_nom)
         df = df[mask_run].copy()
-        step1_removed = after_nan_removal - len(df)
-        logger.info(f"STEP 1 complete: {len(df)} points retained (removed: {step1_removed})")
+        operating_period_removed = after_nan_removal - len(df)
+        logger.info(f"STEP 1 - Operating Period Filter complete: {len(df)} points retained (removed: {operating_period_removed})")
 
-        # ========== ÉTAPE 2 : ENVIRONNEMENT - Exclure bridage acoustique ==========
-        logger.info(f"STEP 2: Exclusion bridage acoustique (FM733) pour turbine {turbine_config.turbine_id}")
+        # ========== ÉTAPE 2 : ENVIRONMENTAL FILTER - Exclure bridage acoustique ==========
+        logger.info(f"STEP 2 - Environmental Filter: Exclusion bridage acoustique (FM733) pour turbine {turbine_config.turbine_id}")
 
         # Initialiser manager
         manager = NordexN311LogCodeManager()
@@ -162,7 +165,7 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
         # Créer masque pour exclure périodes FM733 (bridage acoustique)
         # Note: create_time_mask retourne True pour périodes normales, False pour périodes avec erreur
         # On utilise le masque directement car on veut garder les périodes normales (sans FM733)
-        step2_count_before = len(df)
+        environmental_count_before = len(df)
         mask_no_curtailment = manager.create_time_mask(
             log_df=log_data,
             target_df=df,
@@ -174,8 +177,8 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
         )
 
         df = df[mask_no_curtailment].copy()
-        step2_removed = step2_count_before - len(df)
-        logger.info(f"STEP 2 complete: {len(df)} points retained (removed: {step2_removed})")
+        environmental_removed = environmental_count_before - len(df)
+        logger.info(f"STEP 2 - Environmental Filter complete: {len(df)} points retained (removed: {environmental_removed})")
 
         # ========== ÉTAPE 3 : SILLAGE - IGNORÉ ==========
         logger.info("STEP 3: Wake filtering skipped (user decision)")
@@ -243,6 +246,11 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
             temperature_col: "temperature"
         })
 
+        # Ajouter des alias pour compatibilité avec PowerCurveChartVisualizer
+        # Ce visualizer est utilisé dans RunTestWorkflow et ScadaWorkflow
+        chart_data["wind_speed"] = chart_data["wind_speed_corrected"]  # Alias pour le visualizer
+        chart_data["power"] = chart_data["activation_power"]  # Alias pour le visualizer
+
         final_count = len(chart_data)
         data_retention = (final_count / original_count * 100) if original_count > 0 else 0.0
 
@@ -252,9 +260,9 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
             "valid_timestamps": valid_timestamps,
             "filtering_stats": {
                 "original_count": original_count,
-                "step1_status_removed": step1_removed,
-                "step2_curtailment_removed": step2_removed,
-                "step4_points_corrected": step4_corrected,
+                "operating_period_removed": operating_period_removed,
+                "environmental_removed": environmental_removed,
+                "points_corrected": step4_corrected,
                 "final_count": final_count
             },
             "density_stats": {

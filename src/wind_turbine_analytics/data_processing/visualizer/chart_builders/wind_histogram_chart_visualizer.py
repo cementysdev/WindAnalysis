@@ -2,11 +2,9 @@ from src.wind_turbine_analytics.data_processing.data_result_models import Analys
 from src.wind_turbine_analytics.data_processing.visualizer.base_visualizer import (
     BaseVisualizer,
 )
-import matplotlib.pyplot as plt
-import matplotlib.figure
-import seaborn as sns
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import pandas as pd
-import numpy as np
 from src.logger_config import get_logger
 
 logger = get_logger(__name__)
@@ -15,94 +13,147 @@ logger = get_logger(__name__)
 class WindHistogramChartVisualizer(BaseVisualizer):
     """
     Visualiseur d'histogramme de vitesse de vent avec bins de 0.5 m/s.
+    Converti vers Plotly pour affichage interactif dans l'interface web.
     """
 
     def __init__(self):
-        super().__init__(chart_name="wind_histogram_chart", use_plotly=False)
+        super().__init__(chart_name="wind_histogram_chart", use_plotly=True)
 
-    def _create_figure(self, result: AnalysisResult) -> matplotlib.figure.Figure:
+    def _create_empty_figure(self) -> go.Figure:
+        """Créer une figure vide informative."""
+        fig = go.Figure()
+        fig.update_layout(
+            title={
+                "text": "<b>Distribution de la vitesse du vent</b>",
+                "x": 0.5,
+            },
+            template="plotly_white",
+            height=400,
+        )
+        fig.add_annotation(
+            text="Aucune donnée disponible pour l'histogramme de vitesse du vent",
+            x=0.5,
+            y=0.5,
+            xref="paper",
+            yref="paper",
+            showarrow=False,
+            font=dict(size=14, color="gray"),
+        )
+        return fig
+
+    def _create_figure(self, result: AnalysisResult) -> go.Figure:
         if not result.detailed_results:
             logger.warning("Aucune donnée détaillée pour générer l'histogramme")
             return self._create_empty_figure()
 
-        turbine_ids = list(result.detailed_results.keys())
+        turbine_ids = sorted(result.detailed_results.keys())
         n_turbines = len(turbine_ids)
 
+        # Calculer le layout de la grille
         n_cols = min(n_turbines, 3)
         n_rows = (n_turbines + n_cols - 1) // n_cols
 
-        fig, axes = plt.subplots(
-            n_rows, n_cols, figsize=(6 * n_cols, 4 * n_rows), sharex=True
+        # Créer les subplot titles
+        subplot_titles = [f"<b>WTG {tid}</b>" for tid in turbine_ids]
+
+        # Créer la figure avec subplots
+        fig = make_subplots(
+            rows=n_rows,
+            cols=n_cols,
+            subplot_titles=subplot_titles,
+            vertical_spacing=0.12,
+            horizontal_spacing=0.1,
+            shared_xaxes=True,
         )
 
-        # Gestion des axes pour différents layouts
-        if n_turbines == 1:
-            axes = np.array([[axes]])
-        elif n_rows == 1:
-            axes = axes.reshape(1, -1)
-        elif n_cols == 1:
-            axes = axes.reshape(-1, 1)
-
-        # 1. Déterminer la vitesse max globale pour uniformiser les graphiques
+        # 1. Déterminer la vitesse max globale pour uniformiser les bins
         all_speeds = []
         for tid in turbine_ids:
             df = result.detailed_results[tid].get("chart_data")
-            if df is not None and not df.empty:
-                all_speeds.append(df["wind_speed"].max())
+            if df is not None and not df.empty and "wind_speed" in df.columns:
+                all_speeds.extend(df["wind_speed"].dropna().tolist())
 
-        max_wind = max(all_speeds) if all_speeds else 30
-        bins = np.arange(0, max_wind + 0.5, 0.5)  # Bins de 0.5 m/s
+        if not all_speeds:
+            logger.warning("Aucune donnée de vitesse de vent disponible")
+            return self._create_empty_figure()
+
+        max_wind = max(all_speeds)
+        # Bins de 0.5 m/s
+        bin_size = 0.5
 
         # 2. Tracer pour chaque turbine
         for idx, turbine_id in enumerate(turbine_ids):
-            row, col = idx // n_cols, idx % n_cols
-            ax = axes[row, col]
+            row = idx // n_cols + 1
+            col = idx % n_cols + 1
 
             chart_data = result.detailed_results[turbine_id].get("chart_data")
 
-            if chart_data is None or chart_data.empty:
-                ax.text(
-                    0.5,
-                    0.5,
-                    "No data",
-                    ha="center",
-                    va="center",
-                    transform=ax.transAxes,
+            if chart_data is None or chart_data.empty or "wind_speed" not in chart_data.columns:
+                # Ajouter une annotation "No data" pour cette turbine
+                fig.add_annotation(
+                    text="No data",
+                    x=0.5,
+                    y=0.5,
+                    xref=f"x{idx+1} domain",
+                    yref=f"y{idx+1} domain",
+                    showarrow=False,
+                    font=dict(size=12, color="gray"),
+                    row=row,
+                    col=col,
                 )
                 continue
 
-            # Utilisation de histplot (plus adapté pour des bins réguliers et nombreux)
-            sns.histplot(
-                data=chart_data,
-                x="wind_speed",
-                bins=bins,
-                ax=ax,
-                color="#4393c3",
-                edgecolor="white",
-                alpha=0.8,
+            wind_speeds = chart_data["wind_speed"].dropna()
+
+            if len(wind_speeds) == 0:
+                continue
+
+            # Créer l'histogramme avec Plotly
+            fig.add_trace(
+                go.Histogram(
+                    x=wind_speeds,
+                    xbins=dict(start=0, end=max_wind + bin_size, size=bin_size),
+                    marker=dict(
+                        color="#4393c3",
+                        line=dict(color="white", width=1),
+                    ),
+                    opacity=0.8,
+                    showlegend=False,
+                    hovertemplate="Vitesse: %{x:.1f} m/s<br>Count: %{y}<extra></extra>",
+                ),
+                row=row,
+                col=col,
             )
 
-            # Design & Labels
-            ax.set_title(f"WTG {turbine_id}", fontsize=12, fontweight="bold")
-            ax.set_xlabel("Wind Speed [m/s]", fontsize=10)
-            ax.set_ylabel("Count", fontsize=10)
-            ax.grid(axis="y", linestyle="--", alpha=0.4)
+            # Configuration des axes pour ce subplot
+            fig.update_xaxes(
+                title_text="Wind Speed [m/s]" if row == n_rows else None,
+                showgrid=False,
+                dtick=5,  # Un tick tous les 5 m/s
+                row=row,
+                col=col,
+            )
 
-            # Optionnel : Ajuster les ticks de l'axe X pour plus de lisibilité
-            ax.xaxis.set_major_locator(
-                plt.MultipleLocator(5)
-            )  # Un gros tick tous les 5 m/s
-            ax.xaxis.set_minor_locator(
-                plt.MultipleLocator(1)
-            )  # Un petit tick tous les 1 m/s
+            fig.update_yaxes(
+                title_text="Count",
+                showgrid=True,
+                gridcolor="rgba(0,0,0,0.1)",
+                row=row,
+                col=col,
+            )
 
-        # Supprimer les axes vides
-        for idx in range(n_turbines, n_rows * n_cols):
-            fig.delaxes(axes[idx // n_cols, idx % n_cols])
-
-        fig.suptitle(
-            "Wind Speed Distribution (0.5 m/s bins)", fontsize=14, fontweight="bold"
+        # Layout global
+        height = 400 + (n_rows - 1) * 350
+        fig.update_layout(
+            title={
+                "text": "<b>Wind Speed Distribution (0.5 m/s bins)</b>",
+                "x": 0.5,
+                "xanchor": "center",
+            },
+            height=height,
+            template="plotly_white",
+            showlegend=False,
+            margin=dict(l=60, r=40, t=100, b=60),
         )
-        plt.tight_layout(rect=[0, 0, 1, 0.96])
 
         return fig

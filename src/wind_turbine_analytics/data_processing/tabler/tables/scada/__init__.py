@@ -6,6 +6,7 @@ from .table_eba_loss import EbaLossTabler
 from .table_scada_summary import ScadaSummaryTabler
 from .table_error_code_pareto_frequecy import ErrorCodeParetoFrequencyTabler
 from .table_error_code_pareto_duration import ErrorCodeParetoDurationTabler
+from .table_yield_normative import NormativeYieldTabler
 
 __all__ = [
     "EbaCutInCutOutTabler",
@@ -14,4 +15,5 @@ __all__ = [
     "ScadaSummaryTabler",
     "ErrorCodeParetoFrequencyTabler",
     "ErrorCodeParetoDurationTabler",
+    "NormativeYieldTabler",
 ]

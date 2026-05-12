@@ -38,14 +38,42 @@ const ChartContainer = ({ chart }: ChartContainerProps) => {
     if (plotRef.current && containerRef.current && chart.plotly_json) {
       try {
         const layout = chart.plotly_json.layout || {};
-        const containerWidth = containerRef.current.offsetWidth - 32; // Soustraire le padding (p-4 = 16px de chaque côté)
 
-        // Calculer la hauteur en fonction du type de graphique
-        let height = layout.height || 600;
+        // Calculer le padding en fonction de la taille d'écran
+        const screenWidth = window.innerWidth;
+        const padding = screenWidth < 640 ? 16 : screenWidth < 1024 ? 24 : 32;
+        const containerWidth = containerRef.current.offsetWidth - padding;
+
+        // Calculer la hauteur en fonction du type de graphique et de la taille d'écran
+        let baseHeight = screenWidth < 640 ? 400 : screenWidth < 1024 ? 500 : 600;
+        let height = layout.height || baseHeight;
+
+        // Détecter s'il y a plusieurs subplots
+        const hasMultipleSubplots = layout.grid || (layout.xaxis && layout.xaxis2);
 
         // Si c'est un graphique avec plusieurs subplots (grille), augmenter la hauteur
-        if (layout.grid || (layout.xaxis && layout.xaxis2)) {
-          height = Math.max(height, 800);
+        if (hasMultipleSubplots) {
+          const minHeightForSubplots = screenWidth < 640 ? 600 : screenWidth < 1024 ? 700 : 800;
+          height = Math.max(height, minHeightForSubplots);
+        }
+
+        // Ajuster les marges selon le type de graphique et la taille d'écran
+        const marginScale = screenWidth < 640 ? 0.7 : screenWidth < 1024 ? 0.85 : 1;
+        let margins = layout.margin || {
+          l: Math.round(60 * marginScale),
+          r: Math.round(40 * marginScale),
+          t: Math.round(60 * marginScale),
+          b: Math.round(80 * marginScale),
+        };
+
+        // Pour les graphiques avec subplots côte à côte, augmenter l'espacement en bas
+        if (hasMultipleSubplots) {
+          margins = {
+            l: margins.l || Math.round(60 * marginScale),
+            r: margins.r || Math.round(40 * marginScale),
+            t: margins.t || Math.round(80 * marginScale),
+            b: Math.max(margins.b || Math.round(100 * marginScale), Math.round(100 * marginScale)),
+          };
         }
 
         Plotly.newPlot(
@@ -56,7 +84,7 @@ const ChartContainer = ({ chart }: ChartContainerProps) => {
             autosize: false, // Désactiver autosize pour contrôler manuellement
             width: containerWidth, // Forcer la largeur
             height: height,
-            margin: layout.margin || { l: 50, r: 30, t: 50, b: 50 },
+            margin: margins,
           },
           {
             responsive: true,
@@ -71,7 +99,9 @@ const ChartContainer = ({ chart }: ChartContainerProps) => {
         // Force un resize après un court délai pour s'assurer que tout est bien affiché
         setTimeout(() => {
           if (plotRef.current && containerRef.current) {
-            const newWidth = containerRef.current.offsetWidth - 32;
+            const screenWidth = window.innerWidth;
+            const padding = screenWidth < 640 ? 16 : screenWidth < 1024 ? 24 : 32;
+            const newWidth = containerRef.current.offsetWidth - padding;
             Plotly.relayout(plotRef.current, { width: newWidth });
           }
         }, 100);
@@ -94,7 +124,9 @@ const ChartContainer = ({ chart }: ChartContainerProps) => {
 
     const handleResize = () => {
       if (plotRef.current && containerRef.current) {
-        const newWidth = containerRef.current.offsetWidth - 32;
+        const screenWidth = window.innerWidth;
+        const padding = screenWidth < 640 ? 16 : screenWidth < 1024 ? 24 : 32;
+        const newWidth = containerRef.current.offsetWidth - padding;
         Plotly.relayout(plotRef.current, { width: newWidth });
       }
     };
@@ -104,9 +136,9 @@ const ChartContainer = ({ chart }: ChartContainerProps) => {
   }, [isRendered]);
 
   return (
-    <div ref={containerRef} className="bg-white p-4 rounded-lg shadow-md w-full">
-      <h3 className="text-lg font-semibold mb-3 text-gray-700">{chart.name}</h3>
-      <div ref={plotRef} className="w-full min-h-[600px] overflow-hidden" />
+    <div ref={containerRef} className="bg-white p-2 sm:p-3 lg:p-4 rounded-lg shadow-md w-full">
+      <h3 className="text-sm sm:text-base lg:text-lg font-semibold mb-2 sm:mb-3 text-gray-700">{chart.name}</h3>
+      <div ref={plotRef} className="w-full min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] overflow-hidden" />
     </div>
   );
 };

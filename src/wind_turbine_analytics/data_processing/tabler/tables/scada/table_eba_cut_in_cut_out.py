@@ -122,10 +122,11 @@ class EbaCutInCutOutTabler(BaseTabler):
             f"Tableau '{self.table_name}' généré avec {len(self._table_data)} lignes"
         )
 
-        # Retourner le résultat avec les données pivotées
+        # Retourner le résultat avec les données pivotées ET les headers
         return {
             self.table_name: self._format_as_word_table(),
             f"{self.table_name}_raw": self._table_data,
+            f"{self.table_name}_headers": self._get_table_headers(),  # Headers lisibles
         }
 
     def _pivot_monthly_data(self) -> None:

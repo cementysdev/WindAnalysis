@@ -11,22 +11,22 @@ export function WizardContainer() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-primary-dark text-white py-6 shadow-md">
-        <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold">Wind Turbine Analytics Wizard</h1>
-          <p className="text-sm mt-1">Assistant d'analyse de performance d'éoliennes</p>
+      <header className="bg-primary-dark text-white py-3 sm:py-4 lg:py-6 shadow-md">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-6">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Wind Turbine Analytics Wizard</h1>
+          <p className="text-xs sm:text-sm mt-1">Assistant d'analyse de performance d'éoliennes</p>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 max-w-[95%]">
+      <main className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 max-w-[98%] sm:max-w-[96%] lg:max-w-[95%] xl:max-w-[92%]">
         {/* Step Indicator - Centered */}
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto mb-4 sm:mb-6">
           <StepIndicator currentStep={state.currentStep} />
         </div>
 
         {/* Step Content - Centered */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white rounded-lg shadow-lg p-3 sm:p-4 lg:p-6">
           {state.currentStep === 'dataSource' && <Step1DataSource />}
           {state.currentStep === 'configReview' && <Step2ConfigReview />}
           {state.currentStep === 'results' && <Step3Results />}

@@ -9,6 +9,12 @@ from src.wind_turbine_analytics.application.configuration.config_models import (
     ScadaRunnerConfig,
 )
 from src.wind_turbine_analytics.application.workflows.base_workflow import BaseWorkflow
+from src.wind_turbine_analytics.data_processing.analyzer.logics.performance_level_analyzer import (
+    PerformanceLevelAnalyzer,
+)
+from src.wind_turbine_analytics.data_processing.analyzer.logics.pitch_analyzer import (
+    PitchAnalyzer,
+)
 from src.wind_turbine_analytics.data_processing.analyzer.logics.tip_speed_ratio import (
     TipSpeedRatioAnalyzer,
 )
@@ -25,6 +31,15 @@ from src.wind_turbine_analytics.data_processing.analyzer.logics import (
     CodeErrorAnalyzer,
     NormativeYieldAnalyzer,
 )
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_wind_direction_calibration import (
+    WindDirectionCalibrationTabler,
+)
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_yield_normative import (
+    NormativeYieldTabler,
+)
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.tip_speed_ratio import (
+    TipSpeedRatioTabler,
+)
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.data_availability_visualizer import (
     DataAvailabilityVisualizer,
 )
@@ -36,6 +51,12 @@ from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.eba_ma
 )
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.eba_loss_visualizer import (
     EbaLossVisualizer,
+)
+from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.performance_level_visualizer import (
+    PerformanceLevelVisualizer,
+)
+from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.power_curve_chart_visualizer import (
+    PowerCurveChartVisualizer,
 )
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.power_rose_chart_visualizer import (
     PowerRoseChartVisualizer,
@@ -54,6 +75,12 @@ from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.wind_d
 )
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.wind_rose_chart_visualizer import (
     WindRoseChartVisualizer,
+)
+from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.pitch_visualizer import (
+    PitchVisualizer,
+)
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_pitch import (
+    PitchTabler,
 )
 from src.wind_turbine_analytics.data_processing.tabler.tables.scada import (
     EbaCutInCutOutTabler,
@@ -79,12 +106,8 @@ class ScadaWorkflow(BaseWorkflow):
         super().__init__(config, presenter)
 
     def run(self) -> None:
-
-        # this should be done in the main logic, since this is common for scada and runtest
         self.validation_step()
-        # [TODO] comptue analysis per turbine
         self.process_step()
-        # [TODO] gather those information per turbine
         return
 
     def process_step(self) -> None:
@@ -99,7 +122,7 @@ class ScadaWorkflow(BaseWorkflow):
         eba_cutin_result = DataProcessingStep(
             analyzer=EbACutInCutOutAnalyzer(),
             visualizers=[EbaCutInCutOutVisualizer()],
-            tabler=EbaCutInCutOutTabler(),
+            tabler=[EbaCutInCutOutTabler()],
         ).execute(self.turbine_sources, self.validation_criteria)
         all_results["eba_cut_in_cut_out"] = eba_cutin_result
         summary_tabler.add_analysis_result("eba_cut_in_cut_out", eba_cutin_result)
@@ -147,7 +170,9 @@ class ScadaWorkflow(BaseWorkflow):
                 PowerRoseChartVisualizer(),
                 WindRoseChartVisualizer(),
             ],
-            tabler=None,  # TODO: WindCalibrationTabler si nécessaire
+            tabler=[
+                WindDirectionCalibrationTabler()
+            ],  # TODO: WindCalibrationTabler si nécessaire
         ).execute(self.turbine_sources, self.validation_criteria)
         all_results["wind_calibration"] = calibration_result
         summary_tabler.add_analysis_result("wind_calibration", calibration_result)
@@ -156,18 +181,38 @@ class ScadaWorkflow(BaseWorkflow):
         tsr_result = DataProcessingStep(
             analyzer=TipSpeedRatioAnalyzer(),
             visualizers=[RPMVisualizer()],
-            tabler=None,  # TODO: TipSpeedRatioTabler si nécessaire
+            tabler=[TipSpeedRatioTabler()],  # TODO: TipSpeedRatioTabler si nécessaire
         ).execute(self.turbine_sources, self.validation_criteria)
         all_results["tip_speed_ratio"] = tsr_result
         summary_tabler.add_analysis_result("tip_speed_ratio", tsr_result)
 
-        # Normative Yield
+        # Normative Yield (Power Curve)
         normative_result = DataProcessingStep(
             analyzer=NormativeYieldAnalyzer(),
-            visualizers=None,
-            tabler=None,  # TODO: NormativeYieldTabler si nécessaire
+            visualizers=[
+                PowerCurveChartVisualizer()
+            ],  # TODO: PowerCurveChartVisualizer si nécessaire
+            tabler=[NormativeYieldTabler()],  # TODO: NormativeYieldTabler si nécessaire
         ).execute(self.turbine_sources, self.validation_criteria)
         all_results["normative_yield"] = normative_result
+
+        pitch_analyzer_result = DataProcessingStep(
+            analyzer=PitchAnalyzer(),
+            visualizers=[
+                PitchVisualizer(),
+            ],
+            tabler=[PitchTabler()],
+        ).execute(self.turbine_sources, self.validation_criteria)
+        all_results["pitch_angle"] = pitch_analyzer_result
+        summary_tabler.add_analysis_result("pitch_angle", pitch_analyzer_result)
+
+        # Performance Level Analysis (EBA + Normative Yield)
+        performance_level_result = DataProcessingStep(
+            analyzer=PerformanceLevelAnalyzer(),
+            visualizers=[PerformanceLevelVisualizer()],
+            tabler=None,  # TODO: PerformanceLevelTabler() si nécessaire
+        ).execute(self.turbine_sources, self.validation_criteria)
+        all_results["performance_level"] = performance_level_result
 
         # Générer le rapport Word si activé dans la config
         self._render_report(all_results, summary_tabler)

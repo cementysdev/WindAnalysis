@@ -15,7 +15,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
   const currentIndex = steps.findIndex((step) => step.id === currentStep);
 
   return (
-    <div className="mb-8">
+    <div className="mb-4 sm:mb-6 lg:mb-8">
       <div className="flex items-center justify-between">
         {steps.map((step, index) => {
           const isCompleted = index < currentIndex;
@@ -28,7 +28,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
               <div className="flex flex-col items-center">
                 <div
                   className={cn(
-                    'w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-colors',
+                    'w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center font-bold text-sm sm:text-base lg:text-lg transition-colors',
                     {
                       'bg-primary-dark text-white': isCurrent,
                       'bg-green-500 text-white': isCompleted,
@@ -38,7 +38,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
                 >
                   {isCompleted ? (
                     <svg
-                      className="w-6 h-6"
+                      className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -55,7 +55,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
                   )}
                 </div>
                 <span
-                  className={cn('mt-2 text-sm font-medium text-center', {
+                  className={cn('mt-1 sm:mt-2 text-xs sm:text-sm font-medium text-center max-w-[80px] sm:max-w-none', {
                     'text-primary-dark': isCurrent,
                     'text-green-600': isCompleted,
                     'text-gray-500': isUpcoming,
@@ -68,7 +68,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
               {/* Connector Line */}
               {index < steps.length - 1 && (
                 <div
-                  className={cn('flex-1 h-1 mx-4 transition-colors', {
+                  className={cn('flex-1 h-0.5 sm:h-1 mx-1 sm:mx-2 lg:mx-4 transition-colors', {
                     'bg-green-500': index < currentIndex,
                     'bg-gray-300': index >= currentIndex,
                   })}

@@ -43,8 +43,8 @@ class PowerCurveChartVisualizer(BaseVisualizer):
         turbine_ids = list(result.detailed_results.keys())
         n_turbines = len(turbine_ids)
 
-        # Calculer la disposition du grid (préférer horizontal)
-        n_cols = min(n_turbines, 3)  # Max 3 colonnes
+        # Calculer la disposition du grid: maximum 2 colonnes
+        n_cols = min(n_turbines, 2)  # Max 2 colonnes
         n_rows = (n_turbines + n_cols - 1) // n_cols  # Arrondi supérieur
 
         # Créer les subplots
