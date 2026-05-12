@@ -307,6 +307,7 @@ class WordPresenter(ABC):
             "{{power_curve_chart}}": "power_curve_chart",
             "{{wind_rose_chart}}": "wind_rose_chart",
             "{{rpm_chart}}": "rpm_chart",
+            "{{pitch_chart}}": "pitch_chart",
         }
 
         # Fusionner les deux mappings

@@ -9,6 +9,7 @@ from src.wind_turbine_analytics.application.configuration.config_models import (
     ScadaRunnerConfig,
 )
 from src.wind_turbine_analytics.application.workflows.base_workflow import BaseWorkflow
+from src.wind_turbine_analytics.data_processing.analyzer.logics.pitch_analyzer import PitchAnalyzer
 from src.wind_turbine_analytics.data_processing.analyzer.logics.tip_speed_ratio import (
     TipSpeedRatioAnalyzer,
 )
@@ -61,6 +62,12 @@ from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.wind_d
 )
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.wind_rose_chart_visualizer import (
     WindRoseChartVisualizer,
+)
+from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.pitch_visualizer import (
+    PitchVisualizer,
+)
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_pitch import (
+    PitchTabler,
 )
 from src.wind_turbine_analytics.data_processing.tabler.tables.scada import (
     EbaCutInCutOutTabler,
@@ -173,6 +180,16 @@ class ScadaWorkflow(BaseWorkflow):
             tabler=[NormativeYieldTabler()],  # TODO: NormativeYieldTabler si nécessaire
         ).execute(self.turbine_sources, self.validation_criteria)
         all_results["normative_yield"] = normative_result
+
+        pitch_analyzer_result = DataProcessingStep(
+            analyzer=PitchAnalyzer(),
+            visualizers=[
+                PitchVisualizer(),
+            ],
+            tabler=[PitchTabler()],
+        ).execute(self.turbine_sources, self.validation_criteria)
+        all_results["pitch_angle"] = pitch_analyzer_result
+        summary_tabler.add_analysis_result("pitch_angle", pitch_analyzer_result)
 
         # Générer le rapport Word si activé dans la config
         self._render_report(all_results, summary_tabler)
