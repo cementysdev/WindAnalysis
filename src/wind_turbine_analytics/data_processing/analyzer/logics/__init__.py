@@ -36,6 +36,12 @@ from src.wind_turbine_analytics.data_processing.analyzer.logics.tip_speed_ratio 
 from src.wind_turbine_analytics.data_processing.analyzer.logics.normative_power_analyzer import (
     NormativeYieldAnalyzer,
 )
+from src.wind_turbine_analytics.data_processing.analyzer.logics.performance_level_analyzer import (
+    PerformanceLevelAnalyzer,
+)
+from src.wind_turbine_analytics.data_processing.analyzer.logics.pitch_analyzer import (
+    PitchAnalyzer,
+)
 
 __all__ = [
     # RunTest analyzers
@@ -52,4 +58,6 @@ __all__ = [
     "WindDirectionCalibrationAnalyzer",
     "TipSpeedRatioAnalyzer",
     "NormativeYieldAnalyzer",
+    "PerformanceLevelAnalyzer",
+    "PitchAnalyzer",
 ]

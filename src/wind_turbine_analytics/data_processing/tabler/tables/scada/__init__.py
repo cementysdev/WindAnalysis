@@ -7,6 +7,9 @@ from .table_scada_summary import ScadaSummaryTabler
 from .table_error_code_pareto_frequecy import ErrorCodeParetoFrequencyTabler
 from .table_error_code_pareto_duration import ErrorCodeParetoDurationTabler
 from .table_yield_normative import NormativeYieldTabler
+from .table_wind_direction_calibration import WindDirectionCalibrationTabler
+from .tip_speed_ratio import TipSpeedRatioTabler
+from .table_pitch import PitchTabler
 
 __all__ = [
     "EbaCutInCutOutTabler",
@@ -16,4 +19,7 @@ __all__ = [
     "ErrorCodeParetoFrequencyTabler",
     "ErrorCodeParetoDurationTabler",
     "NormativeYieldTabler",
+    "WindDirectionCalibrationTabler",
+    "TipSpeedRatioTabler",
+    "PitchTabler",
 ]

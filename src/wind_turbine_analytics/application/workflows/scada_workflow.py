@@ -9,18 +9,6 @@ from src.wind_turbine_analytics.application.configuration.config_models import (
     ScadaRunnerConfig,
 )
 from src.wind_turbine_analytics.application.workflows.base_workflow import BaseWorkflow
-from src.wind_turbine_analytics.data_processing.analyzer.logics.performance_level_analyzer import (
-    PerformanceLevelAnalyzer,
-)
-from src.wind_turbine_analytics.data_processing.analyzer.logics.pitch_analyzer import (
-    PitchAnalyzer,
-)
-from src.wind_turbine_analytics.data_processing.analyzer.logics.tip_speed_ratio import (
-    TipSpeedRatioAnalyzer,
-)
-from src.wind_turbine_analytics.data_processing.analyzer.logics.wind_direction_calibration_analyzer import (
-    WindDirectionCalibrationAnalyzer,
-)
 from src.wind_turbine_analytics.data_processing.data_processing import (
     DataProcessingStep,
 )
@@ -30,57 +18,10 @@ from src.wind_turbine_analytics.data_processing.analyzer.logics import (
     DataAvailabilityAnalyzer,
     CodeErrorAnalyzer,
     NormativeYieldAnalyzer,
-)
-from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_wind_direction_calibration import (
-    WindDirectionCalibrationTabler,
-)
-from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_yield_normative import (
-    NormativeYieldTabler,
-)
-from src.wind_turbine_analytics.data_processing.tabler.tables.scada.tip_speed_ratio import (
-    TipSpeedRatioTabler,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.data_availability_visualizer import (
-    DataAvailabilityVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.eba_cut_in_cut_out_visualizer import (
-    EbaCutInCutOutVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.eba_manifacturer_visualizer import (
-    EbaManufacturerVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.eba_loss_visualizer import (
-    EbaLossVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.performance_level_visualizer import (
-    PerformanceLevelVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.power_curve_chart_visualizer import (
-    PowerCurveChartVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.power_rose_chart_visualizer import (
-    PowerRoseChartVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.rpm_visualizer import (
-    RPMVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.top_error_code_frequency_visualizer import (
-    TopErrorCodeFrequencyVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.treemap_error_code_visualizer import (
-    TreemapErrorCodeVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.wind_direction_calibration_visualizer import (
-    WindDirectionCalibrationVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.wind_rose_chart_visualizer import (
-    WindRoseChartVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.pitch_visualizer import (
-    PitchVisualizer,
-)
-from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_pitch import (
-    PitchTabler,
+    PerformanceLevelAnalyzer,
+    PitchAnalyzer,
+    TipSpeedRatioAnalyzer,
+    WindDirectionCalibrationAnalyzer,
 )
 from src.wind_turbine_analytics.data_processing.tabler.tables.scada import (
     EbaCutInCutOutTabler,
@@ -89,6 +30,25 @@ from src.wind_turbine_analytics.data_processing.tabler.tables.scada import (
     ScadaSummaryTabler,
     ErrorCodeParetoFrequencyTabler,
     ErrorCodeParetoDurationTabler,
+    WindDirectionCalibrationTabler,
+    NormativeYieldTabler,
+    TipSpeedRatioTabler,
+    PitchTabler,
+)
+from src.wind_turbine_analytics.data_processing.visualizer.chart_builders import (
+    DataAvailabilityVisualizer,
+    EbaCutInCutOutVisualizer,
+    EbaManufacturerVisualizer,
+    EbaLossVisualizer,
+    PerformanceLevelVisualizer,
+    PowerCurveChartVisualizer,
+    PowerRoseChartVisualizer,
+    RPMVisualizer,
+    TopErrorCodeFrequencyVisualizer,
+    TreemapErrorCodeVisualizer,
+    WindDirectionCalibrationVisualizer,
+    WindRoseChartVisualizer,
+    PitchVisualizer,
 )
 from src.wind_turbine_analytics.data_processing.tabler.tables.runtest import (
     CsvFilesTabler,
