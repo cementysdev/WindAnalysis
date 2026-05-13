@@ -34,6 +34,7 @@ from src.wind_turbine_analytics.data_processing.tabler.tables.scada import (
     NormativeYieldTabler,
     TipSpeedRatioTabler,
     PitchTabler,
+    DataAvailabilityTabler,
 )
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders import (
     DataAvailabilityVisualizer,
@@ -200,7 +201,7 @@ class ScadaWorkflow(BaseWorkflow):
             "Data Availability",
             DataAvailabilityAnalyzer(),
             [DataAvailabilityVisualizer()],
-            None,
+            [DataAvailabilityTabler()],
         )
         all_results["data_availability"] = availability_result
         summary_tabler.add_analysis_result("data_availability", availability_result)

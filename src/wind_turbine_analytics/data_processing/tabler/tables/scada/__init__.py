@@ -10,6 +10,7 @@ from .table_yield_normative import NormativeYieldTabler
 from .table_wind_direction_calibration import WindDirectionCalibrationTabler
 from .tip_speed_ratio import TipSpeedRatioTabler
 from .table_pitch import PitchTabler
+from .table_data_availability import DataAvailabilityTabler
 
 __all__ = [
     "EbaCutInCutOutTabler",
@@ -22,4 +23,5 @@ __all__ = [
     "WindDirectionCalibrationTabler",
     "TipSpeedRatioTabler",
     "PitchTabler",
+    "DataAvailabilityTabler",
 ]
