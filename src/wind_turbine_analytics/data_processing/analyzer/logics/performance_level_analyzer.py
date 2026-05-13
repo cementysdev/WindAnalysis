@@ -240,7 +240,7 @@ class PerformanceLevelAnalyzer(BaseAnalyzer):
             # Distribution par zone
             unique, counts = np.unique(clusters, return_counts=True)
             zone_distribution = {
-                f"zone_{int(zone)}": round((count / len(clusters)) * 100, 2)
+                f"zone_{int(zone)}_pct": round((count / len(clusters)) * 100, 2)
                 for zone, count in zip(unique, counts)
             }
 
