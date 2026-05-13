@@ -254,6 +254,10 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
         final_count = len(chart_data)
         data_retention = (final_count / original_count * 100) if original_count > 0 else 0.0
 
+        # Determine status level based on data retention
+        from src.wind_turbine_analytics.data_processing.status_levels import StatusLevel
+        status_level = StatusLevel.from_percentage(data_retention)
+
         # Construire dictionnaire de résultats
         result = {
             "chart_data": chart_data,
@@ -274,6 +278,7 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
             },
             "quality_metrics": {
                 "data_retention_percent": float(data_retention),
+                "status_level": status_level,
                 "temperature_range": [float(temp_min), float(temp_max)],
                 "wind_speed_range_corrected": [
                     float(chart_data["wind_speed_corrected"].min()),

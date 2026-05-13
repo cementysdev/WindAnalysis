@@ -222,11 +222,18 @@ class PitchAnalyzer(BaseAnalyzer):
 
             monthly_results.append(month_dict)
 
+        # Determine status level based on max desync angle
+        from src.wind_turbine_analytics.data_processing.status_levels import StatusLevel
+        status_level = StatusLevel.from_angle_error(
+            max_desync,
+            thresholds={"success": 2.0, "minor": 5.0, "warning": 10.0, "major": 20.0}
+        )
+
         logger.debug(
             f"Turbine {turbine_config.turbine_id}: Pitch analysis completed. "
             f"Mean pitch (all blades): {mean_pitch_all:.2f}°, "
             f"Max desync: {max_desync:.2f}°, Mean desync: {mean_desync:.2f}°, "
-            f"Months analyzed: {len(monthly_results)}"
+            f"Status: {str(status_level)}, Months analyzed: {len(monthly_results)}"
         )
 
         # Préparer chart_data pour visualisation (avec les 3 pales)
@@ -246,6 +253,7 @@ class PitchAnalyzer(BaseAnalyzer):
             "std_pitch_all": std_pitch_all,
             "max_desync": round(max_desync, 2),
             "mean_desync": round(mean_desync, 2),
+            "status_level": status_level,
             "total_measurements": len(valid_data),
             "monthly_pitch": monthly_results,
             "chart_data": chart_data_df,

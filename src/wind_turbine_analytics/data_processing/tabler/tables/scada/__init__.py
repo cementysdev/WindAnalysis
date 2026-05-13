@@ -11,6 +11,7 @@ from .table_wind_direction_calibration import WindDirectionCalibrationTabler
 from .tip_speed_ratio import TipSpeedRatioTabler
 from .table_pitch import PitchTabler
 from .table_data_availability import DataAvailabilityTabler
+from .table_performance_level import PerformanceLevelTabler
 
 __all__ = [
     "EbaCutInCutOutTabler",
@@ -24,4 +25,5 @@ __all__ = [
     "TipSpeedRatioTabler",
     "PitchTabler",
     "DataAvailabilityTabler",
+    "PerformanceLevelTabler",
 ]

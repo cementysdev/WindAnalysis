@@ -30,7 +30,7 @@ class NormativeYieldTabler(BaseTabler):
         Retourne les en-têtes du tableau pour l'analyse normative.
 
         Returns:
-            Liste des headers avec 6 colonnes simplifiées
+            Liste des headers avec 7 colonnes
         """
         return [
             "WTG",
@@ -39,6 +39,7 @@ class NormativeYieldTabler(BaseTabler):
             "Temp. range (°C)",
             "Wind Speed range (m/s)",
             "Operating Filter",
+            "STATUS",
         ]
 
     def _add_table_row(self, turbine_id: str, turbine_result: Dict[str, Any]) -> None:
@@ -61,6 +62,7 @@ class NormativeYieldTabler(BaseTabler):
         data_retention = quality_metrics.get("data_retention_percent", 0.0)
         temp_range = quality_metrics.get("temperature_range", [0.0, 0.0])
         wind_speed_range = quality_metrics.get("wind_speed_range_corrected", [0.0, 0.0])
+        status_level = quality_metrics.get("status_level", None)
 
         # Extraire la puissance maximale depuis chart_data
         chart_data = turbine_result.get("chart_data", None)
@@ -68,6 +70,9 @@ class NormativeYieldTabler(BaseTabler):
         if chart_data is not None and not chart_data.empty:
             if "activation_power" in chart_data.columns:
                 max_power = float(chart_data["activation_power"].max())
+
+        # Formater le status
+        status_str = str(status_level) if status_level is not None else "N/A"
 
         # Construire la ligne du tableau
         row_data = {
@@ -77,6 +82,7 @@ class NormativeYieldTabler(BaseTabler):
             "temp_range": f"[{temp_range[0]:.1f}, {temp_range[1]:.1f}]",
             "wind_speed_range": f"[{wind_speed_range[0]:.1f}, {wind_speed_range[1]:.1f}]",
             "operating_filter": str(operating_removed),
+            "status": status_str,
         }
 
         self._table_data.append(row_data)

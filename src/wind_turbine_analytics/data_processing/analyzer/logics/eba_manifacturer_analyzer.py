@@ -193,6 +193,22 @@ class EbaManufacturerAnalyzer(BaseAnalyzer):
             turbine_config.turbine_id,
             eba_monthly[["month", "performance"]].to_string(index=False),
         )
+
+        # Calculate mean availability for status
+        monthly_performances = eba_monthly["performance"].tolist()
+        valid_perfs = [p for p in monthly_performances if p > 0]
+        mean_availability = sum(valid_perfs) / len(valid_perfs) if valid_perfs else 0.0
+
+        # Determine status level
+        from src.wind_turbine_analytics.data_processing.status_levels import StatusLevel
+        status_level = StatusLevel.from_percentage(mean_availability)
+
+        logger.debug(
+            "Turbine %s (Manufacturer EBA): Mean availability = %.2f%%, Status = %s",
+            turbine_config.turbine_id,
+            mean_availability,
+            str(status_level),
+        )
         logger.debug(
             "Completed EBA analysis for turbine %s (Manufacturer EBA) without error code filtering.",
             turbine_config.turbine_id,
@@ -206,4 +222,6 @@ class EbaManufacturerAnalyzer(BaseAnalyzer):
             "monthly_performance": eba_monthly[["month", "performance"]].to_dict(
                 orient="records"
             ),
+            "mean_availability_pct": round(mean_availability, 2),
+            "status_level": status_level,
         }

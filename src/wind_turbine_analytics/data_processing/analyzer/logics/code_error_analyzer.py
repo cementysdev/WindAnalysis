@@ -288,6 +288,30 @@ class CodeErrorAnalyzer(BaseAnalyzer):
             impactful_codes, key=lambda x: x["total_duration_hours"], reverse=True
         )
 
+        # Calculate uptime percentage for status
+        test_duration_hours = (test_end - test_start).total_seconds() / 3600
+        total_error_duration = sum(code["total_duration_hours"] for code in impactful_codes)
+
+        # Uptime percentage (temps sans erreur)
+        uptime_pct = (
+            ((test_duration_hours - total_error_duration) / test_duration_hours * 100)
+            if test_duration_hours > 0
+            else 0.0
+        )
+
+        # Determine status level based on uptime
+        from src.wind_turbine_analytics.data_processing.status_levels import StatusLevel
+        status_level = StatusLevel.from_percentage(uptime_pct)
+
+        logger.debug(
+            "Turbine %s: Error duration = %.2fh / %.2fh, Uptime = %.2f%%, Status = %s",
+            turbine_config.turbine_id,
+            total_error_duration,
+            test_duration_hours,
+            uptime_pct,
+            str(status_level),
+        )
+
         # Résultat final
         return {
             "summary": {
@@ -304,4 +328,8 @@ class CodeErrorAnalyzer(BaseAnalyzer):
             "production_impact": production_impact,
             "wind_correlation": wind_correlation,
             "most_impactful_codes": impactful_codes[:10],  # Top 10
+            "total_error_duration_hours": round(total_error_duration, 2),
+            "test_duration_hours": round(test_duration_hours, 2),
+            "uptime_pct": round(uptime_pct, 2),
+            "status_level": status_level,
         }

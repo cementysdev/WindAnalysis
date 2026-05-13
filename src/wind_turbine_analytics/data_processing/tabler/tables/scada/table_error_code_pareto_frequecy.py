@@ -39,6 +39,8 @@ class ErrorCodeParetoFrequencyTabler(BaseTabler):
         self._turbine_code_frequencies: Dict[str, Dict[str, int]] = {}
         self._turbine_ids: List[str] = []
         self._all_codes_info: Dict[str, Dict[str, Any]] = {}  # Métadonnées codes
+        self._turbine_test_durations: Dict[str, float] = {}  # Durée de test par turbine
+        self._turbine_error_durations: Dict[str, float] = {}  # Durée totale d'erreur par turbine
 
     def _get_table_headers(self) -> List[str]:
         """
@@ -83,6 +85,7 @@ class ErrorCodeParetoFrequencyTabler(BaseTabler):
 
         # Ajouter colonne Total
         headers.append("Total")
+        headers.append("STATUS")
 
         return headers
 
@@ -94,10 +97,18 @@ class ErrorCodeParetoFrequencyTabler(BaseTabler):
             turbine_id: ID de la turbine
             turbine_result: Résultats contenant:
                 - code_frequency: Liste de dicts avec {code, count, description, ...}
+                - test_duration_hours: Durée totale de test
+                - total_error_duration_hours: Durée totale d'erreur
         """
         # Enregistrer l'ID de la turbine
         if turbine_id not in self._turbine_ids:
             self._turbine_ids.append(turbine_id)
+
+        # Stocker les durées pour calcul du status
+        test_duration = turbine_result.get("test_duration_hours", 0.0)
+        error_duration = turbine_result.get("total_error_duration_hours", 0.0)
+        self._turbine_test_durations[turbine_id] = test_duration
+        self._turbine_error_durations[turbine_id] = error_duration
 
         # Extraire les fréquences de codes
         code_frequency_list = turbine_result.get("code_frequency", [])
@@ -232,6 +243,20 @@ class ErrorCodeParetoFrequencyTabler(BaseTabler):
 
             # Ajouter le total des erreurs pour cette turbine
             row_data["total"] = str(total_errors)
+
+            # Calculate uptime and status
+            from src.wind_turbine_analytics.data_processing.status_levels import StatusLevel
+
+            test_duration = self._turbine_test_durations.get(turbine_id, 0.0)
+            error_duration = self._turbine_error_durations.get(turbine_id, 0.0)
+            uptime_pct = (
+                ((test_duration - error_duration) / test_duration * 100)
+                if test_duration > 0
+                else 0.0
+            )
+
+            status = StatusLevel.from_percentage(uptime_pct)
+            row_data["status"] = str(status)
 
             self._table_data.append(row_data)
 

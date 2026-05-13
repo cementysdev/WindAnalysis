@@ -184,3 +184,69 @@ class EbaCutInCutOutTabler(BaseTabler):
                 row_data["windfarm"] = "N/A"
 
             self._table_data.append(row_data)
+
+        # Add summary rows at the end
+        self._add_summary_rows()
+
+    def _add_summary_rows(self) -> None:
+        """Add MEAN and STATUS rows after all period data."""
+        if not self._turbine_ids:
+            return
+
+        # Collect all performances per turbine
+        turbine_all_perfs = {tid: [] for tid in self._turbine_ids}
+
+        for period, turbine_perfs in self._monthly_data.items():
+            for turbine_id, perf in turbine_perfs.items():
+                if perf is not None and perf > 0:
+                    turbine_all_perfs[turbine_id].append(perf)
+
+        # Calculate means
+        turbine_means = {}
+        for turbine_id in sorted(self._turbine_ids):
+            perfs = turbine_all_perfs[turbine_id]
+            if perfs:
+                turbine_means[turbine_id] = sum(perfs) / len(perfs)
+
+        # MEAN row
+        mean_row = {"period": "MEAN"}
+        for turbine_id in sorted(self._turbine_ids):
+            col_key = f"wtg_{turbine_id.lower()}"
+            if turbine_id in turbine_means:
+                mean_row[col_key] = self._format_number(
+                    turbine_means[turbine_id], decimals=2, unit="%"
+                )
+            else:
+                mean_row[col_key] = "N/A"
+
+        # WindFarm mean
+        if turbine_means:
+            wf_mean = sum(turbine_means.values()) / len(turbine_means)
+            mean_row["windfarm"] = self._format_number(wf_mean, decimals=2, unit="%")
+        else:
+            mean_row["windfarm"] = "N/A"
+
+        self._table_data.append(mean_row)
+
+        # STATUS row
+        from src.wind_turbine_analytics.data_processing.status_levels import StatusLevel
+
+        status_row = {"period": "STATUS"}
+
+        for turbine_id in sorted(self._turbine_ids):
+            col_key = f"wtg_{turbine_id.lower()}"
+            if turbine_id in turbine_means:
+                status = StatusLevel.from_percentage(turbine_means[turbine_id])
+                status_row[col_key] = str(status)
+            else:
+                status_row[col_key] = "N/A"
+
+        # WindFarm status
+        if turbine_means:
+            wf_mean = sum(turbine_means.values()) / len(turbine_means)
+            wf_status = StatusLevel.from_percentage(wf_mean)
+            status_row["windfarm"] = str(wf_status)
+        else:
+            status_row["windfarm"] = "N/A"
+
+        self._table_data.append(status_row)

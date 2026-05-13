@@ -244,10 +244,21 @@ class PerformanceLevelAnalyzer(BaseAnalyzer):
                 for zone, count in zip(unique, counts)
             }
 
+            # Calculate percentage OUTSIDE zone 6 for status
+            zone_counts = dict(zip(unique, counts))
+            total_points = len(clusters)
+            points_in_zone6 = zone_counts.get(6, 0)
+            percentage_outside_zone6 = ((total_points - points_in_zone6) / total_points * 100) if total_points > 0 else 0.0
+
+            # Determine status level based on percentage outside zone 6
+            from src.wind_turbine_analytics.data_processing.status_levels import StatusLevel
+            status_level = StatusLevel.from_percentage(percentage_outside_zone6)
+
             logger.debug(
                 f"Turbine {turbine_config.turbine_id}: Performance level analysis completed. "
                 f"Thresholds: {[round(x, 2) for x in X_threshold]}, "
-                f"Distribution: {zone_distribution}"
+                f"Distribution: {zone_distribution}, "
+                f"Outside Zone 6: {percentage_outside_zone6:.1f}%, Status: {str(status_level)}"
             )
 
             # Préparer chart_data pour visualisation
@@ -279,6 +290,8 @@ class PerformanceLevelAnalyzer(BaseAnalyzer):
                 "theta_rot": [float(x) for x in theta_rot],
                 "theta_pwer": [float(x) for x in theta_pwer],
                 "zone_distribution": zone_distribution,
+                "percentage_outside_zone6": round(percentage_outside_zone6, 2),
+                "status_level": status_level,
                 "total_measurements": len(valid_data),
                 "normalization": {
                     "wind_speed_min": float(wind_speed.min()),

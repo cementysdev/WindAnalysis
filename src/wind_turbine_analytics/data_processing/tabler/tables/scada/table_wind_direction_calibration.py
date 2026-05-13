@@ -71,13 +71,21 @@ class WindDirectionCalibrationTabler(BaseTabler):
             std_error = turbine_result.get("overall_std_angular_error", 0.0)
             max_error = turbine_result.get("overall_max_angular_error", 0.0)
             correlation = turbine_result.get("overall_correlation", None)
-            criterion_met = turbine_result.get("criterion_met", False)
+            status_level = turbine_result.get("status_level", None)
 
             # Formater la corrélation (peut être None)
             if correlation is not None:
                 correlation_str = f"{correlation:.3f}"
             else:
                 correlation_str = "N/A"
+
+            # Formater le status
+            if status_level is not None:
+                status_str = str(status_level)
+            else:
+                # Fallback to old criterion_met if status_level not available
+                criterion_met = turbine_result.get("criterion_met", False)
+                status_str = self._format_status_cell(criterion_met)
 
             # Construire la ligne du tableau
             row_data = {
@@ -86,7 +94,7 @@ class WindDirectionCalibrationTabler(BaseTabler):
                 "std_error": self._format_number(std_error, decimals=2, unit="°"),
                 "max_error": self._format_number(max_error, decimals=2, unit="°"),
                 "correlation": correlation_str,
-                "status": self._format_status_cell(criterion_met),
+                "status": status_str,
             }
 
         self._table_data.append(row_data)

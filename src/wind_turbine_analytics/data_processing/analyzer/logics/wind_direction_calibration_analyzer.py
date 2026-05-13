@@ -204,10 +204,17 @@ class WindDirectionCalibrationAnalyzer(BaseAnalyzer):
         threshold = 5.0  # degrés
         criterion_met = overall_mean_error < threshold
 
+        # Determine status level based on mean angular error
+        from src.wind_turbine_analytics.data_processing.status_levels import StatusLevel
+        status_level = StatusLevel.from_angle_error(
+            overall_mean_error,
+            thresholds={"success": 3.0, "minor": 5.0, "warning": 7.0, "major": 10.0}
+        )
+
         logger.debug(
             f"Turbine {turbine_config.turbine_id}: Wind direction calibration analysis completed. "
             f"Mean angular error: {overall_mean_error:.2f}°, Threshold: {threshold}°, "
-            f"Criterion met: {criterion_met}"
+            f"Criterion met: {criterion_met}, Status: {str(status_level)}"
         )
 
         # Créer chart_data avec colonnes standardisées pour les visualiseurs
@@ -249,6 +256,7 @@ class WindDirectionCalibrationAnalyzer(BaseAnalyzer):
             ),
             "threshold_degrees": threshold,
             "criterion_met": criterion_met,
+            "status_level": status_level,
             "total_measurements": len(test_data),
             "daily_calibration": daily_results,
             "chart_data": chart_data_df,

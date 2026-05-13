@@ -35,6 +35,7 @@ from src.wind_turbine_analytics.data_processing.tabler.tables.scada import (
     TipSpeedRatioTabler,
     PitchTabler,
     DataAvailabilityTabler,
+    PerformanceLevelTabler,
 )
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders import (
     DataAvailabilityVisualizer,
@@ -254,7 +255,7 @@ class ScadaWorkflow(BaseWorkflow):
             "Performance Level",
             PerformanceLevelAnalyzer(),
             [PerformanceLevelVisualizer()],
-            None,
+            [PerformanceLevelTabler()],
         )
         all_results["performance_level"] = performance_level_result
 

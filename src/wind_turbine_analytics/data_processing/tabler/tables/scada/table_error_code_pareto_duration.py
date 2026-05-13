@@ -39,6 +39,7 @@ class ErrorCodeParetoDurationTabler(BaseTabler):
         self._turbine_code_durations: Dict[str, Dict[str, float]] = {}
         self._turbine_ids: List[str] = []
         self._all_codes_info: Dict[str, Dict[str, Any]] = {}  # Métadonnées codes
+        self._turbine_test_durations: Dict[str, float] = {}  # Durée de test par turbine
 
     def _get_table_headers(self) -> List[str]:
         """
@@ -83,6 +84,7 @@ class ErrorCodeParetoDurationTabler(BaseTabler):
 
         # Ajouter colonne Total
         headers.append("Total (h)")
+        headers.append("STATUS")
 
         return headers
 
@@ -94,10 +96,15 @@ class ErrorCodeParetoDurationTabler(BaseTabler):
             turbine_id: ID de la turbine
             turbine_result: Résultats contenant:
                 - most_impactful_codes: Liste de dicts avec {code, total_duration_hours, description, ...}
+                - test_duration_hours: Durée totale de test
         """
         # Enregistrer l'ID de la turbine
         if turbine_id not in self._turbine_ids:
             self._turbine_ids.append(turbine_id)
+
+        # Stocker la durée de test pour calcul du status
+        test_duration = turbine_result.get("test_duration_hours", 0.0)
+        self._turbine_test_durations[turbine_id] = test_duration
 
         # Extraire les codes impactants (durées)
         impactful_codes_list = turbine_result.get("most_impactful_codes", [])
@@ -233,6 +240,19 @@ class ErrorCodeParetoDurationTabler(BaseTabler):
 
             # Ajouter le total des heures d'indisponibilité pour cette turbine
             row_data["total"] = f"{total_duration:.2f}"
+
+            # Calculate uptime and status
+            from src.wind_turbine_analytics.data_processing.status_levels import StatusLevel
+
+            test_duration = self._turbine_test_durations.get(turbine_id, 0.0)
+            uptime_pct = (
+                ((test_duration - total_duration) / test_duration * 100)
+                if test_duration > 0
+                else 0.0
+            )
+
+            status = StatusLevel.from_percentage(uptime_pct)
+            row_data["status"] = str(status)
 
             self._table_data.append(row_data)
 

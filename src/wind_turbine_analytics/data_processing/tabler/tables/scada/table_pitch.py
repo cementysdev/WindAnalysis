@@ -26,7 +26,7 @@ class PitchTabler(BaseTabler):
         Retourne les en-têtes du tableau pour l'analyse pitch des 3 pales.
 
         Returns:
-            Liste des headers avec 6 colonnes
+            Liste des headers avec 7 colonnes
         """
         return [
             "WTG",
@@ -35,6 +35,7 @@ class PitchTabler(BaseTabler):
             "Blade 3 Mean (°)",
             "Mean All (°)",
             "Max Desync (°)",
+            "STATUS",
         ]
 
     def _add_table_row(self, turbine_id: str, turbine_result: Dict[str, Any]) -> None:
@@ -60,7 +61,8 @@ class PitchTabler(BaseTabler):
                 "blade2_mean": "N/A",
                 "blade3_mean": "N/A",
                 "mean_all": "N/A",
-                "max_desync": f"ERROR: {error_msg}",
+                "max_desync": "N/A",
+                "status": f"ERROR: {error_msg}",
             }
         else:
             # Extraire les statistiques par pale
@@ -74,6 +76,10 @@ class PitchTabler(BaseTabler):
 
             mean_pitch_all = turbine_result.get("mean_pitch_all", 0.0)
             max_desync = turbine_result.get("max_desync", 0.0)
+            status_level = turbine_result.get("status_level", None)
+
+            # Formater le status
+            status_str = str(status_level) if status_level is not None else "N/A"
 
             # Construire la ligne du tableau
             row_data = {
@@ -83,6 +89,7 @@ class PitchTabler(BaseTabler):
                 "blade3_mean": self._format_number(blade3_mean, decimals=2, unit="°"),
                 "mean_all": self._format_number(mean_pitch_all, decimals=2, unit="°"),
                 "max_desync": self._format_number(max_desync, decimals=2, unit="°"),
+                "status": status_str,
             }
 
         self._table_data.append(row_data)

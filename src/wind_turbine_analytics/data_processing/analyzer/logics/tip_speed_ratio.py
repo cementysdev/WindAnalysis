@@ -225,11 +225,18 @@ class TipSpeedRatioAnalyzer(BaseAnalyzer):
         # Critère satisfait si le TSR moyen global est dans la plage
         criterion_met = optimal_range[0] <= mean_tsr <= optimal_range[1]
 
+        # Determine status level based on percentage in range
+        from src.wind_turbine_analytics.data_processing.status_levels import StatusLevel
+        status_level = StatusLevel.from_percentage(
+            percentage_in_range,
+            thresholds={"success": 90.0, "minor": 75.0, "warning": 60.0, "major": 40.0}
+        )
+
         logger.debug(
             f"Turbine {turbine_config.turbine_id}: TSR analysis completed. "
             f"Mean TSR: {mean_tsr:.2f}, Optimal range: {optimal_range}, "
             f"Criterion met: {criterion_met}, In range: {percentage_in_range:.1f}%, "
-            f"Months analyzed: {len(monthly_results)}"
+            f"Status: {str(status_level)}, Months analyzed: {len(monthly_results)}"
         )
 
         # Préparer chart_data pour visualisation RPM (avec mois)
@@ -251,6 +258,7 @@ class TipSpeedRatioAnalyzer(BaseAnalyzer):
             "optimal_range": optimal_range,
             "criterion_met": criterion_met,
             "percentage_in_range": round(percentage_in_range, 1),
+            "status_level": status_level,
             "total_measurements": len(valid_data),
             "monthly_tsr": monthly_results,  # Ajout des résultats mensuels
             "chart_data": chart_data_df,

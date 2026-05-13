@@ -35,6 +35,7 @@ class TipSpeedRatioTabler(BaseTabler):
             "Std TSR",
             "Optimal Range",
             "In Range (%)",
+            "STATUS",
         ]
 
     def _add_table_row(self, turbine_id: str, turbine_result: Dict[str, Any]) -> None:
@@ -55,7 +56,7 @@ class TipSpeedRatioTabler(BaseTabler):
         std_tsr = turbine_result.get("std_tsr", 0.0)
         optimal_range = turbine_result.get("optimal_range", [7.0, 9.0])
         percentage_in_range = turbine_result.get("percentage_in_range", 0.0)
-        criterion_met = turbine_result.get("criterion_met", False)
+        status_level = turbine_result.get("status_level", None)
 
         # Vérifier si c'est une erreur
         if "error" in turbine_result:
@@ -73,6 +74,9 @@ class TipSpeedRatioTabler(BaseTabler):
             # Formater la plage optimale
             optimal_range_str = f"[{optimal_range[0]:.1f}, {optimal_range[1]:.1f}]"
 
+            # Formater le status
+            status_str = str(status_level) if status_level is not None else "N/A"
+
             # Construire la ligne du tableau
             row_data = {
                 "wtg": turbine_id,
@@ -82,6 +86,7 @@ class TipSpeedRatioTabler(BaseTabler):
                 "in_range": self._format_number(
                     percentage_in_range, decimals=1, unit="%"
                 ),
+                "status": status_str,
             }
 
         self._table_data.append(row_data)
