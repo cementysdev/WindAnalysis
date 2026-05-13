@@ -43,6 +43,7 @@ class ScadaWordPresenter(WordPresenter):
     - [TABLE:NORMATIVE_YIELD_TABLE]
     - [TABLE:CODE_ERROR_PARETO_FREQUENCY]
     - [TABLE:WIND_DIRECTION_CALIBRATION_TABLE]
+    - [TABLE:PERFORMANCE_LEVEL_TABLE]
     """
 
     def _set_table_borders(self, table):
