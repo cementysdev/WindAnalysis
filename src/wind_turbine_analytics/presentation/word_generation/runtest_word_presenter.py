@@ -43,7 +43,7 @@ class RunTestWordPresenter(WordPresenter):
             doc: Document Word chargé
             context: Contexte avec les données de tableaux
         """
-        logger.info("Filling tables using RunTest index-based strategy...")
+        logger.debug("Filling tables using RunTest index-based strategy...")
 
         # Mapping index → nom de table dans le contexte
         table_mapping = {
@@ -66,7 +66,7 @@ class RunTestWordPresenter(WordPresenter):
                     data = context[table_name]
                     if isinstance(data, list) and len(data) > 0:
                         self._fill_table_by_index(table, data)
-                        logger.info(f"✅ Table {table_idx} ('{table_name}') filled with {len(data)} rows")
+                        logger.debug(f"✅ Table {table_idx} ('{table_name}') filled with {len(data)} rows")
                     else:
                         logger.warning(f"⚠️ Empty data for table {table_idx} ('{table_name}')")
                 else:

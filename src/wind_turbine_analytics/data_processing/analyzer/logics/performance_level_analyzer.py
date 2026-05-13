@@ -126,7 +126,7 @@ class PerformanceLevelAnalyzer(BaseAnalyzer):
             )
             return {"error": "No valid data (all columns not null)"}
 
-        logger.info(
+        logger.debug(
             f"Turbine {turbine_config.turbine_id}: Analyzing {len(valid_data)} valid measurements"
         )
 
@@ -159,7 +159,7 @@ class PerformanceLevelAnalyzer(BaseAnalyzer):
             # Fallback: prendre le percentile 95 de toutes les vitesses
             cut_out_speed = float(np.percentile(wind_speed, 95))
 
-        logger.info(
+        logger.debug(
             f"Turbine {turbine_config.turbine_id}: Using cut-in={cut_in_speed} m/s, "
             f"cut-out={cut_out_speed:.2f} m/s (calculated at 98% P_nominal={P_nominal:.1f} kW)"
         )
@@ -197,7 +197,7 @@ class PerformanceLevelAnalyzer(BaseAnalyzer):
 
         try:
             # Calibration automatique des modèles avec bounds adaptés
-            logger.info(
+            logger.debug(
                 f"Turbine {turbine_config.turbine_id}: Starting calibration with "
                 f"{len(wind_speed)} points..."
             )
@@ -218,7 +218,7 @@ class PerformanceLevelAnalyzer(BaseAnalyzer):
             theta_rot = classifier.theta_rot
             theta_pwer = classifier.theta_pwer
 
-            logger.info(
+            logger.debug(
                 f"Turbine {turbine_config.turbine_id}: Calibration completed. "
                 f"X_threshold: {[round(x, 3) for x in X_threshold]}, "
                 f"theta_rot: {[round(x, 3) for x in theta_rot]}, "
@@ -232,7 +232,7 @@ class PerformanceLevelAnalyzer(BaseAnalyzer):
 
             # Debug: afficher la distribution des clusters
             unique_clusters, counts = np.unique(clusters, return_counts=True)
-            logger.info(
+            logger.debug(
                 f"Turbine {turbine_config.turbine_id}: Cluster distribution: "
                 f"{dict(zip(unique_clusters.tolist(), counts.tolist()))}"
             )
@@ -244,7 +244,7 @@ class PerformanceLevelAnalyzer(BaseAnalyzer):
                 for zone, count in zip(unique, counts)
             }
 
-            logger.info(
+            logger.debug(
                 f"Turbine {turbine_config.turbine_id}: Performance level analysis completed. "
                 f"Thresholds: {[round(x, 2) for x in X_threshold]}, "
                 f"Distribution: {zone_distribution}"

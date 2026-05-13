@@ -48,11 +48,11 @@ async def read_config(folder_path: str = Query(..., description="Path to folder 
             )
 
         # Read and parse YAML
-        logger.info(f"Reading config from: {config_file}")
+        logger.debug(f"Reading config from: {config_file}")
         with open(config_file, 'r', encoding='utf-8') as f:
             config_data = yaml.safe_load(f)
 
-        logger.info(f"Successfully parsed config.yml with {len(config_data.get('turbines', {}))} turbines")
+        logger.debug(f"Successfully parsed config.yml with {len(config_data.get('turbines', {}))} turbines")
 
         return config_data
 

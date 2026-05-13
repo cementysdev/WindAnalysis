@@ -56,7 +56,7 @@ class RunTestSummaryTabler(BaseTabler):
                 self.all_results[turbine_id] = {}
             self.all_results[turbine_id][analysis_name] = data
 
-        logger.info(
+        logger.debug(
             f"Résultats de '{analysis_name}' ajoutés au récapitulatif "
             f"({len(result.detailed_results)} turbines)"
         )
@@ -83,7 +83,7 @@ class RunTestSummaryTabler(BaseTabler):
                 f"{self.table_name}_headers": self._get_table_headers(),  # Headers même si vide
             }
 
-        logger.info(
+        logger.debug(
             f"Génération du tableau récapitulatif pour {len(self.all_results)} turbines"
         )
 

@@ -1,13 +1,11 @@
-# """RunTest application workflow."""
+"""RunTest application workflow."""
 
-# from __future__ import annotations
+from __future__ import annotations
 
-# from pathlib import Path
-
+from typing import Any
 from src.wind_turbine_analytics.application.configuration.config_models import (
     RunTestPipelineConfig,
 )
-from typing import Any
 from src.wind_turbine_analytics.application.workflows.base_workflow import BaseWorkflow
 from src.logger_config import get_logger
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders import (
@@ -17,10 +15,6 @@ from src.wind_turbine_analytics.data_processing.visualizer.chart_builders import
     HeatmapChartVisualizer,
     CutInCutoutTimelineVisualizer,
 )
-
-logger = get_logger(__name__)
-
-# Imports des analyzers pour RunTest
 from src.wind_turbine_analytics.data_processing.analyzer.logics import (
     ConsecutiveHoursAnalyzer,
     TestCutInCutOutAnalyzer,
@@ -28,12 +22,9 @@ from src.wind_turbine_analytics.data_processing.analyzer.logics import (
     AutonomousOperationAnalyzer,
     TestAvailabilityAnalyzer,
 )
+from src.wind_turbine_analytics.cli import StepStatus
 
-
-# Import du DataProcessingStep
-from src.wind_turbine_analytics.data_processing.data_processing import (
-    DataProcessingStep,
-)
+logger = get_logger(__name__)
 
 # Imports des tablers pour génération de rapports Word
 from src.wind_turbine_analytics.data_processing.tabler.tables.runtest import (
@@ -56,9 +47,91 @@ class RunTestWorkflow(BaseWorkflow):
         super().__init__(config, presenter)
 
     def run(self) -> None:
-        self.validation_step()
+        # Define pipeline steps
+        steps = [
+            "Load Configuration",
+            "Criterion 1: Consecutive Hours",
+            "Criterion 2: Cut-In/Cut-Out",
+            "Criterion 3: Nominal Power",
+            "Criterion 4: Autonomous Operation",
+            "Criterion 5: Availability",
+            "Generate Report",
+        ]
+
+        # Start pipeline with CLI
+        self._presenter.start_pipeline(
+            "RunTest Analysis",
+            steps,
+            "Wind Turbine Analytics - RunTest Pipeline"
+        )
+
+        # Step 1: Load Configuration
+        self._presenter.show_step_start("Load Configuration")
+        try:
+            self.validation_step()
+            self._presenter.show_step_complete(StepStatus.SUCCESS)
+        except Exception as e:
+            self._presenter.show_step_complete(StepStatus.ERROR, str(e))
+            raise
+
+        # Steps 2-7: Process criteria
         self.process_step()
+
+        # End pipeline
+        self._presenter.end_pipeline()
         return
+
+    def _execute_step(self, step_name, analyzer, visualizers, tablers):
+        """
+        Execute a criterion analysis with CLI progress tracking.
+
+        Args:
+            step_name: Name of the criterion step
+            analyzer: Analyzer instance
+            visualizers: List of visualizer instances or None
+            tablers: List of tabler instances or single tabler or None
+
+        Returns:
+            AnalysisResult from the step
+        """
+        # Start step with substeps
+        substeps = ["Analyzing"]
+        if visualizers:
+            substeps.append("Visualizing")
+        if tablers:
+            substeps.append("Generating Tables")
+
+        self._presenter.show_step_start(step_name, substeps)
+
+        try:
+            # Phase 1: Analyzing
+            self._presenter.show_substep_update("Analyzing")
+            result = analyzer.analyze(self.turbine_sources, self.validation_criteria)
+
+            # Phase 2: Visualizing
+            if result.requires_visuals and visualizers:
+                self._presenter.show_substep_update("Visualizing")
+                for visualizer in visualizers:
+                    visualizer.generate(result)
+
+            # Phase 3: Generating Tables
+            if tablers:
+                self._presenter.show_substep_update("Generating Tables")
+                tabler_list = tablers if isinstance(tablers, list) else [tablers]
+                for tabler in tabler_list:
+                    table_data = tabler.generate(result)
+                    if result.metadata is None:
+                        result.metadata = {}
+                    if "table_data" not in result.metadata:
+                        result.metadata["table_data"] = {}
+                    result.metadata["table_data"].update(table_data)
+
+            self._presenter.show_step_complete(StepStatus.SUCCESS)
+            return result
+
+        except Exception as e:
+            self._presenter.show_step_complete(StepStatus.ERROR, str(e))
+            raise
 
     def process_step(self) -> None:
         """Traite toutes les analyses et génère le rapport Word si activé."""
@@ -68,79 +141,74 @@ class RunTestWorkflow(BaseWorkflow):
         # Stocker tous les résultats pour génération du rapport
         all_results = {}
 
-        # Criteria 1: Minimum of 120 consecutive hours
-        consecutive_hours_results = DataProcessingStep(
-            analyzer=ConsecutiveHoursAnalyzer(),
-            visualizers=None,  # TODO: implement ConsecutiveHoursVisualizer
-            tabler=ConsecutiveHoursTabler(),
-        ).execute(self.turbine_sources, self.validation_criteria)
-        self._presenter.show_analysis_result(
-            consecutive_hours_results, "Consecutive Hours Analysis (Criterion 1)"
+        # Criterion 1: Minimum of 120 consecutive hours
+        consecutive_hours_results = self._execute_step(
+            "Criterion 1: Consecutive Hours",
+            ConsecutiveHoursAnalyzer(),
+            None,
+            ConsecutiveHoursTabler(),
         )
         all_results["consecutive_hours"] = consecutive_hours_results
         summary_tabler.add_analysis_result(
             "consecutive_hours", consecutive_hours_results
         )
 
-        # Criteria 2: 72 hours within cut-in to cut-out wind speed range
-        test_cut_in_cut_out_results = DataProcessingStep(
-            analyzer=TestCutInCutOutAnalyzer(),
-            visualizers=[CutInCutoutTimelineVisualizer()],
-            tabler=CutInCutOutTabler(),
-        ).execute(self.turbine_sources, self.validation_criteria)
-        self._presenter.show_analysis_result(
-            test_cut_in_cut_out_results, "Test Cut-In/Cut-Out Analysis (Criterion 2)"
+        # Criterion 2: 72 hours within cut-in to cut-out wind speed range
+        test_cut_in_cut_out_results = self._execute_step(
+            "Criterion 2: Cut-In/Cut-Out",
+            TestCutInCutOutAnalyzer(),
+            [CutInCutoutTimelineVisualizer()],
+            CutInCutOutTabler(),
         )
         all_results["cut_in_cut_out"] = test_cut_in_cut_out_results
         summary_tabler.add_analysis_result(
             "cut_in_cut_out", test_cut_in_cut_out_results
         )
 
-        # Criteria 3: 3 hours at or above 98% of nominal power
-        # Note: 2 tableaux pour ce critère (valeurs + durée)
-        nominal_power_result = DataProcessingStep(
-            analyzer=NominalPowerAnalyzer(),
-            visualizers=[
+        # Criterion 3: 3 hours at or above 98% of nominal power
+        nominal_power_result = self._execute_step(
+            "Criterion 3: Nominal Power",
+            NominalPowerAnalyzer(),
+            [
                 PowerCurveChartVisualizer(),
                 WindRoseChartVisualizer(),
                 WindHistogramChartVisualizer(),
             ],
-            tabler=[NominalPowerValuesTabler(), NominalPowerDurationTabler()],
-        ).execute(self.turbine_sources, self.validation_criteria)
-        self._presenter.show_analysis_result(
-            nominal_power_result, "Nominal Power Analysis (Criterion 3)"
+            [NominalPowerValuesTabler(), NominalPowerDurationTabler()],
         )
         all_results["nominal_power"] = nominal_power_result
         summary_tabler.add_analysis_result("nominal_power", nominal_power_result)
 
-        # Criteria 4: Local acknowledgements / restarts (<=3)
-        autonomous_operation_result = DataProcessingStep(
-            analyzer=AutonomousOperationAnalyzer(),
-            visualizers=None,
-            tabler=AutonomousOperationTabler(),
-        ).execute(self.turbine_sources, self.validation_criteria)
-        self._presenter.show_analysis_result(
-            autonomous_operation_result, "Autonomous Operation Analysis (Criterion 4)"
+        # Criterion 4: Local acknowledgements / restarts (<=3)
+        autonomous_operation_result = self._execute_step(
+            "Criterion 4: Autonomous Operation",
+            AutonomousOperationAnalyzer(),
+            None,
+            AutonomousOperationTabler(),
         )
         all_results["autonomous_operation"] = autonomous_operation_result
         summary_tabler.add_analysis_result(
             "autonomous_operation", autonomous_operation_result
         )
 
-        # Criteria 5: Availability (>=92%)
-        availability_result = DataProcessingStep(
-            analyzer=TestAvailabilityAnalyzer(),
-            visualizers=[HeatmapChartVisualizer()],
-            tabler=AvailabilityTabler(),
-        ).execute(self.turbine_sources, self.validation_criteria)
-        self._presenter.show_analysis_result(
-            availability_result, "Availability Analysis (Criterion 5)"
+        # Criterion 5: Availability (>=92%)
+        availability_result = self._execute_step(
+            "Criterion 5: Availability",
+            TestAvailabilityAnalyzer(),
+            [HeatmapChartVisualizer()],
+            AvailabilityTabler(),
         )
         all_results["availability"] = availability_result
         summary_tabler.add_analysis_result("availability", availability_result)
 
-        # Générer le rapport Word si activé dans la config
-        self._render_report(all_results, summary_tabler)
+        # Generate Report
+        self._presenter.show_step_start("Generate Report")
+        try:
+            self._render_report(all_results, summary_tabler)
+            self._presenter.show_step_complete(StepStatus.SUCCESS)
+        except Exception as e:
+            self._presenter.show_step_complete(StepStatus.ERROR, str(e))
+            raise
 
     def _render_report(
         self, all_results: dict, summary_tabler: RunTestSummaryTabler
@@ -153,10 +221,10 @@ class RunTestWorkflow(BaseWorkflow):
             summary_tabler: Tableau récapitulatif avec tous les résultats accumulés
         """
         if not self._config.render_template:
-            logger.info("Template rendering disabled in config (render_template=False)")
+            logger.debug("Template rendering disabled in config (render_template=False)")
             return
 
-        logger.info("Rendering Word report...")
+        logger.debug("Rendering Word report...")
 
         try:
             # Agréger toutes les table_data des résultats
@@ -174,7 +242,7 @@ class RunTestWorkflow(BaseWorkflow):
             csv_files_data = csv_files_tabler.generate_from_turbine_farm(
                 self.turbine_sources
             )
-            logger.info(
+            logger.debug(
                 f"CSV files table generated with {len(csv_files_data.get('csv_files_table', []))} rows"
             )
             context.update(csv_files_data)
@@ -186,7 +254,7 @@ class RunTestWorkflow(BaseWorkflow):
                     for chart_name, chart_info in result.metadata["charts"].items():
                         if "png_path" in chart_info:
                             chart_paths[chart_name] = chart_info["png_path"]
-                            logger.info(f"Chemin d'image collecté: {chart_name} -> {chart_info['png_path']}")
+                            logger.debug(f"Chemin d'image collecté: {chart_name} -> {chart_info['png_path']}")
 
             # Ajouter les chemins d'images au contexte
             context["chart_paths"] = chart_paths
@@ -286,7 +354,7 @@ class RunTestWorkflow(BaseWorkflow):
 
         except FileNotFoundError as e:
             logger.error(f"Template file not found: {e}")
-            logger.info(
+            logger.debug(
                 "Please create a Word template with docxtpl tags at: "
                 f"{self._config.template_path}"
             )

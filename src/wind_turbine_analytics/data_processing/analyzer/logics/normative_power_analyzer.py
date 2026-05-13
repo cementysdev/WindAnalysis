@@ -86,7 +86,7 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
         P0 = 101325  # Pa - Pression atmosphérique standard (niveau mer)
 
         # ========== ÉTAPE 1 : OPERATING PERIOD FILTER - Filtrer périodes "Run" ==========
-        logger.info(f"STEP 1 - Operating Period Filter: Filtrage périodes 'Run' pour turbine {turbine_config.turbine_id}")
+        logger.debug(f"STEP 1 - Operating Period Filter: Filtrage périodes 'Run' pour turbine {turbine_config.turbine_id}")
 
         # Extraire colonnes et configuration
         mapping = turbine_config.mapping_operation_data
@@ -107,7 +107,7 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
             )
             P_nom = 3780.0
         if P_nom <= 100:
-            logger.info(
+            logger.debug(
                 f"Nominal power for turbine {turbine_config.turbine_id} is very low ({P_nom} kW). "
                 f"Multiplying by 1000 to convert to kW."
             )
@@ -118,7 +118,7 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
         df = df[(df[timestamp_col] >= test_start) & (df[timestamp_col] <= test_end)]
 
         original_count = len(df)
-        logger.info(f"Points dans période de test [{test_start} - {test_end}]: {original_count}")
+        logger.debug(f"Points dans période de test [{test_start} - {test_end}]: {original_count}")
 
         # Convertir types numériques
         df[wind_speed_col] = pd.to_numeric(df[wind_speed_col], errors="coerce")
@@ -128,7 +128,7 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
         # Supprimer NaN
         df = df.dropna(subset=[wind_speed_col, power_col, temperature_col])
         after_nan_removal = len(df)
-        logger.info(f"Points après suppression NaN: {after_nan_removal} (removed: {original_count - after_nan_removal})")
+        logger.debug(f"Points après suppression NaN: {after_nan_removal} (removed: {original_count - after_nan_removal})")
 
         # Récupérer cut-in depuis critères
         criterion = criteria.validation_criterion.get("cut_in_to_cut_out", Criterion())
@@ -149,10 +149,10 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
         mask_run = (df[wind_speed_col] > v_cut_in) & (df[power_col] > 0.01 * P_nom)
         df = df[mask_run].copy()
         operating_period_removed = after_nan_removal - len(df)
-        logger.info(f"STEP 1 - Operating Period Filter complete: {len(df)} points retained (removed: {operating_period_removed})")
+        logger.debug(f"STEP 1 - Operating Period Filter complete: {len(df)} points retained (removed: {operating_period_removed})")
 
         # ========== ÉTAPE 2 : ENVIRONMENTAL FILTER - Exclure bridage acoustique ==========
-        logger.info(f"STEP 2 - Environmental Filter: Exclusion bridage acoustique (FM733) pour turbine {turbine_config.turbine_id}")
+        logger.debug(f"STEP 2 - Environmental Filter: Exclusion bridage acoustique (FM733) pour turbine {turbine_config.turbine_id}")
 
         # Initialiser manager
         manager = NordexN311LogCodeManager()
@@ -178,13 +178,13 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
 
         df = df[mask_no_curtailment].copy()
         environmental_removed = environmental_count_before - len(df)
-        logger.info(f"STEP 2 - Environmental Filter complete: {len(df)} points retained (removed: {environmental_removed})")
+        logger.debug(f"STEP 2 - Environmental Filter complete: {len(df)} points retained (removed: {environmental_removed})")
 
         # ========== ÉTAPE 3 : SILLAGE - IGNORÉ ==========
-        logger.info("STEP 3: Wake filtering skipped (user decision)")
+        logger.debug("STEP 3: Wake filtering skipped (user decision)")
 
         # ========== ÉTAPE 4 : CORRECTION PHYSIQUE - Densité de l'air ==========
-        logger.info(f"STEP 4: Correction densité de l'air (IEC 61400-12-2) pour turbine {turbine_config.turbine_id}")
+        logger.debug(f"STEP 4: Correction densité de l'air (IEC 61400-12-2) pour turbine {turbine_config.turbine_id}")
 
         # Vérifier plausibilité température
         temp_min, temp_max = df[temperature_col].min(), df[temperature_col].max()
@@ -215,19 +215,19 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
         std_correction = df["correction_factor"].std()
 
         step4_corrected = len(df)
-        logger.info(
+        logger.debug(
             f"STEP 4 complete: {step4_corrected} points corrected "
             f"(mean_correction_factor={mean_correction:.4f}, std={std_correction:.4f})"
         )
 
         # ========== ÉTAPE 5 : SYNCHRONISATION - Préparer timestamps valides ==========
-        logger.info("STEP 5: Preparing valid timestamps for multi-turbine synchronization")
+        logger.debug("STEP 5: Preparing valid timestamps for multi-turbine synchronization")
 
         valid_timestamps = pd.DatetimeIndex(df[timestamp_col])
-        logger.info(f"Valid timestamps extracted: {len(valid_timestamps)} points")
+        logger.debug(f"Valid timestamps extracted: {len(valid_timestamps)} points")
 
         # ========== ÉTAPE 6 : PRÉPARER RÉSULTATS ET STATISTIQUES ==========
-        logger.info("STEP 6: Building output structure")
+        logger.debug("STEP 6: Building output structure")
 
         # Préparer DataFrame pour visualisation
         chart_data = df[[
@@ -282,7 +282,7 @@ class NormativeYieldAnalyzer(BaseAnalyzer):
             }
         }
 
-        logger.info(
+        logger.debug(
             f"Normative yield analysis completed for {turbine_config.turbine_id}: "
             f"{final_count}/{original_count} points retained ({data_retention:.1f}%)"
         )

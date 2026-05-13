@@ -77,7 +77,7 @@ class AutonomousOperationAnalyzer(BaseAnalyzer):
         )
         required_threshold = local_restart_criterion.value
 
-        logger.info(
+        logger.debug(
             f"Analyse autonomie d'exploitation pour {turbine_config.turbine_id}: "
             f"seuil={required_threshold} redémarrages manuels max"
         )
@@ -110,12 +110,12 @@ class AutonomousOperationAnalyzer(BaseAnalyzer):
         )
         log_test_period = log_prepared[mask_test_period].copy()
 
-        logger.info(
+        logger.debug(
             f"Nombre d'événements de log dans la période de test: {len(log_test_period)}"
         )
 
         if len(log_test_period) == 0:
-            logger.info("Aucun événement dans la période de test -> Autonomie validée")
+            logger.debug("Aucun événement dans la période de test -> Autonomie validée")
             return {
                 "manual_restart_codes": [],
                 "manual_restart_count": 0,
@@ -133,7 +133,7 @@ class AutonomousOperationAnalyzer(BaseAnalyzer):
         manual_restart_required_codes = manual_codes + safety_local_codes
         manual_restart_code_list = [code.code for code in manual_restart_required_codes]
 
-        logger.info(
+        logger.debug(
             f"Codes nécessitant redémarrage manuel identifiés: "
             f"{len(manual_restart_code_list)}"
         )
@@ -183,7 +183,7 @@ class AutonomousOperationAnalyzer(BaseAnalyzer):
         # STEP 5: Évaluer le critère
         criterion_met = manual_restart_count <= required_threshold
 
-        logger.info(
+        logger.debug(
             f"Redémarrages manuels trouvés: {manual_restart_count}, "
             f"Seuil: {required_threshold}, Réussi: {criterion_met}"
         )

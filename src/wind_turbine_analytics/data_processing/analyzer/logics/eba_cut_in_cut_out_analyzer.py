@@ -91,7 +91,7 @@ class EbACutInCutOutAnalyzer(BaseAnalyzer):
         ):
             # Charger la courbe de puissance garantie et identifier les points de cut-in et cut-out basés sur un seuil de puissance (ex: 5% de P_nom).
             # TODO : Implémenter la logique de chargement de la courbe de puissance garantie et d'identification des points de cut-in et cut-out.
-            logger.info(
+            logger.debug(
                 "Guaranteed power curve provided for turbine %s. "
                 "Loading and identifying cut-in and cut-out points.",
                 turbine_config.turbine_id,
@@ -155,7 +155,7 @@ class EbACutInCutOutAnalyzer(BaseAnalyzer):
         E_real = df["real_energy"].sum()
         E_theorical = df["theorical_energy"].sum()
 
-        logger.info(
+        logger.debug(
             "Turbine %s: Total real energy = %.2f kWh, Total theoretical energy = %.2f kWh",
             turbine_config.turbine_id,
             E_real,
@@ -174,7 +174,7 @@ class EbACutInCutOutAnalyzer(BaseAnalyzer):
         eba_monthly["performance"] = (
             100.0 * eba_monthly["E_real_monthly"] / eba_monthly["E_theorical_monthly"]
         ).fillna(0.0)
-        logger.info(
+        logger.debug(
             "Turbine %s: Monthly performance:\n%s",
             turbine_config.turbine_id,
             eba_monthly[["month", "performance"]].to_string(index=False),

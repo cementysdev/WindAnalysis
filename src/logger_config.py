@@ -41,7 +41,7 @@ class ColoredFormatter(logging.Formatter):
 
 
 def setup_logger(
-    name: str, level: int = logging.INFO, log_file: Optional[str] = None
+    name: str, level: int = logging.ERROR, log_file: Optional[str] = None
 ) -> logging.Logger:
     """
     Configure and return a logger with colored console output.
@@ -100,7 +100,7 @@ def get_logger(name: str) -> logging.Logger:
     Example:
         >>> from src.logger_config import get_logger
         >>> logger = get_logger(__name__)
-        >>> logger.info("Processing started")
+        >>> logger.debug("Processing started")
         >>> logger.warning("Low data quality detected")
         >>> logger.error("Failed to load file")
     """
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     demo_logger = get_logger(__name__)
 
     demo_logger.debug("This is a DEBUG message")
-    demo_logger.info("This is an INFO message")
+    demo_logger.debug("This is an INFO message")
     demo_logger.warning("This is a WARNING message")
     demo_logger.error("This is an ERROR message")
     demo_logger.critical("This is a CRITICAL message")

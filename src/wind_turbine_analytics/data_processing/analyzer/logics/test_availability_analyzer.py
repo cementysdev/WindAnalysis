@@ -60,7 +60,7 @@ class TestAvailabilityAnalyzer(BaseAnalyzer):
         )
         required_threshold = availability_criterion.value  # Seuil en % (ex: 92)
 
-        logger.info(
+        logger.debug(
             f"Analyse disponibilité pour {turbine_config.turbine_id}: "
             f"seuil={required_threshold}%"
         )
@@ -68,7 +68,7 @@ class TestAvailabilityAnalyzer(BaseAnalyzer):
         # STEP 2: Calculer la durée totale calendaire (en heures)
         total_hours = (test_end - test_start).total_seconds() / 3600.0
 
-        logger.info(
+        logger.debug(
             f"Période de test: {test_start} à {test_end} "
             f"(durée totale: {total_hours:.2f}h)"
         )
@@ -115,7 +115,7 @@ class TestAvailabilityAnalyzer(BaseAnalyzer):
         unauthorized_codes = manager.get_unauthorized_stop_codes()
         unauthorized_code_list = [code.code for code in unauthorized_codes]
 
-        logger.info(
+        logger.debug(
             f"Codes d'arrêt non autorisés identifiés: " f"{len(unauthorized_code_list)}"
         )
 
@@ -146,7 +146,7 @@ class TestAvailabilityAnalyzer(BaseAnalyzer):
         ].copy()
 
         if alarms.empty:
-            logger.info(
+            logger.debug(
                 "Aucun événement d'arrêt non autorisé dans les logs. "
                 "Disponibilité = 100%"
             )
@@ -253,7 +253,7 @@ class TestAvailabilityAnalyzer(BaseAnalyzer):
 
         criterion_met = availability_percent >= required_threshold
 
-        logger.info(
+        logger.debug(
             f"Disponibilité calculée: {availability_percent:.2f}% "
             f"(arrêts: {unauthorized_downtime_hours:.2f}h / {total_hours:.2f}h), "
             f"Seuil: {required_threshold}%, Réussi: {criterion_met}"

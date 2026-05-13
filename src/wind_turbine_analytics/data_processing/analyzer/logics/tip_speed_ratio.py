@@ -118,7 +118,7 @@ class TipSpeedRatioAnalyzer(BaseAnalyzer):
                 "supported_models": list(TURBINE_ROTOR_RADIUS.keys()),
             }
 
-        logger.info(
+        logger.debug(
             f"Turbine {turbine_config.turbine_id}: Using rotor radius {rotor_radius}m for model {turbine_model}"
         )
 
@@ -159,7 +159,7 @@ class TipSpeedRatioAnalyzer(BaseAnalyzer):
                 "error": f"No valid data (rpm > 0 and wind_speed > {cut_in_speed} m/s)"
             }
 
-        logger.info(
+        logger.debug(
             f"Turbine {turbine_config.turbine_id}: Analyzing {len(valid_data)} valid measurements"
         )
 
@@ -225,7 +225,7 @@ class TipSpeedRatioAnalyzer(BaseAnalyzer):
         # Critère satisfait si le TSR moyen global est dans la plage
         criterion_met = optimal_range[0] <= mean_tsr <= optimal_range[1]
 
-        logger.info(
+        logger.debug(
             f"Turbine {turbine_config.turbine_id}: TSR analysis completed. "
             f"Mean TSR: {mean_tsr:.2f}, Optimal range: {optimal_range}, "
             f"Criterion met: {criterion_met}, In range: {percentage_in_range:.1f}%, "

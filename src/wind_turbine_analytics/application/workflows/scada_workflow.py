@@ -54,6 +54,7 @@ from src.wind_turbine_analytics.data_processing.tabler.tables.runtest import (
     CsvFilesTabler,
 )
 from src.wind_turbine_analytics.presentation.word_generation import ScadaWordPresenter
+from src.wind_turbine_analytics.cli import StepStatus
 from src.logger_config import get_logger
 
 logger = get_logger(__name__)
@@ -66,9 +67,96 @@ class ScadaWorkflow(BaseWorkflow):
         super().__init__(config, presenter)
 
     def run(self) -> None:
-        self.validation_step()
+        # Define pipeline steps
+        steps = [
+            "Load Configuration",
+            "EBA Cut-In/Cut-Out",
+            "EBA Manufacturer",
+            "Code Error Analysis",
+            "Data Availability",
+            "Wind Calibration",
+            "Tip Speed Ratio",
+            "Normative Yield",
+            "Pitch Analysis",
+            "Performance Level",
+            "Generate Report",
+        ]
+
+        # Start pipeline with CLI
+        self._presenter.start_pipeline(
+            "SCADA Analysis",
+            steps,
+            "Wind Turbine Analytics - SCADA Pipeline"
+        )
+
+        # Step 1: Load Configuration
+        self._presenter.show_step_start("Load Configuration")
+        try:
+            self.validation_step()
+            self._presenter.show_step_complete(StepStatus.SUCCESS)
+        except Exception as e:
+            self._presenter.show_step_complete(StepStatus.ERROR, str(e))
+            raise
+
+        # Steps 2-11: Process analyses
         self.process_step()
+
+        # End pipeline
+        self._presenter.end_pipeline()
         return
+
+    def _execute_step(self, step_name, analyzer, visualizers, tablers):
+        """
+        Execute a DataProcessingStep with CLI progress tracking.
+
+        Args:
+            step_name: Name of the step
+            analyzer: Analyzer instance
+            visualizers: List of visualizer instances
+            tablers: List of tabler instances or None
+            add_to_summary: Whether to add result to summary tabler
+
+        Returns:
+            AnalysisResult from the step
+        """
+        # Start step with substeps
+        substeps = ["Analyzing"]
+        if visualizers:
+            substeps.append("Visualizing")
+        if tablers:
+            substeps.append("Generating Tables")
+
+        self._presenter.show_step_start(step_name, substeps)
+
+        try:
+            # Phase 1: Analyzing
+            self._presenter.show_substep_update("Analyzing")
+            result = analyzer.analyze(self.turbine_sources, self.validation_criteria)
+
+            # Phase 2: Visualizing
+            if result.requires_visuals and visualizers:
+                self._presenter.show_substep_update("Visualizing")
+                for visualizer in visualizers:
+                    visualizer.generate(result)
+
+            # Phase 3: Generating Tables
+            if tablers:
+                self._presenter.show_substep_update("Generating Tables")
+                tabler_list = tablers if isinstance(tablers, list) else [tablers]
+                for tabler in tabler_list:
+                    table_data = tabler.generate(result)
+                    if result.metadata is None:
+                        result.metadata = {}
+                    if "table_data" not in result.metadata:
+                        result.metadata["table_data"] = {}
+                    result.metadata["table_data"].update(table_data)
+
+            self._presenter.show_step_complete(StepStatus.SUCCESS)
+            return result
+
+        except Exception as e:
+            self._presenter.show_step_complete(StepStatus.ERROR, str(e))
+            raise
 
     def process_step(self) -> None:
         """Traite toutes les analyses SCADA et génère le rapport Word si activé."""
@@ -79,103 +167,104 @@ class ScadaWorkflow(BaseWorkflow):
         all_results = {}
 
         # EBA Cut-In/Cut-Out Analysis
-        eba_cutin_result = DataProcessingStep(
-            analyzer=EbACutInCutOutAnalyzer(),
-            visualizers=[EbaCutInCutOutVisualizer()],
-            tabler=[EbaCutInCutOutTabler()],
-        ).execute(self.turbine_sources, self.validation_criteria)
+        eba_cutin_result = self._execute_step(
+            "EBA Cut-In/Cut-Out",
+            EbACutInCutOutAnalyzer(),
+            [EbaCutInCutOutVisualizer()],
+            [EbaCutInCutOutTabler()],
+        )
         all_results["eba_cut_in_cut_out"] = eba_cutin_result
         summary_tabler.add_analysis_result("eba_cut_in_cut_out", eba_cutin_result)
 
         # EBA Manufacturer Analysis
-        eba_mfr_result = DataProcessingStep(
-            analyzer=EbaManufacturerAnalyzer(),
-            visualizers=[
-                EbaManufacturerVisualizer(),
-                EbaLossVisualizer(),
-            ],
-            tabler=[EbaManufacturerTabler(), EbaLossTabler()],
-        ).execute(self.turbine_sources, self.validation_criteria)
+        eba_mfr_result = self._execute_step(
+            "EBA Manufacturer",
+            EbaManufacturerAnalyzer(),
+            [EbaManufacturerVisualizer(), EbaLossVisualizer()],
+            [EbaManufacturerTabler(), EbaLossTabler()],
+        )
         all_results["eba_manufacturer"] = eba_mfr_result
         summary_tabler.add_analysis_result("eba_manufacturer", eba_mfr_result)
 
         # Code Error Analysis
-        error_codes_result = DataProcessingStep(
-            analyzer=CodeErrorAnalyzer(),
-            visualizers=[
-                TopErrorCodeFrequencyVisualizer(),
-                TreemapErrorCodeVisualizer(),
-            ],
-            tabler=[
-                ErrorCodeParetoFrequencyTabler(),
-                ErrorCodeParetoDurationTabler(),
-            ],
-        ).execute(self.turbine_sources, self.validation_criteria)
+        error_codes_result = self._execute_step(
+            "Code Error Analysis",
+            CodeErrorAnalyzer(),
+            [TopErrorCodeFrequencyVisualizer(), TreemapErrorCodeVisualizer()],
+            [ErrorCodeParetoFrequencyTabler(), ErrorCodeParetoDurationTabler()],
+        )
         all_results["error_codes"] = error_codes_result
 
         # Data Availability Analysis
-        availability_result = DataProcessingStep(
-            analyzer=DataAvailabilityAnalyzer(),
-            visualizers=[DataAvailabilityVisualizer()],
-            tabler=None,  # TODO: DataAvailabilityTabler si nécessaire
-        ).execute(self.turbine_sources, self.validation_criteria)
+        availability_result = self._execute_step(
+            "Data Availability",
+            DataAvailabilityAnalyzer(),
+            [DataAvailabilityVisualizer()],
+            None,
+        )
         all_results["data_availability"] = availability_result
         summary_tabler.add_analysis_result("data_availability", availability_result)
 
         # Wind Direction Calibration
-        calibration_result = DataProcessingStep(
-            analyzer=WindDirectionCalibrationAnalyzer(),
-            visualizers=[
+        calibration_result = self._execute_step(
+            "Wind Calibration",
+            WindDirectionCalibrationAnalyzer(),
+            [
                 WindDirectionCalibrationVisualizer(),
                 PowerRoseChartVisualizer(),
                 WindRoseChartVisualizer(),
             ],
-            tabler=[
-                WindDirectionCalibrationTabler()
-            ],  # TODO: WindCalibrationTabler si nécessaire
-        ).execute(self.turbine_sources, self.validation_criteria)
+            [WindDirectionCalibrationTabler()],
+        )
         all_results["wind_calibration"] = calibration_result
         summary_tabler.add_analysis_result("wind_calibration", calibration_result)
 
         # Tip Speed Ratio
-        tsr_result = DataProcessingStep(
-            analyzer=TipSpeedRatioAnalyzer(),
-            visualizers=[RPMVisualizer()],
-            tabler=[TipSpeedRatioTabler()],  # TODO: TipSpeedRatioTabler si nécessaire
-        ).execute(self.turbine_sources, self.validation_criteria)
+        tsr_result = self._execute_step(
+            "Tip Speed Ratio",
+            TipSpeedRatioAnalyzer(),
+            [RPMVisualizer()],
+            [TipSpeedRatioTabler()],
+        )
         all_results["tip_speed_ratio"] = tsr_result
         summary_tabler.add_analysis_result("tip_speed_ratio", tsr_result)
 
         # Normative Yield (Power Curve)
-        normative_result = DataProcessingStep(
-            analyzer=NormativeYieldAnalyzer(),
-            visualizers=[
-                PowerCurveChartVisualizer()
-            ],  # TODO: PowerCurveChartVisualizer si nécessaire
-            tabler=[NormativeYieldTabler()],  # TODO: NormativeYieldTabler si nécessaire
-        ).execute(self.turbine_sources, self.validation_criteria)
+        normative_result = self._execute_step(
+            "Normative Yield",
+            NormativeYieldAnalyzer(),
+            [PowerCurveChartVisualizer()],
+            [NormativeYieldTabler()],
+        )
         all_results["normative_yield"] = normative_result
 
-        pitch_analyzer_result = DataProcessingStep(
-            analyzer=PitchAnalyzer(),
-            visualizers=[
-                PitchVisualizer(),
-            ],
-            tabler=[PitchTabler()],
-        ).execute(self.turbine_sources, self.validation_criteria)
+        # Pitch Analysis
+        pitch_analyzer_result = self._execute_step(
+            "Pitch Analysis",
+            PitchAnalyzer(),
+            [PitchVisualizer()],
+            [PitchTabler()],
+        )
         all_results["pitch_angle"] = pitch_analyzer_result
         summary_tabler.add_analysis_result("pitch_angle", pitch_analyzer_result)
 
-        # Performance Level Analysis (EBA + Normative Yield)
-        performance_level_result = DataProcessingStep(
-            analyzer=PerformanceLevelAnalyzer(),
-            visualizers=[PerformanceLevelVisualizer()],
-            tabler=None,  # TODO: PerformanceLevelTabler() si nécessaire
-        ).execute(self.turbine_sources, self.validation_criteria)
+        # Performance Level Analysis
+        performance_level_result = self._execute_step(
+            "Performance Level",
+            PerformanceLevelAnalyzer(),
+            [PerformanceLevelVisualizer()],
+            None,
+        )
         all_results["performance_level"] = performance_level_result
 
-        # Générer le rapport Word si activé dans la config
-        self._render_report(all_results, summary_tabler)
+        # Generate Report
+        self._presenter.show_step_start("Generate Report")
+        try:
+            self._render_report(all_results, summary_tabler)
+            self._presenter.show_step_complete(StepStatus.SUCCESS)
+        except Exception as e:
+            self._presenter.show_step_complete(StepStatus.ERROR, str(e))
+            raise
 
     def _render_report(
         self, all_results: dict, summary_tabler: ScadaSummaryTabler
@@ -188,10 +277,10 @@ class ScadaWorkflow(BaseWorkflow):
             summary_tabler: Tableau récapitulatif avec tous les résultats
         """
         if not self._config.render_template:
-            logger.info("Template rendering disabled (render_template=False)")
+            logger.debug("Template rendering disabled (render_template=False)")
             return
 
-        logger.info("Rendering SCADA Word report...")
+        logger.debug("Rendering SCADA Word report...")
 
         try:
             # Agréger toutes les table_data des résultats
@@ -209,7 +298,7 @@ class ScadaWorkflow(BaseWorkflow):
             csv_files_data = csv_files_tabler.generate_from_turbine_farm(
                 self.turbine_sources
             )
-            logger.info(
+            logger.debug(
                 f"CSV files table: {len(csv_files_data.get('csv_files_table', []))} rows"
             )
             context.update(csv_files_data)
@@ -221,7 +310,7 @@ class ScadaWorkflow(BaseWorkflow):
                     for chart_name, chart_info in result.metadata["charts"].items():
                         if "png_path" in chart_info:
                             chart_paths[chart_name] = chart_info["png_path"]
-                            logger.info(f"Chart collected: {chart_name}")
+                            logger.debug(f"Chart collected: {chart_name}")
 
             # Ajouter les chemins d'images au contexte
             context["chart_paths"] = chart_paths
@@ -267,11 +356,11 @@ class ScadaWorkflow(BaseWorkflow):
             )
             presenter.render_report(context, metadata=metadata)
 
-            logger.info(f"✅ SCADA report saved to: {self._config.output_path}")
+            logger.debug(f"✅ SCADA report saved to: {self._config.output_path}")
 
         except FileNotFoundError as e:
             logger.error(f"Template file not found: {e}")
-            logger.info(f"Please create template at: {self._config.template_path}")
+            logger.debug(f"Please create template at: {self._config.template_path}")
         except Exception as e:
             logger.error(f"Failed to render SCADA Word report: {e}")
             import traceback

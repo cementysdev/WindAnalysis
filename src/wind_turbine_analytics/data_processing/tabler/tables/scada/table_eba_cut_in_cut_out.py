@@ -107,7 +107,7 @@ class EbaCutInCutOutTabler(BaseTabler):
         # Collecte manuelle (ne PAS appeler super().generate())
         # car le pivot est incompatible avec le template method de BaseTabler
         if result.detailed_results:
-            logger.info(
+            logger.debug(
                 f"Génération du tableau '{self.table_name}' "
                 f"pour {len(result.detailed_results)} turbines"
             )
@@ -118,7 +118,7 @@ class EbaCutInCutOutTabler(BaseTabler):
         self._pivot_monthly_data()
 
         # Log final
-        logger.info(
+        logger.debug(
             f"Tableau '{self.table_name}' généré avec {len(self._table_data)} lignes"
         )
 

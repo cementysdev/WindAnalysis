@@ -56,7 +56,7 @@ class TestCutInCutOutAnalyzer(BaseAnalyzer):
         required_hours = cut_in_cut_out_criterion.value
         cut_in_speed, cut_out_speed = cut_in_cut_out_criterion.specification
 
-        logger.info(
+        logger.debug(
             f"Analyse cut-in/cut-out pour {turbine_config.turbine_id}: "
             f"cut-in={cut_in_speed} m/s, cut-out={cut_out_speed} m/s, "
             f"critère={required_hours}h"
@@ -145,7 +145,7 @@ class TestCutInCutOutAnalyzer(BaseAnalyzer):
         unauthorized_codes = manager.get_unauthorized_stop_codes()
         unauthorized_code_list = [code.code for code in unauthorized_codes]
 
-        logger.info(
+        logger.debug(
             f"Codes d'arrêt non autorisés identifiés: {len(unauthorized_code_list)}"
         )
 
@@ -167,7 +167,7 @@ class TestCutInCutOutAnalyzer(BaseAnalyzer):
             )
         ].copy()
 
-        logger.info(
+        logger.debug(
             f"Arrêts non autorisés trouvés dans les logs: {len(unauthorized_logs)}"
         )
 
@@ -251,7 +251,7 @@ class TestCutInCutOutAnalyzer(BaseAnalyzer):
 
         criterion_met = max_net_duration >= required_hours
 
-        logger.info(
+        logger.debug(
             f"Durée maximale continue (nette): {max_net_duration}h, "
             f"Critère: {required_hours}h, Réussi: {criterion_met}"
         )

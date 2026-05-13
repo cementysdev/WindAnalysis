@@ -66,7 +66,7 @@ class BaseAnalyzer:
                     )
 
                 # Charger les données d'opération
-                logger.info(
+                logger.debug(
                     f"Chargement des données pour la turbine {turbine_id} depuis {path_operation_data}"
                 )
                 # try to solve inconsistency of data types for different columns
@@ -166,7 +166,7 @@ class BaseAnalyzer:
             )
             P_nom = 3780.0  # Default nominal power in kW (ex: 3.78 MW)
         if P_nom <= 20:
-            logger.info(
+            logger.debug(
                 "Nominal power for turbine %s is very low (%s kW)."
                 " This may indicate an issue with the configuration. "
                 "Multiplying by 1000.",

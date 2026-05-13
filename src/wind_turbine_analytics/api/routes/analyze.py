@@ -37,7 +37,7 @@ async def run_runtest_analysis(request: AnalyzeRequest):
         HTTPException 400: If folder_path or config.yml is invalid
         HTTPException 500: If workflow execution fails
     """
-    logger.info(f"Received RunTest analysis request for: {request.folder_path}")
+    logger.debug(f"Received RunTest analysis request for: {request.folder_path}")
 
     # Validate folder and config.yml
     folder = Path(request.folder_path)
@@ -62,7 +62,7 @@ async def run_runtest_analysis(request: AnalyzeRequest):
         render_template=request.render_template,
     )
 
-    logger.info(f"RunTest config created: output_path={config.output_path}")
+    logger.debug(f"RunTest config created: output_path={config.output_path}")
 
     # Execute workflow via adapter
     try:
@@ -73,7 +73,7 @@ async def run_runtest_analysis(request: AnalyzeRequest):
             logger.error(f"RunTest workflow returned error: {result.message}")
             raise HTTPException(status_code=500, detail=result.message)
 
-        logger.info(f"RunTest analysis completed successfully: {len(result.charts)} charts, {len(result.tables)} tables")
+        logger.debug(f"RunTest analysis completed successfully: {len(result.charts)} charts, {len(result.tables)} tables")
         return result
 
     except HTTPException:
@@ -104,7 +104,7 @@ async def run_scada_analysis(request: AnalyzeRequest):
         HTTPException 400: If folder_path or config.yml is invalid
         HTTPException 500: If workflow execution fails
     """
-    logger.info(f"Received SCADA analysis request for: {request.folder_path}")
+    logger.debug(f"Received SCADA analysis request for: {request.folder_path}")
 
     # Validate folder and config.yml
     folder = Path(request.folder_path)
@@ -129,7 +129,7 @@ async def run_scada_analysis(request: AnalyzeRequest):
         render_template=request.render_template,
     )
 
-    logger.info(f"SCADA config created: output_path={config.output_path}")
+    logger.debug(f"SCADA config created: output_path={config.output_path}")
 
     # Execute workflow via adapter
     try:
@@ -140,7 +140,7 @@ async def run_scada_analysis(request: AnalyzeRequest):
             logger.error(f"SCADA workflow returned error: {result.message}")
             raise HTTPException(status_code=500, detail=result.message)
 
-        logger.info(f"SCADA analysis completed successfully: {len(result.charts)} charts, {len(result.tables)} tables")
+        logger.debug(f"SCADA analysis completed successfully: {len(result.charts)} charts, {len(result.tables)} tables")
         return result
 
     except HTTPException:

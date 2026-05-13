@@ -102,7 +102,7 @@ class WindDirectionCalibrationAnalyzer(BaseAnalyzer):
         else:
             v_min = 3.0  # Valeur par défaut
 
-        logger.info(
+        logger.debug(
             f"Turbine {turbine_config.turbine_id}: Filtering data with wind_speed > {v_min} m/s"
         )
 
@@ -204,7 +204,7 @@ class WindDirectionCalibrationAnalyzer(BaseAnalyzer):
         threshold = 5.0  # degrés
         criterion_met = overall_mean_error < threshold
 
-        logger.info(
+        logger.debug(
             f"Turbine {turbine_config.turbine_id}: Wind direction calibration analysis completed. "
             f"Mean angular error: {overall_mean_error:.2f}°, Threshold: {threshold}°, "
             f"Criterion met: {criterion_met}"

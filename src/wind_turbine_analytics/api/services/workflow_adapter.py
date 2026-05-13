@@ -89,7 +89,7 @@ class WorkflowAdapter:
         Raises:
             Exception: If workflow execution fails
         """
-        logger.info(f"Starting workflow execution: {workflow_class.__name__}")
+        logger.debug(f"Starting workflow execution: {workflow_class.__name__}")
 
         # Reset captured data
         self.captured_charts = []
@@ -109,13 +109,13 @@ class WorkflowAdapter:
             presenter = PipelinePresenter()
             workflow = workflow_class(config=config, presenter=presenter)
 
-            logger.info("Running workflow validation and processing...")
+            logger.debug("Running workflow validation and processing...")
             workflow.run()  # Returns None but generates side effects
 
             # Extract metadata from workflow
             self._extract_metadata(workflow)
 
-            logger.info(
+            logger.debug(
                 f"Workflow completed: {len(self.captured_charts)} charts, "
                 f"{len(self.captured_tables)} tables captured"
             )

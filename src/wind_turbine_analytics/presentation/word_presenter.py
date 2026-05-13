@@ -50,11 +50,11 @@ class WordPresenter:
 
         if new_template_path.exists():
             # Utiliser le template optimisé existant
-            logger.info(f"Utilisation du template optimisé existant: {new_template_path.name}")
+            logger.debug(f"Utilisation du template optimisé existant: {new_template_path.name}")
             self.template_path = new_template_path
         elif self.template_path.exists() and auto_create_template:
             # Créer le template optimisé UNE SEULE FOIS
-            logger.info(f"Template optimisé introuvable, création à partir de: {self.template_path.name}")
+            logger.debug(f"Template optimisé introuvable, création à partir de: {self.template_path.name}")
             self._create_new_template()
             # Utiliser le nouveau template créé
             self.template_path = new_template_path
@@ -64,7 +64,7 @@ class WordPresenter:
                 f"Please provide a valid template path."
             )
 
-        logger.info(f"WordPresenter prêt avec: {self.template_path.name}")
+        logger.debug(f"WordPresenter prêt avec: {self.template_path.name}")
 
     def render_report(
         self, context: Dict[str, Any], metadata: Dict[str, Any] = None
@@ -83,7 +83,7 @@ class WordPresenter:
         Raises:
             Exception: Si la génération du document échoue
         """
-        logger.info(f"Rendering Word report from template: {self.template_path}")
+        logger.debug(f"Rendering Word report from template: {self.template_path}")
 
         try:
             # Charger le template avec python-docx
@@ -107,7 +107,7 @@ class WordPresenter:
             # Sauvegarder le document
             doc.save(self.output_path)
 
-            logger.info(f"✅ Report successfully saved to: {self.output_path}")
+            logger.debug(f"✅ Report successfully saved to: {self.output_path}")
 
         except Exception as e:
             logger.error(f"❌ Failed to generate Word report: {e}")
@@ -139,13 +139,13 @@ class WordPresenter:
         Note: Il n'y a PAS de tableau récapitulatif global dans le template actuel.
               Le tableau summary_table sera ignoré pour l'instant.
         """
-        logger.info("Adaptation automatique du template pour syntaxe docxtpl...")
+        logger.debug("Adaptation automatique du template pour syntaxe docxtpl...")
 
         try:
             # Charger avec python-docx pour modification
             doc = Document(self.template_path)
 
-            logger.info(f"Template chargé: {len(doc.tables)} tableaux trouvés")
+            logger.debug(f"Template chargé: {len(doc.tables)} tableaux trouvés")
 
             # Adapter les tableaux avec les BONS indices
             if len(doc.tables) >= 8:
@@ -156,7 +156,7 @@ class WordPresenter:
                 self._adapt_table_nominal_power_duration(doc.tables[5])  # Critère 3b
                 self._adapt_table_autonomous_operation(doc.tables[6])  # Critère 4
                 self._adapt_table_availability(doc.tables[7])  # Critère 5
-                logger.info("✅ 7 tableaux adaptés")
+                logger.debug("✅ 7 tableaux adaptés")
             else:
                 logger.warning(
                     f"Template n'a que {len(doc.tables)} tableaux, "
@@ -170,7 +170,7 @@ class WordPresenter:
             # Utiliser le template adapté pour la génération
             self.template_path = adapted_path
 
-            logger.info(f"✅ Template adapté sauvegardé: {adapted_path}")
+            logger.debug(f"✅ Template adapté sauvegardé: {adapted_path}")
 
         except Exception as e:
             logger.warning(
@@ -331,7 +331,7 @@ class WordPresenter:
         row_2.cells[2].text = "{{item.start}}"
         row_2.cells[3].text = "{{item.status}}{%endtr%}"
 
-        logger.info(f"Tableau puissance nominale - durée adapté: {len(headers)} colonnes")
+        logger.debug(f"Tableau puissance nominale - durée adapté: {len(headers)} colonnes")
 
     def _adapt_table_autonomous_operation(self, table) -> None:
         """Adapte le tableau autonomie d'exploitation."""
@@ -414,7 +414,7 @@ class WordPresenter:
             # Autres métadonnées
             full_context.update(metadata)
 
-        logger.info(
+        logger.debug(
             f"Context prepared with {len(full_context)} keys "
             f"(generation_date: {full_context['generation_date']})"
         )
@@ -431,7 +431,7 @@ class WordPresenter:
         3. Ajoute le tableau récapitulatif global
         4. Marque les tableaux avec des identifiants pour remplissage dynamique
         """
-        logger.info("Création d'un nouveau template optimisé...")
+        logger.debug("Création d'un nouveau template optimisé...")
 
         original_path = self.template_path
         new_path = self.template_path.parent / f"{self.template_path.stem}_new{self.template_path.suffix}"
@@ -444,7 +444,7 @@ class WordPresenter:
         original_doc = Document(original_path)
         new_doc = Document()
 
-        logger.info(f"Template original: {len(original_doc.paragraphs)} paragraphes, "
+        logger.debug(f"Template original: {len(original_doc.paragraphs)} paragraphes, "
                     f"{len(original_doc.tables)} tableaux")
 
         # Copier le contenu en identifiant les tableaux
@@ -508,8 +508,8 @@ class WordPresenter:
         new_path.parent.mkdir(parents=True, exist_ok=True)
         new_doc.save(new_path)
 
-        logger.info(f"✅ Nouveau template créé: {new_path}")
-        logger.info(f"Taille: {new_path.stat().st_size / 1024:.2f} KB")
+        logger.debug(f"✅ Nouveau template créé: {new_path}")
+        logger.debug(f"Taille: {new_path.stat().st_size / 1024:.2f} KB")
 
         # Utiliser le nouveau template
         self.template_path = new_path
@@ -581,7 +581,7 @@ class WordPresenter:
             doc: Document Word chargé
             context: Contexte avec les données de tableaux
         """
-        logger.info("Remplissage des tableaux dynamiques...")
+        logger.debug("Remplissage des tableaux dynamiques...")
 
         # Parcourir les paragraphes pour trouver les marqueurs
         for para_idx, para in enumerate(doc.paragraphs):
@@ -590,7 +590,7 @@ class WordPresenter:
             # Si c'est un marqueur de tableau
             if text.startswith('[TABLE:') and text.endswith(']'):
                 table_name = text[7:-1].lower()  # Extraire le nom
-                logger.info(f"Marqueur trouvé: {table_name}")
+                logger.debug(f"Marqueur trouvé: {table_name}")
 
                 # Trouver le tableau suivant
                 table = self._find_next_table(doc, para_idx)
@@ -598,7 +598,7 @@ class WordPresenter:
                     data = context[table_name]
                     if isinstance(data, list) and len(data) > 0:
                         self._populate_table(table, data)
-                        logger.info(f"✅ Tableau '{table_name}' rempli avec {len(data)} lignes")
+                        logger.debug(f"✅ Tableau '{table_name}' rempli avec {len(data)} lignes")
                     else:
                         logger.warning(f"⚠️ Données vides pour '{table_name}'")
                 else:
@@ -662,7 +662,7 @@ class WordPresenter:
             doc: Document Word
             context: Contexte avec les métadonnées et critères
         """
-        logger.info("Remplacement des balises de métadonnées...")
+        logger.debug("Remplacement des balises de métadonnées...")
 
         replacements = {
             # Métadonnées générales
@@ -740,7 +740,7 @@ class WordPresenter:
                 else:
                     para.add_run(full_text)
 
-        logger.info("✅ Métadonnées et critères remplacés")
+        logger.debug("✅ Métadonnées et critères remplacés")
 
     def _insert_images(self, doc: Document, context: Dict[str, Any]) -> None:
         """
@@ -752,7 +752,7 @@ class WordPresenter:
         """
         from docx.shared import Inches
 
-        logger.info("Insertion des images de visualisation...")
+        logger.debug("Insertion des images de visualisation...")
 
         # Mapping des balises vers les noms de charts
         image_tags = {
@@ -790,8 +790,8 @@ class WordPresenter:
                     run = para.add_run()
                     try:
                         run.add_picture(str(image_path), width=Inches(6.0))
-                        logger.info(f"✅ Image insérée: {chart_name}")
+                        logger.debug(f"✅ Image insérée: {chart_name}")
                     except Exception as e:
                         logger.error(f"❌ Erreur lors de l'insertion de {chart_name}: {e}")
 
-        logger.info("✅ Images insérées dans le document")
+        logger.debug("✅ Images insérées dans le document")

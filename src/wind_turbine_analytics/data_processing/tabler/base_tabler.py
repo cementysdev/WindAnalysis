@@ -46,7 +46,7 @@ class BaseTabler(ABC):
         """
         self._table_data = []
         if result.detailed_results:
-            logger.info(
+            logger.debug(
                 f"Génération du tableau '{self.table_name}' "
                 f"pour {len(result.detailed_results)} turbines"
             )
@@ -57,7 +57,7 @@ class BaseTabler(ABC):
 
         formatted_table = self._format_as_word_table()
 
-        logger.info(
+        logger.debug(
             f"Tableau '{self.table_name}' généré avec {len(formatted_table)} lignes"
         )
         return {

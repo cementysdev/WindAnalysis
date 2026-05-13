@@ -71,7 +71,7 @@ class ScadaWordPresenter(WordPresenter):
         tcPr.append(shd)
 
     def _process_tables(self, doc: Document, context: Dict[str, Any]) -> None:
-        logger.info("Replacing markers with dynamic tables...")
+        logger.debug("Replacing markers with dynamic tables...")
 
         table_regex = re.compile(r"\[TABLE:\s*(.*?)\s*\]", re.IGNORECASE)
 
@@ -83,7 +83,7 @@ class ScadaWordPresenter(WordPresenter):
 
             if match:
                 tag_content = match.group(1).strip().upper()
-                logger.info(f"Marker found: {tag_content}")
+                logger.debug(f"Marker found: {tag_content}")
 
                 # Chercher les données et headers
                 data = None
@@ -106,7 +106,7 @@ class ScadaWordPresenter(WordPresenter):
                     # 3. Supprimer le paragraphe qui contenait le tag [TABLE:XXX]
                     self._remove_paragraph(para)
 
-                    logger.info(
+                    logger.debug(
                         f"✅ Table '{tag_content}' created and replaced marker."
                     )
                 else:
@@ -142,7 +142,7 @@ class ScadaWordPresenter(WordPresenter):
         # Si custom_headers fourni, l'utiliser pour l'affichage (mais garder data_keys pour extraction)
         if custom_headers and len(custom_headers) == len(data_keys):
             display_headers = custom_headers
-            logger.info(f"Using custom headers: {display_headers}")
+            logger.debug(f"Using custom headers: {display_headers}")
         else:
             display_headers = data_keys
             if custom_headers:

@@ -142,7 +142,7 @@ class ErrorCodeParetoFrequencyTabler(BaseTabler):
         # Collecte manuelle (ne PAS appeler super().generate())
         # car le pivot est incompatible avec le template method de BaseTabler
         if result.detailed_results:
-            logger.info(
+            logger.debug(
                 f"Génération du tableau '{self.table_name}' "
                 f"pour {len(result.detailed_results)} turbines"
             )
@@ -153,7 +153,7 @@ class ErrorCodeParetoFrequencyTabler(BaseTabler):
         self._pivot_code_frequencies()
 
         # Log final
-        logger.info(
+        logger.debug(
             f"Tableau '{self.table_name}' généré avec "
             f"{len(self._table_data)} lignes (turbines) et "
             f"{len(self._all_codes_info)} codes distincts"
@@ -198,7 +198,7 @@ class ErrorCodeParetoFrequencyTabler(BaseTabler):
         if total_codes_count > TOP_N_CODES:
             excluded_codes = [code for code, _ in sorted_codes[TOP_N_CODES:]]
             excluded_total = sum(code_totals[code] for code in excluded_codes)
-            logger.info(
+            logger.debug(
                 f"Limiting to top {TOP_N_CODES} codes. "
                 f"{total_codes_count - TOP_N_CODES} codes excluded ({excluded_total} occurrences total)"
             )
@@ -241,7 +241,7 @@ class ErrorCodeParetoFrequencyTabler(BaseTabler):
             total_all = sum(code_totals.values())
             pareto_percent = (displayed_total / total_all * 100) if total_all > 0 else 0
 
-            logger.info(
+            logger.debug(
                 f"Pareto analysis: Top {len(sorted_codes)} codes (displayed) represent {pareto_percent:.1f}% "
                 f"of total errors ({displayed_total}/{total_all})"
             )

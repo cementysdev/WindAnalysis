@@ -1,8 +1,6 @@
 import sys
 
-from src.wind_turbine_analytics.presentation.console_presenter import (
-    ConsolePipelinePresenter,
-)
+from src.wind_turbine_analytics.presentation.cli_presenter import CLIPipelinePresenter
 from src.wind_turbine_analytics.application import ScadaRunnerConfig, run_scada_pipeline
 
 
@@ -23,5 +21,5 @@ if __name__ == "__main__":
         render_template=True,
     )
 
-    presenter = ConsolePipelinePresenter()
+    presenter = CLIPipelinePresenter()
     run_scada_pipeline(config=config, presenter=presenter)

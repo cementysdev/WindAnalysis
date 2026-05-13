@@ -50,7 +50,7 @@ class WordPresenter(ABC):
                 f"Please provide a valid template path."
             )
 
-        logger.info(
+        logger.debug(
             f"WordPresenter initialized with template: {self.template_path.name}"
         )
 
@@ -72,7 +72,7 @@ class WordPresenter(ABC):
         Raises:
             Exception: Si la génération du document échoue
         """
-        logger.info(f"Rendering Word report from template: {self.template_path}")
+        logger.debug(f"Rendering Word report from template: {self.template_path}")
 
         try:
             # Charger le template avec python-docx
@@ -96,7 +96,7 @@ class WordPresenter(ABC):
             # Sauvegarder le document
             doc.save(self.output_path)
 
-            logger.info(f"✅ Report successfully saved to: {self.output_path}")
+            logger.debug(f"✅ Report successfully saved to: {self.output_path}")
 
         except Exception as e:
             logger.error(f"❌ Failed to generate Word report: {e}")
@@ -173,7 +173,7 @@ class WordPresenter(ABC):
             # Autres métadonnées (parc, critères, etc.)
             full_context.update(metadata)
 
-        logger.info(
+        logger.debug(
             f"Context prepared with {len(full_context)} keys "
             f"(generation_date: {full_context['generation_date']})"
         )
@@ -188,7 +188,7 @@ class WordPresenter(ABC):
             doc: Document Word
             context: Contexte avec les métadonnées et critères
         """
-        logger.info("Replacing metadata tags...")
+        logger.debug("Replacing metadata tags...")
 
         replacements = {
             # Métadonnées générales
@@ -266,7 +266,7 @@ class WordPresenter(ABC):
                 else:
                     para.add_run(full_text)
 
-        logger.info("✅ Metadata tags replaced")
+        logger.debug("✅ Metadata tags replaced")
 
     def _insert_images(self, doc: Document, context: Dict[str, Any]) -> None:
         """
@@ -276,7 +276,7 @@ class WordPresenter(ABC):
             doc: Document Word
             context: Contexte contenant les chemins des images dans 'chart_paths'
         """
-        logger.info("Inserting visualization images...")
+        logger.debug("Inserting visualization images...")
 
         # Récupérer les chemins des images depuis le contexte
         chart_paths = context.get("chart_paths", {})
@@ -335,8 +335,8 @@ class WordPresenter(ABC):
                     run = para.add_run()
                     try:
                         run.add_picture(str(image_path), width=Inches(6.0))
-                        logger.info(f"✅ Image inserted: {chart_name}")
+                        logger.debug(f"✅ Image inserted: {chart_name}")
                     except Exception as e:
                         logger.error(f"❌ Error inserting {chart_name}: {e}")
 
-        logger.info("✅ Images inserted in document")
+        logger.debug("✅ Images inserted in document")

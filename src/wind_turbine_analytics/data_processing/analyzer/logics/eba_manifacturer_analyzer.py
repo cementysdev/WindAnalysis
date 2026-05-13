@@ -42,11 +42,11 @@ class EbaManufacturerAnalyzer(BaseAnalyzer):
         - Vitesse de vent entre cut-in et cut-out
         - INCLUT tous les downtimes (curtailments, maintenance, problèmes réseau, etc.)
         """
-        logger.info(
+        logger.debug(
             "Starting EBA analysis for turbine %s (Manufacturer EBA) without error code filtering.",
             turbine_config.turbine_id,
         )
-        logger.info("=" * 80)
+        logger.debug("=" * 80)
         mapping = turbine_config.mapping_operation_data
         wind_speed_col = mapping.wind_speed
         timestamp_col = mapping.timestamp
@@ -91,7 +91,7 @@ class EbaManufacturerAnalyzer(BaseAnalyzer):
             )
             is not None
         ):
-            logger.info(
+            logger.debug(
                 "Guaranteed power curve provided for turbine %s. "
                 "Loading and identifying cut-in and cut-out points.",
                 turbine_config.turbine_id,
@@ -135,7 +135,7 @@ class EbaManufacturerAnalyzer(BaseAnalyzer):
         mask_wind_range = df[wind_speed_col].between(v_min, v_max, inclusive="both")
         df = df[mask_wind_range].copy()
 
-        logger.info(
+        logger.debug(
             "Turbine %s (Manufacturer EBA): Including ALL periods with wind in range [%.1f, %.1f] m/s, "
             "even with low/zero production (downtimes included)",
             turbine_config.turbine_id,
@@ -154,7 +154,7 @@ class EbaManufacturerAnalyzer(BaseAnalyzer):
         total_periods = len(df)
         downtime_percent = (downtime_periods / total_periods * 100) if total_periods > 0 else 0
 
-        logger.info(
+        logger.debug(
             "Turbine %s (Manufacturer EBA): %d/%d periods (%.2f%%) with production <= 1%% of P_nom (likely downtimes)",
             turbine_config.turbine_id,
             downtime_periods,
@@ -165,7 +165,7 @@ class EbaManufacturerAnalyzer(BaseAnalyzer):
         E_real = df["real_energy"].sum()
         E_theorical = df["theorical_energy"].sum()
 
-        logger.info(
+        logger.debug(
             "Turbine %s (Manufacturer EBA): Total real energy = %.2f kWh, "
             "Total theoretical energy = %.2f kWh",
             turbine_config.turbine_id,
@@ -188,16 +188,16 @@ class EbaManufacturerAnalyzer(BaseAnalyzer):
             100.0 * eba_monthly["E_real_monthly"] / eba_monthly["E_theorical_monthly"]
         ).fillna(0.0)
 
-        logger.info(
+        logger.debug(
             "Turbine %s (Manufacturer EBA): Monthly performance:\n%s",
             turbine_config.turbine_id,
             eba_monthly[["month", "performance"]].to_string(index=False),
         )
-        logger.info(
+        logger.debug(
             "Completed EBA analysis for turbine %s (Manufacturer EBA) without error code filtering.",
             turbine_config.turbine_id,
         )
-        logger.info("-" * 80)
+        logger.debug("-" * 80)
         return {
             "total_real_energy": E_real,
             "total_theoretical_energy": E_theorical,

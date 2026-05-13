@@ -126,7 +126,7 @@ class PitchAnalyzer(BaseAnalyzer):
             )
             return {"error": "No valid data (pitch1/2/3 and wind_speed not null)"}
 
-        logger.info(
+        logger.debug(
             f"Turbine {turbine_config.turbine_id}: Analyzing {len(valid_data)} valid measurements"
         )
 
@@ -222,7 +222,7 @@ class PitchAnalyzer(BaseAnalyzer):
 
             monthly_results.append(month_dict)
 
-        logger.info(
+        logger.debug(
             f"Turbine {turbine_config.turbine_id}: Pitch analysis completed. "
             f"Mean pitch (all blades): {mean_pitch_all:.2f}°, "
             f"Max desync: {max_desync:.2f}°, Mean desync: {mean_desync:.2f}°, "

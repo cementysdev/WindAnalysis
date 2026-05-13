@@ -120,7 +120,7 @@ def _detect_header_row(df: pd.DataFrame) -> Optional[int]:
 
         # Si au moins 3 mots-clés correspondent, c'est probablement l'en-tête
         if matches >= 3:
-            logger.info(f"En-tête détecté à la ligne {idx}")
+            logger.debug(f"En-tête détecté à la ligne {idx}")
             return idx
 
     return None
@@ -170,7 +170,7 @@ def _clean_header_names(df: pd.DataFrame) -> pd.DataFrame:
                 # Utiliser la première ligne comme en-tête
                 df.columns = potential_header
                 df = df.iloc[1:].reset_index(drop=True)
-                logger.info("En-tête extrait de la première ligne de données")
+                logger.debug("En-tête extrait de la première ligne de données")
 
     return df
 
@@ -227,7 +227,7 @@ def _merge_date_time_columns(df: pd.DataFrame) -> pd.DataFrame:
     has_timestamp = 'timestamp' in df_temp.columns
 
     if has_date and has_time and not has_timestamp:
-        logger.info("Fusion des colonnes 'date' et 'time' en 'timestamp'")
+        logger.debug("Fusion des colonnes 'date' et 'time' en 'timestamp'")
 
         # Fusionner date et time
         df_temp['timestamp'] = (
@@ -341,7 +341,7 @@ def load_csv(
                 if len(df.columns) < 2 and len(separators) > 1:
                     continue
 
-                logger.info(
+                logger.debug(
                     f"Fichier chargé: {file_path.name} "
                     f"(encoding={enc}, sep='{sep_char}', shape={df.shape})"
                 )
@@ -360,7 +360,7 @@ def load_csv(
                             header=header_row,
                             **kwargs
                         )
-                        logger.info(f"Fichier rechargé avec header={header_row}")
+                        logger.debug(f"Fichier rechargé avec header={header_row}")
 
                     # Nettoyer les noms de colonnes
                     df = _clean_header_names(df)
@@ -368,7 +368,7 @@ def load_csv(
                     # Fusionner date/time si nécessaire
                     df = _merge_date_time_columns(df)
 
-                logger.info(
+                logger.debug(
                     f"DataFrame final: shape={df.shape}, "
                     f"columns={list(df.columns)}"
                 )

@@ -209,7 +209,7 @@ class PowerRoseChartVisualizer(BaseVisualizer):
             ),
         )
 
-        logger.info(
+        logger.debug(
             f"Rose des puissances créée pour {n_turbines} turbine(s) "
             f"avec {len(dir_labels)} secteurs directionnels"
         )

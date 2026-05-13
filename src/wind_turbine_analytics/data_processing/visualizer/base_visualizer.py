@@ -45,7 +45,7 @@ class BaseVisualizer(ABC):
         # Créer le répertoire de sortie si nécessaire
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"Génération du graphique '{self.chart_name}'...")
+        logger.debug(f"Génération du graphique '{self.chart_name}'...")
 
         # Appeler la méthode abstraite pour créer la figure
         fig = self._create_figure(result)
@@ -59,7 +59,7 @@ class BaseVisualizer(ABC):
             # Plotly: sauvegarder PNG et JSON
             fig.write_image(str(png_path), width=1200, height=800)
             fig.write_json(str(json_path))
-            logger.info(f"✅ Graphique Plotly sauvegardé: {png_path} + {json_path}")
+            logger.debug(f"✅ Graphique Plotly sauvegardé: {png_path} + {json_path}")
 
             # Stocker les chemins dans metadata
             self._store_in_metadata(result, str(png_path), str(json_path))
@@ -68,7 +68,7 @@ class BaseVisualizer(ABC):
         else:
             # Matplotlib/Seaborn: sauvegarder PNG uniquement
             fig.savefig(str(png_path), dpi=150, bbox_inches="tight")
-            logger.info(f"✅ Graphique Matplotlib sauvegardé: {png_path}")
+            logger.debug(f"✅ Graphique Matplotlib sauvegardé: {png_path}")
 
             # Stocker les chemins dans metadata
             self._store_in_metadata(result, str(png_path), None)

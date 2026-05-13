@@ -46,20 +46,20 @@ app.include_router(health_router)
 app.include_router(analyze_router)
 app.include_router(config_router)
 
-logger.info("FastAPI application initialized successfully")
+logger.debug("FastAPI application initialized successfully")
 
 
 @app.on_event("startup")
 async def startup_event():
     """Log startup information."""
-    logger.info("=" * 60)
-    logger.info("Wind Turbine Analytics API starting...")
-    logger.info("API Documentation: http://localhost:8000/docs")
-    logger.info("Health Check: http://localhost:8000/health")
-    logger.info("=" * 60)
+    logger.debug("=" * 60)
+    logger.debug("Wind Turbine Analytics API starting...")
+    logger.debug("API Documentation: http://localhost:8000/docs")
+    logger.debug("Health Check: http://localhost:8000/health")
+    logger.debug("=" * 60)
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Log shutdown information."""
-    logger.info("Wind Turbine Analytics API shutting down...")
+    logger.debug("Wind Turbine Analytics API shutting down...")

@@ -94,7 +94,7 @@ class EbaLossVisualizer(BaseVisualizer):
         max_loss = max(all_loss_percentages)
         avg_loss = sum(all_loss_percentages) / len(all_loss_percentages)
 
-        logger.info(
+        logger.debug(
             f"Statistiques des pertes d'énergie: "
             f"min={min_loss:.2f}%, max={max_loss:.2f}%, moyenne={avg_loss:.2f}%"
         )

@@ -50,7 +50,7 @@ class NominalPowerAnalyzer(BaseAnalyzer):
 
         # Convertir en kW si nécessaire (si < 100, c'est probablement en MW)
         if P_nom <= 100:
-            logger.info(
+            logger.debug(
                 f"Nominal power for turbine {turbine_config.turbine_id} "
                 f"is {P_nom} MW, converting to kW"
             )
@@ -66,7 +66,7 @@ class NominalPowerAnalyzer(BaseAnalyzer):
         # Calculer le seuil de puissance
         power_threshold = (power_threshold_percent / 100.0) * P_nom
 
-        logger.info(
+        logger.debug(
             f"Analyse puissance nominale pour {turbine_config.turbine_id}: "
             f"P_nom={P_nom}kW, seuil={power_threshold_percent}% "
             f"({power_threshold:.2f}kW), durée requise={required_hours}h"
@@ -130,16 +130,16 @@ class NominalPowerAnalyzer(BaseAnalyzer):
             max_wind_speed = None
             max_wind_timestamp = None
 
-        logger.info(
+        logger.debug(
             f"Durée totale >= {power_threshold_percent}% P_nom: "
             f"{total_duration:.2f}h, Critère: {required_hours}h, "
             f"Réussi: {criterion_met}"
         )
-        logger.info(
+        logger.debug(
             f"Puissance max observée: {max_power:.2f}kW " f"le {max_power_timestamp}"
         )
         if max_wind_speed is not None:
-            logger.info(
+            logger.debug(
                 f"Vitesse vent max observée: {max_wind_speed:.2f}m/s "
                 f"le {max_wind_timestamp}"
             )
