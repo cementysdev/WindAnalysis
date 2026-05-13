@@ -167,7 +167,6 @@ class Regime_Classification:
         """
         mask = self.__build_residual_mask__(x_wind, y_rot, y_pwer)
         X0, X1, X2, X3 = self.X_threshold
-        print(self.X_threshold)
         clusters = classifier_operating_regime(x_wind, mask, X0, X1, X2, X3)
         return clusters
 
@@ -193,40 +192,8 @@ class Regime_Classification:
         """
         self.fit(x_wind, y_rot, y_pwer)
 
-        # idx = np.argsort(x_wind)
-        # x_wind = x_wind[idx]
-        # y_rot, y_pwer, y_pitch = y_rot[idx], y_pwer[idx], y_pitch[idx]
-        # y_model_rot, y_model_pwer = self.predict(x_wind)
 
-        print("FIT RESULT")
-
-        # plot_model(
-        #     wind_speed = x_wind,
-        #     Power = y_pwer,
-        #     Rotation = y_rot,
-        #     Pitch = y_pitch,
-        #     model_Power = y_model_pwer,
-        #     model_Rotation = y_model_rot,
-        #     X_threshold = self.X_threshold
-        # )
-
-        # print()
-
-        # print('RESIDUAL PLOT')
-
-        # res_Rotation, res_Power = self.calcul_residual(x_wind, y_rot, y_pwer)
-        # plot_residual(
-        #     wind_speed = x_wind,
-        #     res_Power = res_Power,
-        #     res_Rotation = res_Rotation,
-        #     X_threshold = self.X_threshold
-        # )
-
-        print()
-
-        print("CLASSIFICATION PLOT")
         clusters = self.classify(x_wind, y_rot, y_pwer)
-        print(np.unique(clusters))
         plot_classification(
             wind_speed=x_wind,
             Power=y_pwer,
@@ -235,5 +202,3 @@ class Regime_Classification:
             clusters=clusters,
             L_X=self.X_threshold,
         )
-
-        print()

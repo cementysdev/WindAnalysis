@@ -25,7 +25,7 @@ def create_header(title: str = "Wind Turbine Analytics", subtitle: Optional[str]
         Rich Panel with header
     """
     # Generate ASCII art
-    fig = Figlet(font='slant')
+    fig = Figlet(font="ansi_shadow")
     ascii_art = fig.renderText(title)
 
     # Create gradient effect (blue to cyan)

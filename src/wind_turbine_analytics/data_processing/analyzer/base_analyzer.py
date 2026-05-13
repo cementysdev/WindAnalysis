@@ -189,7 +189,7 @@ class BaseAnalyzer:
         df_curve["wind_bin"] = pd.cut(df_curve[wind_speed_col], bins)
         # Use 95th percentile instead of median to represent optimal performance
         # This creates a more realistic theoretical baseline and prevents performance > 100%
-        power_curve = df_curve.groupby("wind_bin")[power_col].quantile(0.95)
+        power_curve = df_curve.groupby("wind_bin", observed=True)[power_col].quantile(0.95)
 
         bin_centers = np.array([interval.mid for interval in power_curve.index])
 
