@@ -31,6 +31,7 @@ class ScadaWordPresenter(WordPresenter):
     - Supporte l'ajout/suppression de tables sans changer le code
 
     Marqueurs attendus dans le template SCADA:
+    - [TABLE:STATUS_SUMMARY_TABLE]
     - [TABLE:CSV_FILES_TABLE]
     - [TABLE:SCADA_SUMMARY_TABLE]
     - [TABLE:EBA_CUT_IN_CUT_OUT_TABLE]

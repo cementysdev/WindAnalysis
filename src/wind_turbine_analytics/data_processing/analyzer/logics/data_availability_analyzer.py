@@ -179,4 +179,24 @@ class DataAvailabilityAnalyzer(BaseAnalyzer):
                 if total_intervals > 0
                 else 0
             )
-        return {"availability_table": availability_df, "summary": summary}
+
+        # Calculate overall availability average for status
+        variables = [
+            summary["wind_speed_availability_pct"],
+            summary["wind_direction_availability_pct"],
+            summary["active_power_availability_pct"],
+        ]
+        if temperature_col:
+            variables.append(summary["temperature_availability_pct"])
+
+        overall_avg = sum(variables) / len(variables) if variables else 0.0
+
+        # Determine status level
+        from src.wind_turbine_analytics.data_processing.status_levels import StatusLevel
+        status_level = StatusLevel.from_percentage(overall_avg)
+
+        return {
+            "availability_table": availability_df,
+            "summary": summary,
+            "status_level": status_level,
+        }

@@ -36,6 +36,7 @@ from src.wind_turbine_analytics.data_processing.tabler.tables.scada import (
     PitchTabler,
     DataAvailabilityTabler,
     PerformanceLevelTabler,
+    StatusSummaryTabler,
 )
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders import (
     DataAvailabilityVisualizer,
@@ -165,6 +166,9 @@ class ScadaWorkflow(BaseWorkflow):
         # Créer un summary_tabler pour agréger tous les résultats
         summary_tabler = ScadaSummaryTabler()
 
+        # Créer un status_summary_tabler pour vue d'ensemble des statuts
+        status_summary_tabler = StatusSummaryTabler()
+
         # Stocker tous les résultats pour génération du rapport
         all_results = {}
 
@@ -177,6 +181,7 @@ class ScadaWorkflow(BaseWorkflow):
         )
         all_results["eba_cut_in_cut_out"] = eba_cutin_result
         summary_tabler.add_analysis_result("eba_cut_in_cut_out", eba_cutin_result)
+        status_summary_tabler.add_analysis_result("eba_cut_in_cut_out", eba_cutin_result)
 
         # EBA Manufacturer Analysis
         eba_mfr_result = self._execute_step(
@@ -187,6 +192,7 @@ class ScadaWorkflow(BaseWorkflow):
         )
         all_results["eba_manufacturer"] = eba_mfr_result
         summary_tabler.add_analysis_result("eba_manufacturer", eba_mfr_result)
+        status_summary_tabler.add_analysis_result("eba_manufacturer", eba_mfr_result)
 
         # Code Error Analysis
         error_codes_result = self._execute_step(
@@ -206,6 +212,7 @@ class ScadaWorkflow(BaseWorkflow):
         )
         all_results["data_availability"] = availability_result
         summary_tabler.add_analysis_result("data_availability", availability_result)
+        status_summary_tabler.add_analysis_result("data_availability", availability_result)
 
         # Wind Direction Calibration
         calibration_result = self._execute_step(
@@ -220,6 +227,7 @@ class ScadaWorkflow(BaseWorkflow):
         )
         all_results["wind_calibration"] = calibration_result
         summary_tabler.add_analysis_result("wind_calibration", calibration_result)
+        status_summary_tabler.add_analysis_result("wind_calibration", calibration_result)
 
         # Tip Speed Ratio
         tsr_result = self._execute_step(
@@ -230,6 +238,7 @@ class ScadaWorkflow(BaseWorkflow):
         )
         all_results["tip_speed_ratio"] = tsr_result
         summary_tabler.add_analysis_result("tip_speed_ratio", tsr_result)
+        status_summary_tabler.add_analysis_result("tip_speed_ratio", tsr_result)
 
         # Normative Yield (Power Curve)
         normative_result = self._execute_step(
@@ -239,6 +248,7 @@ class ScadaWorkflow(BaseWorkflow):
             [NormativeYieldTabler()],
         )
         all_results["normative_yield"] = normative_result
+        status_summary_tabler.add_analysis_result("normative_yield", normative_result)
 
         # Pitch Analysis
         pitch_analyzer_result = self._execute_step(
@@ -249,6 +259,7 @@ class ScadaWorkflow(BaseWorkflow):
         )
         all_results["pitch_angle"] = pitch_analyzer_result
         summary_tabler.add_analysis_result("pitch_angle", pitch_analyzer_result)
+        status_summary_tabler.add_analysis_result("pitch_angle", pitch_analyzer_result)
 
         # Performance Level Analysis
         performance_level_result = self._execute_step(
@@ -258,18 +269,19 @@ class ScadaWorkflow(BaseWorkflow):
             [PerformanceLevelTabler()],
         )
         all_results["performance_level"] = performance_level_result
+        status_summary_tabler.add_analysis_result("performance_level", performance_level_result)
 
         # Generate Report
         self._presenter.show_step_start("Generate Report")
         try:
-            self._render_report(all_results, summary_tabler)
+            self._render_report(all_results, summary_tabler, status_summary_tabler)
             self._presenter.show_step_complete(StepStatus.SUCCESS)
         except Exception as e:
             self._presenter.show_step_complete(StepStatus.ERROR, str(e))
             raise
 
     def _render_report(
-        self, all_results: dict, summary_tabler: ScadaSummaryTabler
+        self, all_results: dict, summary_tabler: ScadaSummaryTabler, status_summary_tabler: StatusSummaryTabler
     ) -> None:
         """
         Génère le rapport Word SCADA si activé dans la config.
@@ -277,6 +289,7 @@ class ScadaWorkflow(BaseWorkflow):
         Args:
             all_results: Dict des résultats d'analyse par type
             summary_tabler: Tableau récapitulatif avec tous les résultats
+            status_summary_tabler: Tableau de synthèse des statuts
         """
         if not self._config.render_template:
             logger.debug("Template rendering disabled (render_template=False)")
@@ -294,6 +307,13 @@ class ScadaWorkflow(BaseWorkflow):
             # Générer le tableau récapitulatif et l'ajouter au contexte
             summary_data = summary_tabler.generate()
             context.update(summary_data)
+
+            # Générer le tableau de synthèse des statuts et l'ajouter au contexte
+            status_summary_data = status_summary_tabler.generate()
+            context.update(status_summary_data)
+            logger.debug(
+                f"Status summary table: {len(status_summary_data.get('status_summary_table', []))} rows"
+            )
 
             # Générer le tableau des fichiers CSV utilisés
             csv_files_tabler = CsvFilesTabler()

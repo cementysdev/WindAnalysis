@@ -12,6 +12,7 @@ from .tip_speed_ratio import TipSpeedRatioTabler
 from .table_pitch import PitchTabler
 from .table_data_availability import DataAvailabilityTabler
 from .table_performance_level import PerformanceLevelTabler
+from .table_status_summary import StatusSummaryTabler
 
 __all__ = [
     "EbaCutInCutOutTabler",
@@ -26,4 +27,5 @@ __all__ = [
     "PitchTabler",
     "DataAvailabilityTabler",
     "PerformanceLevelTabler",
+    "StatusSummaryTabler",
 ]
