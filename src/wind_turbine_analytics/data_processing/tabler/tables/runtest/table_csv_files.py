@@ -10,10 +10,15 @@ class CsvFilesTabler(BaseTabler):
     """
     Tableau listant les fichiers CSV utilisés pour le test.
 
-    Format: | WTG | Path Operation Data | Path Alarm Log |
+    Format: | WTG | Operation Data | Log Data |
 
     Ce tabler est spécial car il ne traite pas un AnalysisResult mais
     directement les informations de TurbineFarm.
+
+    Note: Les clés du dictionnaire correspondent aux headers en snake_case:
+    - "WTG" -> clé "wtg"
+    - "Operation Data" -> clé "operation_data"
+    - "Log Data" -> clé "log_data"
     """
 
     def __init__(self):

@@ -48,9 +48,12 @@ class GeneralInformation:
     writer_name: str = ""
     writer_email: str = ""
     writer_phone: str = ""
-    verficator_name: str = ""
-    verficator_email: str = ""
-    verficator_phone: str = ""
+    verificator_name: str = ""
+    verificator_email: str = ""
+    verificator_phone: str = ""
+    approver_name: str = ""
+    approver_email: str = ""
+    approver_phone: str = ""
     date_archive: str = ""
 
 

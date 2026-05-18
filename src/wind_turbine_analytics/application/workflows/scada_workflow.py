@@ -389,6 +389,66 @@ class ScadaWorkflow(BaseWorkflow):
                     if self.general_information
                     else "N/A"
                 ),
+                "client_name": (
+                    self.general_information.client_name
+                    if self.general_information
+                    else "N/A"
+                ),
+                "client_location": (
+                    self.general_information.client_location
+                    if self.general_information
+                    else "N/A"
+                ),
+                "client_contact": (
+                    self.general_information.client_contact
+                    if self.general_information
+                    else "N/A"
+                ),
+                "author_name": (
+                    self.general_information.author_name
+                    if self.general_information
+                    else "N/A"
+                ),
+                "author_email": (
+                    self.general_information.author_email
+                    if self.general_information
+                    else "N/A"
+                ),
+                "author_phone": (
+                    self.general_information.author_phone
+                    if self.general_information
+                    else "N/A"
+                ),
+                "verificator_name": (
+                    self.general_information.verificator_name
+                    if self.general_information
+                    else "N/A"
+                ),
+                "verificator_email": (
+                    self.general_information.verificator_email
+                    if self.general_information
+                    else "N/A"
+                ),
+                "verificator_phone": (
+                    self.general_information.verificator_phone
+                    if self.general_information
+                    else "N/A"
+                ),
+                "approver_name": (
+                    self.general_information.approver_name
+                    if self.general_information
+                    else "N/A"
+                ),
+                "approver_email": (
+                    self.general_information.approver_email
+                    if self.general_information
+                    else "N/A"
+                ),
+                "approver_phone": (
+                    self.general_information.approver_phone
+                    if self.general_information
+                    else "N/A"
+                ),
             }
 
             # Rendre le rapport Word avec ScadaWordPresenter

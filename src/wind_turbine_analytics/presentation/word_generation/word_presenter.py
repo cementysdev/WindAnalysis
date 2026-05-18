@@ -189,7 +189,6 @@ class WordPresenter(ABC):
             context: Contexte avec les métadonnées et critères
         """
         logger.debug("Replacing metadata tags...")
-
         replacements = {
             # Métadonnées générales
             "{{generation_date}}": context.get("generation_date", ""),
@@ -199,6 +198,18 @@ class WordPresenter(ABC):
             "{{analysis_end}}": context.get("analysis_end", ""),
             "{{turbine_list}}": context.get("turbine_list", ""),
             "{{turbine_count}}": str(context.get("turbine_count", "")),
+            "{{client_name}}": context.get("client_name", ""),
+            "{{client_location}}": context.get("client_location", ""),
+            "{{client_contact}}": context.get("client_contact", ""),
+            "{{author_name}}": context.get("author_name", ""),
+            "{{author_email}}": context.get("author_email", ""),
+            "{{author_phone}}": context.get("author_phone", ""),
+            "{{verificator_name}}": context.get("verificator_name", ""),
+            "{{verificator_email}}": context.get("verificator_email", ""),
+            "{{verificator_phone}}": context.get("verificator_phone", ""),
+            "{{approver_name}}": context.get("approver_name", ""),
+            "{{approver_email}}": context.get("approver_email", ""),
+            "{{approver_phone}}": context.get("approver_phone", ""),
             # Informations sur le parc
             "{{park_name}}": context.get("park_name", ""),
             "{{Nom_du_parc}}": context.get("park_name", ""),
