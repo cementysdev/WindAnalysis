@@ -312,8 +312,10 @@ class WordPresenter(ABC):
         # Mapping des balises SCADA
         scada_image_tags = {
             "{{eba_cut_in_cut_out_chart}}": "eba_cut_in_cut_out_chart",
-            "{{eba_manifacturer_chart}}": "eba_manifacturer_chart",
+            "{{eba_manufacturer_chart}}": "eba_manufacturer_chart",
             "{{eba_loss_chart}}": "eba_loss_chart",
+            "{{tba_cut_in_cut_out_chart}}": "tba_cut_in_cut_out_chart",
+            "{{tba_manufacturer_chart}}": "tba_manufacturer_chart",
             "{{top_error_code_frequency}}": "top_error_code_frequency",
             "{{treemap_error_code}}": "treemap_error_code",
             "{{data_availability_chart}}": "data_availability_chart",

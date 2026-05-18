@@ -9,8 +9,12 @@ from src.wind_turbine_analytics.application.configuration.config_models import (
     ScadaRunnerConfig,
 )
 from src.wind_turbine_analytics.application.workflows.base_workflow import BaseWorkflow
-from src.wind_turbine_analytics.data_processing.analyzer.logics.tba_cut_in_cut_out_analyzer import TbACutInCutOutAnalyzer
-from src.wind_turbine_analytics.data_processing.analyzer.logics.tba_manifacturer_analyzer import TbaManufacturerAnalyzer
+from src.wind_turbine_analytics.data_processing.analyzer.logics.tba_cut_in_cut_out_analyzer import (
+    TbACutInCutOutAnalyzer,
+)
+from src.wind_turbine_analytics.data_processing.analyzer.logics.tba_manifacturer_analyzer import (
+    TbaManufacturerAnalyzer,
+)
 from src.wind_turbine_analytics.data_processing.data_processing import (
     DataProcessingStep,
 )
@@ -41,8 +45,12 @@ from src.wind_turbine_analytics.data_processing.tabler.tables.scada import (
     StatusSummaryTabler,
     GpsCoordinatesTabler,
 )
-from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_tba_cut_in_cut_out import TbaCutInCutOutTabler
-from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_tba_manufacturer import TbaManufacturerTabler
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_tba_cut_in_cut_out import (
+    TbaCutInCutOutTabler,
+)
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_tba_manufacturer import (
+    TbaManufacturerTabler,
+)
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders import (
     DataAvailabilityVisualizer,
     EbaCutInCutOutVisualizer,
@@ -82,6 +90,8 @@ class ScadaWorkflow(BaseWorkflow):
             "Load Configuration",
             "EBA Cut-In/Cut-Out",
             "EBA Manufacturer",
+            "TBA Cut-In/Cut-Out",
+            "TBA Manufacturer",
             "Code Error Analysis",
             "Data Availability",
             "Wind Calibration",
@@ -210,7 +220,9 @@ class ScadaWorkflow(BaseWorkflow):
         )
         all_results["tba_cut_in_cut_out"] = tba_cutin_result
         summary_tabler.add_analysis_result("tba_cut_in_cut_out", tba_cutin_result)
-        status_summary_tabler.add_analysis_result("tba_cut_in_cut_out", tba_cutin_result)
+        status_summary_tabler.add_analysis_result(
+            "tba_cut_in_cut_out", tba_cutin_result
+        )
 
         # TBA Manufacturer Analysis
         tba_mfr_result = self._execute_step(
@@ -315,7 +327,9 @@ class ScadaWorkflow(BaseWorkflow):
             self._presenter.show_step_complete(StepStatus.ERROR, str(e))
             raise
 
-    def _extract_metadata_fields(self, fields: list, source=None, default="N/A") -> dict:
+    def _extract_metadata_fields(
+        self, fields: list, source=None, default="N/A"
+    ) -> dict:
         """
         Extract multiple fields from a source object with fallback to default.
 
@@ -409,21 +423,41 @@ class ScadaWorkflow(BaseWorkflow):
             turbine_list = list(self.turbine_sources.farm.keys())
 
             # Récupérer analysis_start et analysis_end de la première turbine
-            first_turbine_config = self.turbine_sources.farm[turbine_list[0]] if turbine_list else None
+            first_turbine_config = (
+                self.turbine_sources.farm[turbine_list[0]] if turbine_list else None
+            )
 
             # Extract general information fields using helper method
             general_info_fields = [
-                "park_name", "commune", "region", "country", "constructor",
-                "model_wtg", "nominal_power", "client_name", "client_location",
-                "client_contact", "author_name", "author_email", "author_phone",
-                "verificator_name", "verificator_email", "verificator_phone",
-                "approver_name", "approver_email", "approver_phone",
+                "park_name",
+                "commune",
+                "region",
+                "country",
+                "constructor",
+                "model_wtg",
+                "nominal_power",
+                "client_name",
+                "client_location",
+                "client_contact",
+                "author_name",
+                "author_email",
+                "author_phone",
+                "verificator_name",
+                "verificator_email",
+                "verificator_phone",
+                "approver_name",
+                "approver_email",
+                "approver_phone",
             ]
 
             # Build metadata dict
             metadata = {
-                "analysis_start": first_turbine_config.test_start if first_turbine_config else "N/A",
-                "analysis_end": first_turbine_config.test_end if first_turbine_config else "N/A",
+                "analysis_start": (
+                    first_turbine_config.test_start if first_turbine_config else "N/A"
+                ),
+                "analysis_end": (
+                    first_turbine_config.test_end if first_turbine_config else "N/A"
+                ),
                 "turbines": turbine_list,
             }
 
