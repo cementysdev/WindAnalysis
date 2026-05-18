@@ -4,6 +4,9 @@ general_information:
   park_name: "Parc éolien de Romazieres"
   client_name: "Energiter, 770 rue Alfred Nobel, 34000 Montpellier, France"
   client_location: "17510 - Romazieres, Charente-Maritime, France"
+  commune: Romazieres
+  region: Nouvelle-Aquitaine
+  country: France
   client_contact: nordex@sssd.dt
   number_wtg: 4
   model_wtg: "N131"

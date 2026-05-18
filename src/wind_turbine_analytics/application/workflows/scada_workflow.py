@@ -379,6 +379,26 @@ class ScadaWorkflow(BaseWorkflow):
                     if self.general_information
                     else "N/A"
                 ),
+                "commune": (
+                    self.general_information.commune
+                    if self.general_information
+                    else "N/A"
+                ),
+                "region": (
+                    self.general_information.region
+                    if self.general_information
+                    else "N/A"
+                ),
+                "country": (
+                    self.general_information.country
+                    if self.general_information
+                    else "N/A"
+                ),
+                "constructor": (
+                    self.general_information.constructor
+                    if self.general_information
+                    else "N/A"
+                ),
                 "model_wtg": (
                     self.general_information.model_wtg
                     if self.general_information
