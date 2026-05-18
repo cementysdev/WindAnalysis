@@ -154,6 +154,22 @@ class BaseLogCodeManager(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_owner_availability_codes(self) -> dict[str, list[ErrorCode]]:
+        """
+        Returns codes to exclude from TBA Manufacturer unavailability calculation.
+
+        These codes represent periods where the turbine is considered "available"
+        from the manufacturer's perspective (owner intervention, curtailment, icing).
+
+        Returns:
+            Dict with keys:
+                - "owner_intervention": Codes for manual stops by owner
+                - "curtailment": Codes for aggregator demand / noise reduction
+                - "icing": Codes for ice-related conditions
+        """
+        pass
+
     def _codes_match(self, code1: str, code2: str) -> bool:
         """
         Vérifie si deux codes correspondent, indépendamment du préfixe FM.

@@ -54,6 +54,12 @@ from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.wind_d
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.pitch_visualizer import (
     PitchVisualizer,
 )
+from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.tba_cut_in_cut_out_visualizer import (
+    TbaCutInCutOutVisualizer,
+)
+from src.wind_turbine_analytics.data_processing.visualizer.chart_builders.tba_manufacturer_visualizer import (
+    TbaManufacturerVisualizer,
+)
 
 __all__ = [
     "ConsecutiveHoursVisualizer",
@@ -74,4 +80,6 @@ __all__ = [
     "TreemapErrorCodeVisualizer",
     "WindDirectionCalibrationVisualizer",
     "PitchVisualizer",
+    "TbaCutInCutOutVisualizer",
+    "TbaManufacturerVisualizer",
 ]

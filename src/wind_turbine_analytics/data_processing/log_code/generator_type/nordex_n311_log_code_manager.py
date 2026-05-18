@@ -389,6 +389,44 @@ class NordexN311LogCodeManager(BaseLogCodeManager):
             "remote_resettable_count": len(reset_mode_distribution["remote_reset"]),
         }
 
+    def get_owner_availability_codes(self) -> dict[str, list[ErrorCode]]:
+        """
+        Returns Nordex N311 codes to exclude from TBA Manufacturer calculation.
+
+        Returns:
+            Dict with three categories of codes:
+                - owner_intervention: FM7 (Customer Stop)
+                - curtailment: FM733 and related (noise reduction, sector management)
+                - icing: FM301-692 (ice-related conditions)
+        """
+        owner_codes = {
+            "owner_intervention": [],
+            "curtailment": [],
+            "icing": []
+        }
+
+        # Patterns for identification
+        curtailment_keywords = ["noise", "disconnect", "sector", "curtail", "ssf"]
+        icing_keywords = ["ice", "icing", "ais", "anti-icing"]
+
+        for code in self.error_codes.values():
+            code_stripped = code.code.strip().upper()
+            description_lower = code.description.lower()
+
+            # Owner intervention: explicit FM7
+            if code_stripped == "FM7":
+                owner_codes["owner_intervention"].append(code)
+
+            # Curtailment: keyword matching in description
+            elif any(kw in description_lower for kw in curtailment_keywords):
+                owner_codes["curtailment"].append(code)
+
+            # Icing: keyword matching in description
+            elif any(kw in description_lower for kw in icing_keywords):
+                owner_codes["icing"].append(code)
+
+        return owner_codes
+
     def generate_report(self, log_df, code_column: str) -> str:
         """
         Génère un rapport textuel d'analyse des codes.

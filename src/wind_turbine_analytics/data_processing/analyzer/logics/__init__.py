@@ -21,8 +21,14 @@ from src.wind_turbine_analytics.data_processing.analyzer.logics.data_availabilit
 from src.wind_turbine_analytics.data_processing.analyzer.logics.eba_cut_in_cut_out_analyzer import (
     EbACutInCutOutAnalyzer,
 )
+from src.wind_turbine_analytics.data_processing.analyzer.logics.tba_cut_in_cut_out_analyzer import (
+    TbACutInCutOutAnalyzer,
+)
 from src.wind_turbine_analytics.data_processing.analyzer.logics.eba_manifacturer_analyzer import (
     EbaManufacturerAnalyzer,
+)
+from src.wind_turbine_analytics.data_processing.analyzer.logics.tba_manifacturer_analyzer import (
+    TbaManufacturerAnalyzer,
 )
 from src.wind_turbine_analytics.data_processing.analyzer.logics.code_error_analyzer import (
     CodeErrorAnalyzer,
@@ -53,7 +59,9 @@ __all__ = [
     # SCADA analyzers
     "DataAvailabilityAnalyzer",
     "EbACutInCutOutAnalyzer",
+    "TbACutInCutOutAnalyzer",
     "EbaManufacturerAnalyzer",
+    "TbaManufacturerAnalyzer",
     "CodeErrorAnalyzer",
     "WindDirectionCalibrationAnalyzer",
     "TipSpeedRatioAnalyzer",

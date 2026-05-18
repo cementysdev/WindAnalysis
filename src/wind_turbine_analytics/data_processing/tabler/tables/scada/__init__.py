@@ -1,7 +1,9 @@
 """SCADA report tables."""
 
 from .table_eba_cut_in_cut_out import EbaCutInCutOutTabler
+from .table_tba_cut_in_cut_out import TbaCutInCutOutTabler
 from .table_eba_manifacturer import EbaManufacturerTabler
+from .table_tba_manufacturer import TbaManufacturerTabler
 from .table_eba_loss import EbaLossTabler
 from .table_scada_summary import ScadaSummaryTabler
 from .table_error_code_pareto_frequecy import ErrorCodeParetoFrequencyTabler
@@ -17,7 +19,9 @@ from .table_gps_coordinates import GpsCoordinatesTabler
 
 __all__ = [
     "EbaCutInCutOutTabler",
+    "TbaCutInCutOutTabler",
     "EbaManufacturerTabler",
+    "TbaManufacturerTabler",
     "EbaLossTabler",
     "ScadaSummaryTabler",
     "ErrorCodeParetoFrequencyTabler",

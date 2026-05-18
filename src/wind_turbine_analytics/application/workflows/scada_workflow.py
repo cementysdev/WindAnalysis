@@ -9,6 +9,8 @@ from src.wind_turbine_analytics.application.configuration.config_models import (
     ScadaRunnerConfig,
 )
 from src.wind_turbine_analytics.application.workflows.base_workflow import BaseWorkflow
+from src.wind_turbine_analytics.data_processing.analyzer.logics.tba_cut_in_cut_out_analyzer import TbACutInCutOutAnalyzer
+from src.wind_turbine_analytics.data_processing.analyzer.logics.tba_manifacturer_analyzer import TbaManufacturerAnalyzer
 from src.wind_turbine_analytics.data_processing.data_processing import (
     DataProcessingStep,
 )
@@ -39,6 +41,8 @@ from src.wind_turbine_analytics.data_processing.tabler.tables.scada import (
     StatusSummaryTabler,
     GpsCoordinatesTabler,
 )
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_tba_cut_in_cut_out import TbaCutInCutOutTabler
+from src.wind_turbine_analytics.data_processing.tabler.tables.scada.table_tba_manufacturer import TbaManufacturerTabler
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders import (
     DataAvailabilityVisualizer,
     EbaCutInCutOutVisualizer,
@@ -48,6 +52,8 @@ from src.wind_turbine_analytics.data_processing.visualizer.chart_builders import
     PowerCurveChartVisualizer,
     PowerRoseChartVisualizer,
     RPMVisualizer,
+    TbaCutInCutOutVisualizer,
+    TbaManufacturerVisualizer,
     TopErrorCodeFrequencyVisualizer,
     TreemapErrorCodeVisualizer,
     WindDirectionCalibrationVisualizer,
@@ -194,6 +200,28 @@ class ScadaWorkflow(BaseWorkflow):
         all_results["eba_manufacturer"] = eba_mfr_result
         summary_tabler.add_analysis_result("eba_manufacturer", eba_mfr_result)
         status_summary_tabler.add_analysis_result("eba_manufacturer", eba_mfr_result)
+
+        # TBA Cut-In/Cut-Out Analysis
+        tba_cutin_result = self._execute_step(
+            "TBA Cut-In/Cut-Out",
+            TbACutInCutOutAnalyzer(),
+            [TbaCutInCutOutVisualizer()],
+            [TbaCutInCutOutTabler()],
+        )
+        all_results["tba_cut_in_cut_out"] = tba_cutin_result
+        summary_tabler.add_analysis_result("tba_cut_in_cut_out", tba_cutin_result)
+        status_summary_tabler.add_analysis_result("tba_cut_in_cut_out", tba_cutin_result)
+
+        # TBA Manufacturer Analysis
+        tba_mfr_result = self._execute_step(
+            "TBA Manufacturer",
+            TbaManufacturerAnalyzer(),
+            [TbaManufacturerVisualizer()],
+            [TbaManufacturerTabler()],
+        )
+        all_results["tba_manufacturer"] = tba_mfr_result
+        summary_tabler.add_analysis_result("tba_manufacturer", tba_mfr_result)
+        status_summary_tabler.add_analysis_result("tba_manufacturer", tba_mfr_result)
 
         # Code Error Analysis
         error_codes_result = self._execute_step(
