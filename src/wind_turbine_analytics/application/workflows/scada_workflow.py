@@ -287,6 +287,26 @@ class ScadaWorkflow(BaseWorkflow):
             self._presenter.show_step_complete(StepStatus.ERROR, str(e))
             raise
 
+    def _extract_metadata_fields(self, fields: list, source=None, default="N/A") -> dict:
+        """
+        Extract multiple fields from a source object with fallback to default.
+
+        Args:
+            fields: List of field names to extract
+            source: Source object to extract from (defaults to self.general_information)
+            default: Default value if field or source is None
+
+        Returns:
+            Dict mapping field names to their values
+        """
+        if source is None:
+            source = self.general_information
+
+        if source is None:
+            return {field: default for field in fields}
+
+        return {field: getattr(source, field, default) for field in fields}
+
     def _render_report(
         self,
         all_results: dict,
@@ -361,115 +381,26 @@ class ScadaWorkflow(BaseWorkflow):
             turbine_list = list(self.turbine_sources.farm.keys())
 
             # Récupérer analysis_start et analysis_end de la première turbine
-            first_turbine_config = None
-            if turbine_list:
-                first_turbine_config = self.turbine_sources.farm[turbine_list[0]]
+            first_turbine_config = self.turbine_sources.farm[turbine_list[0]] if turbine_list else None
 
+            # Extract general information fields using helper method
+            general_info_fields = [
+                "park_name", "commune", "region", "country", "constructor",
+                "model_wtg", "nominal_power", "client_name", "client_location",
+                "client_contact", "author_name", "author_email", "author_phone",
+                "verificator_name", "verificator_email", "verificator_phone",
+                "approver_name", "approver_email", "approver_phone",
+            ]
+
+            # Build metadata dict
             metadata = {
-                "analysis_start": (
-                    first_turbine_config.test_start if first_turbine_config else "N/A"
-                ),
-                "analysis_end": (
-                    first_turbine_config.test_end if first_turbine_config else "N/A"
-                ),
+                "analysis_start": first_turbine_config.test_start if first_turbine_config else "N/A",
+                "analysis_end": first_turbine_config.test_end if first_turbine_config else "N/A",
                 "turbines": turbine_list,
-                # Informations sur le parc
-                "park_name": (
-                    self.general_information.park_name
-                    if self.general_information
-                    else "N/A"
-                ),
-                "commune": (
-                    self.general_information.commune
-                    if self.general_information
-                    else "N/A"
-                ),
-                "region": (
-                    self.general_information.region
-                    if self.general_information
-                    else "N/A"
-                ),
-                "country": (
-                    self.general_information.country
-                    if self.general_information
-                    else "N/A"
-                ),
-                "constructor": (
-                    self.general_information.constructor
-                    if self.general_information
-                    else "N/A"
-                ),
-                "model_wtg": (
-                    self.general_information.model_wtg
-                    if self.general_information
-                    else "N/A"
-                ),
-                "nominal_power": (
-                    self.general_information.nominal_power
-                    if self.general_information
-                    else "N/A"
-                ),
-                "client_name": (
-                    self.general_information.client_name
-                    if self.general_information
-                    else "N/A"
-                ),
-                "client_location": (
-                    self.general_information.client_location
-                    if self.general_information
-                    else "N/A"
-                ),
-                "client_contact": (
-                    self.general_information.client_contact
-                    if self.general_information
-                    else "N/A"
-                ),
-                "author_name": (
-                    self.general_information.author_name
-                    if self.general_information
-                    else "N/A"
-                ),
-                "author_email": (
-                    self.general_information.author_email
-                    if self.general_information
-                    else "N/A"
-                ),
-                "author_phone": (
-                    self.general_information.author_phone
-                    if self.general_information
-                    else "N/A"
-                ),
-                "verificator_name": (
-                    self.general_information.verificator_name
-                    if self.general_information
-                    else "N/A"
-                ),
-                "verificator_email": (
-                    self.general_information.verificator_email
-                    if self.general_information
-                    else "N/A"
-                ),
-                "verificator_phone": (
-                    self.general_information.verificator_phone
-                    if self.general_information
-                    else "N/A"
-                ),
-                "approver_name": (
-                    self.general_information.approver_name
-                    if self.general_information
-                    else "N/A"
-                ),
-                "approver_email": (
-                    self.general_information.approver_email
-                    if self.general_information
-                    else "N/A"
-                ),
-                "approver_phone": (
-                    self.general_information.approver_phone
-                    if self.general_information
-                    else "N/A"
-                ),
             }
+
+            # Add all general information fields
+            metadata.update(self._extract_metadata_fields(general_info_fields))
 
             # Rendre le rapport Word avec ScadaWordPresenter
             presenter = ScadaWordPresenter(
