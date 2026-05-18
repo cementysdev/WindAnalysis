@@ -72,6 +72,7 @@ class TbaManufacturerTabler(BaseTabler):
         return {
             self.table_name: self._table_data,
             f"{self.table_name}_raw": self._table_data,
+            f"{self.table_name}_headers": self._get_table_headers(),
         }
 
     def _pivot_monthly_data(self) -> None:
