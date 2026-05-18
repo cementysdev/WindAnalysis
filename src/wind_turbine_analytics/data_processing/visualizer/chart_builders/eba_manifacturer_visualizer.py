@@ -24,7 +24,7 @@ class EbaManufacturerVisualizer(BaseVisualizer):
     """
 
     def __init__(self):
-        super().__init__(chart_name="eba_manifacturer_chart", use_plotly=True)
+        super().__init__(chart_name="eba_manufacturer_chart", use_plotly=True)
 
     def _create_figure(self, result: AnalysisResult) -> go.Figure:
         """

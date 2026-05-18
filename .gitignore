@@ -4,6 +4,8 @@ __pycache__/
 *$py.class
 *.pyc
 
+.docs/
+
 # Jupyter Notebook
 *.ipynb
 .ipynb_checkpoints/

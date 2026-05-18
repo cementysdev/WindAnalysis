@@ -23,7 +23,16 @@ class TbaManufacturerTabler(BaseTabler):
 
     def _get_table_headers(self) -> List[str]:
         """Return column headers (dynamically built in generate)."""
-        return ["Period"]
+        headers = ["Period"]
+
+        # Ajouter une colonne par turbine (ordre alphabétique)
+        for turbine_id in sorted(self._turbine_ids):
+            headers.append(f"WTG {turbine_id}")
+
+        # Ajouter colonne WindFarm (moyenne)
+        headers.append("WindFarm")
+
+        return headers
 
     def _add_table_row(self, turbine_id: str, turbine_result: Dict[str, Any]) -> None:
         """
@@ -92,9 +101,7 @@ class TbaManufacturerTabler(BaseTabler):
 
             # Calculate WindFarm average for this period
             valid_availabilities = [
-                avail
-                for avail in turbine_availabilities.values()
-                if avail is not None
+                avail for avail in turbine_availabilities.values() if avail is not None
             ]
             if valid_availabilities:
                 avg_availability = sum(valid_availabilities) / len(valid_availabilities)
@@ -127,9 +134,7 @@ class TbaManufacturerTabler(BaseTabler):
         for turbine_id in sorted(self._turbine_ids):
             availabilities = turbine_all_availabilities[turbine_id]
             if availabilities:
-                turbine_means[turbine_id] = (
-                    sum(availabilities) / len(availabilities)
-                )
+                turbine_means[turbine_id] = sum(availabilities) / len(availabilities)
 
         # MEAN row
         mean_row = {"period": "MEAN"}

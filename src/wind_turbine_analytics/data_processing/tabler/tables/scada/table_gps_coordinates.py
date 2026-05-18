@@ -63,9 +63,13 @@ class GpsCoordinatesTabler(BaseTabler):
 
             # Format hub_height and rotor_diameter with units
             if hub_height != "N/A":
-                hub_height = self._format_number(float(hub_height), decimals=1, unit="m")
+                hub_height = self._format_number(
+                    float(hub_height), decimals=1, unit="m"
+                )
             if rotor_diameter != "N/A":
-                rotor_diameter = self._format_number(float(rotor_diameter), decimals=1, unit="m")
+                rotor_diameter = self._format_number(
+                    float(rotor_diameter), decimals=1, unit="m"
+                )
 
             self._table_data.append(
                 {
@@ -77,7 +81,11 @@ class GpsCoordinatesTabler(BaseTabler):
                 }
             )
 
-        return {self.table_name: self._table_data}
+        return {
+            self.table_name: self._table_data,
+            f"{self.table_name}_raw": self._table_data,
+            f"{self.table_name}_headers": self._get_table_headers(),
+        }
 
     def _add_table_row(self, turbine_id: str, turbine_result: Dict[str, Any]) -> None:
         """

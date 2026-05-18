@@ -28,9 +28,7 @@ class CsvFilesTabler(BaseTabler):
         """Retourne les en-têtes du tableau."""
         return ["WTG", "Operation Data", "Log Data"]
 
-    def _add_table_row(
-        self, turbine_id: str, turbine_result: Dict[str, Any]
-    ) -> None:
+    def _add_table_row(self, turbine_id: str, turbine_result: Dict[str, Any]) -> None:
         """
         Méthode non utilisée pour ce tabler.
         Voir generate_from_turbine_farm() à la place.
@@ -81,4 +79,5 @@ class CsvFilesTabler(BaseTabler):
         return {
             self.table_name: self._table_data,
             f"{self.table_name}_raw": self._table_data,
+            f"{self.table_name}_headers": self._get_table_headers(),
         }
