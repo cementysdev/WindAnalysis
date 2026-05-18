@@ -13,6 +13,7 @@ from .table_pitch import PitchTabler
 from .table_data_availability import DataAvailabilityTabler
 from .table_performance_level import PerformanceLevelTabler
 from .table_status_summary import StatusSummaryTabler
+from .table_gps_coordinates import GpsCoordinatesTabler
 
 __all__ = [
     "EbaCutInCutOutTabler",
@@ -28,4 +29,5 @@ __all__ = [
     "DataAvailabilityTabler",
     "PerformanceLevelTabler",
     "StatusSummaryTabler",
+    "GpsCoordinatesTabler",
 ]

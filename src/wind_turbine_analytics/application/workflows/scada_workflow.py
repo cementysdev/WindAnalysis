@@ -37,6 +37,7 @@ from src.wind_turbine_analytics.data_processing.tabler.tables.scada import (
     DataAvailabilityTabler,
     PerformanceLevelTabler,
     StatusSummaryTabler,
+    GpsCoordinatesTabler,
 )
 from src.wind_turbine_analytics.data_processing.visualizer.chart_builders import (
     DataAvailabilityVisualizer,
@@ -87,9 +88,7 @@ class ScadaWorkflow(BaseWorkflow):
 
         # Start pipeline with CLI
         self._presenter.start_pipeline(
-            "SCADA Analysis",
-            steps,
-            "Wind Turbine Analytics - SCADA Pipeline"
+            "SCADA Analysis", steps, "Wind Turbine Analytics - SCADA Pipeline"
         )
 
         # Step 1: Load Configuration
@@ -181,7 +180,9 @@ class ScadaWorkflow(BaseWorkflow):
         )
         all_results["eba_cut_in_cut_out"] = eba_cutin_result
         summary_tabler.add_analysis_result("eba_cut_in_cut_out", eba_cutin_result)
-        status_summary_tabler.add_analysis_result("eba_cut_in_cut_out", eba_cutin_result)
+        status_summary_tabler.add_analysis_result(
+            "eba_cut_in_cut_out", eba_cutin_result
+        )
 
         # EBA Manufacturer Analysis
         eba_mfr_result = self._execute_step(
@@ -212,7 +213,9 @@ class ScadaWorkflow(BaseWorkflow):
         )
         all_results["data_availability"] = availability_result
         summary_tabler.add_analysis_result("data_availability", availability_result)
-        status_summary_tabler.add_analysis_result("data_availability", availability_result)
+        status_summary_tabler.add_analysis_result(
+            "data_availability", availability_result
+        )
 
         # Wind Direction Calibration
         calibration_result = self._execute_step(
@@ -227,7 +230,9 @@ class ScadaWorkflow(BaseWorkflow):
         )
         all_results["wind_calibration"] = calibration_result
         summary_tabler.add_analysis_result("wind_calibration", calibration_result)
-        status_summary_tabler.add_analysis_result("wind_calibration", calibration_result)
+        status_summary_tabler.add_analysis_result(
+            "wind_calibration", calibration_result
+        )
 
         # Tip Speed Ratio
         tsr_result = self._execute_step(
@@ -269,7 +274,9 @@ class ScadaWorkflow(BaseWorkflow):
             [PerformanceLevelTabler()],
         )
         all_results["performance_level"] = performance_level_result
-        status_summary_tabler.add_analysis_result("performance_level", performance_level_result)
+        status_summary_tabler.add_analysis_result(
+            "performance_level", performance_level_result
+        )
 
         # Generate Report
         self._presenter.show_step_start("Generate Report")
@@ -281,7 +288,10 @@ class ScadaWorkflow(BaseWorkflow):
             raise
 
     def _render_report(
-        self, all_results: dict, summary_tabler: ScadaSummaryTabler, status_summary_tabler: StatusSummaryTabler
+        self,
+        all_results: dict,
+        summary_tabler: ScadaSummaryTabler,
+        status_summary_tabler: StatusSummaryTabler,
     ) -> None:
         """
         Génère le rapport Word SCADA si activé dans la config.
@@ -324,6 +334,16 @@ class ScadaWorkflow(BaseWorkflow):
                 f"CSV files table: {len(csv_files_data.get('csv_files_table', []))} rows"
             )
             context.update(csv_files_data)
+
+            # Générer le tableau des coordonnées GPS
+            gps_coordinates_tabler = GpsCoordinatesTabler()
+            gps_coordinates_data = gps_coordinates_tabler.generate_from_turbine_farm(
+                self.turbine_sources
+            )
+            logger.debug(
+                f"GPS coordinates table: {len(gps_coordinates_data.get('gps_coordinates_table', []))} rows"
+            )
+            context.update(gps_coordinates_data)
 
             # Collecter les chemins des images de visualisation
             chart_paths = {}

@@ -69,32 +69,44 @@ class StatusSummaryTabler(BaseTabler):
             {
                 "name": "EBA Manufacturer",
                 "analysis": "eba_manufacturer",
-                "extractor": lambda result, tid: self._get_status(result, tid, "status_level"),
+                "extractor": lambda result, tid: self._get_status(
+                    result, tid, "status_level"
+                ),
             },
             {
                 "name": "EBA Cut-In/Cut-Out",
                 "analysis": "eba_cut_in_cut_out",
-                "extractor": lambda result, tid: self._get_status(result, tid, "status_level"),
+                "extractor": lambda result, tid: self._get_status(
+                    result, tid, "status_level"
+                ),
             },
             {
                 "name": "Wind Calibration",
                 "analysis": "wind_calibration",
-                "extractor": lambda result, tid: self._get_status(result, tid, "status_level"),
+                "extractor": lambda result, tid: self._get_status(
+                    result, tid, "status_level"
+                ),
             },
             {
                 "name": "Tip Speed Ratio",
                 "analysis": "tip_speed_ratio",
-                "extractor": lambda result, tid: self._get_status(result, tid, "status_level"),
+                "extractor": lambda result, tid: self._get_status(
+                    result, tid, "status_level"
+                ),
             },
             {
                 "name": "Pitch Angle",
                 "analysis": "pitch_angle",
-                "extractor": lambda result, tid: self._get_status(result, tid, "status_level"),
+                "extractor": lambda result, tid: self._get_status(
+                    result, tid, "status_level"
+                ),
             },
             {
                 "name": "Performance Level",
                 "analysis": "performance_level",
-                "extractor": lambda result, tid: self._get_status(result, tid, "status_level"),
+                "extractor": lambda result, tid: self._get_status(
+                    result, tid, "status_level"
+                ),
             },
             {
                 "name": "Normative Yield",
@@ -126,9 +138,7 @@ class StatusSummaryTabler(BaseTabler):
 
         return {self.table_name: self._table_data}
 
-    def _get_status(
-        self, result: AnalysisResult, turbine_id: str, key: str
-    ) -> str:
+    def _get_status(self, result: AnalysisResult, turbine_id: str, key: str) -> str:
         """
         Extract status from analysis result.
 

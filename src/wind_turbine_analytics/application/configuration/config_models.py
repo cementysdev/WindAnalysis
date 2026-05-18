@@ -84,6 +84,9 @@ class TurbineGeneralInformation:
     path_log_data: Optional[str] = None
     path_guaranteed_power_curve: Optional[str] = None
     timestamp: str = ""
+    hub_height: str = ""
+    rotor_diameter: str = ""
+    gps_coordinates: list[float] = field(default_factory=list)
 
 
 @dataclass()

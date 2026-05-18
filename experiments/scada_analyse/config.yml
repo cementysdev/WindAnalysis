@@ -35,7 +35,7 @@ validation_criteria:
   cut_in_to_cut_out:
     value: 72
     unit: h
-    specification: [ 3, 25 ]
+    specification: [3, 25]
     description: plage de vitesse
   nominal_power_hours:
     value: 3
@@ -54,8 +54,8 @@ validation_criteria:
     description: null
 
 log_data:
-  authorized_stop: [ 6, 7, 615, 920, 921 ]
-  unauthorized_stop: [ FM3, FM300, FM615, FM954, FE1613, FE1208 ]
+  authorized_stop: [6, 7, 615, 920, 921]
+  unauthorized_stop: [FM3, FM300, FM615, FM954, FE1613, FE1208]
 
 dynamic_fields:
   turbines:
@@ -67,6 +67,9 @@ dynamic_fields:
         path_operation_data: ".\\experiments\\scada_analyse\\DATA\\LU09\\WTG_LU09.csv"
         path_log_data: ".\\experiments\\scada_analyse\\DATA\\LU09\\WTG_message_LU09.csv"
         path_guaranteed_power_curve: null
+        hub_height: 135
+        rotor_diameter: 131
+        gps_coordinates: [45.123456, -0.123456]
       mapping_operation_data:
         timestamp: date
         wind_speed: Wind [m/s]
@@ -95,6 +98,9 @@ dynamic_fields:
         path_operation_data: ".\\experiments\\scada_analyse\\DATA\\LU10\\WTG_LU10.csv"
         path_log_data: ".\\experiments\\scada_analyse\\DATA\\LU10\\WTG_message_LU10.csv"
         path_guaranteed_power_curve: null
+        hub_height: 135
+        rotor_diameter: 131
+        gps_coordinates: [45.123456, -0.123456]
       mapping_operation_data:
         timestamp: date
         wind_speed: Wind [m/s]
@@ -123,6 +129,9 @@ dynamic_fields:
         path_operation_data: ".\\experiments\\scada_analyse\\DATA\\LU11\\WTG_LU11.csv"
         path_log_data: ".\\experiments\\scada_analyse\\DATA\\LU11\\WTG_message_LU11.csv"
         path_guaranteed_power_curve: null
+        hub_height: 135
+        rotor_diameter: 131
+        gps_coordinates: [45.123456, -0.123456]
       mapping_operation_data:
         timestamp: date
         wind_speed: Wind [m/s]
@@ -151,6 +160,9 @@ dynamic_fields:
         path_operation_data: ".\\experiments\\scada_analyse\\DATA\\LU12\\WTG_LU12.csv"
         path_log_data: ".\\experiments\\scada_analyse\\DATA\\LU12\\WTG_message_LU12.csv"
         path_guaranteed_power_curve: null
+        hub_height: 135
+        rotor_diameter: 131
+        gps_coordinates: [45.123456, -0.123456]
       mapping_operation_data:
         timestamp: date
         wind_speed: Wind [m/s]
