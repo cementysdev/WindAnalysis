@@ -21,7 +21,7 @@ class CsvFilesTabler(BaseTabler):
 
     def _get_table_headers(self) -> List[str]:
         """Retourne les en-têtes du tableau."""
-        return ["WTG", "Path Operation Data", "Path Alarm Log"]
+        return ["WTG", "Operation Data", "Log Data"]
 
     def _add_table_row(
         self, turbine_id: str, turbine_result: Dict[str, Any]
@@ -68,8 +68,8 @@ class CsvFilesTabler(BaseTabler):
             self._table_data.append(
                 {
                     "wtg": turbine_id,
-                    "path_operation": path_operation,
-                    "path_log": path_log,
+                    "operation_data": path_operation,
+                    "log_data": path_log,
                 }
             )
 
