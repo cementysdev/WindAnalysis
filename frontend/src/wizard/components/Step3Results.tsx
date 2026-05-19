@@ -3,7 +3,7 @@ import { useWizard } from '../../hooks/useWizard';
 import { analyzeAPI } from '../../services/api';
 import { RunTestResults } from '../../components/results/RunTestResults';
 import { ScadaResults } from '../../components/results/ScadaResults';
-import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw, Download } from 'lucide-react';
 
 export function Step3Results() {
   const { state, setAnalysisResult, setLoading, setError, previousStep, reset } = useWizard();
@@ -132,6 +132,15 @@ export function Step3Results() {
     );
   }
 
+  const handleDownloadReport = () => {
+    if (state.sessionId) {
+      analyzeAPI.downloadReport(state.sessionId);
+    } else if (state.analysisResult?.report_path) {
+      // Legacy mode - report path is local, can't download
+      alert('Le rapport est disponible localement à : ' + state.analysisResult.report_path);
+    }
+  };
+
   // Display results
   return (
     <div>
@@ -139,12 +148,23 @@ export function Step3Results() {
         <h2 className="text-2xl font-bold text-primary-dark">
           Résultats de l'analyse {state.workflowType === 'runtest' ? 'RunTest' : 'SCADA'}
         </h2>
-        <button
-          onClick={reset}
-          className="bg-green-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-green-700 transition-colors"
-        >
-          Nouvelle analyse
-        </button>
+        <div className="flex space-x-3">
+          {state.sessionId && (
+            <button
+              onClick={handleDownloadReport}
+              className="bg-blue-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors flex items-center"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Télécharger le rapport
+            </button>
+          )}
+          <button
+            onClick={reset}
+            className="bg-green-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-green-700 transition-colors"
+          >
+            Nouvelle analyse
+          </button>
+        </div>
       </div>
 
       {/* Metadata Summary */}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Eye, Trash2, Loader2, AlertCircle, RefreshCw, Calendar, Activity } from 'lucide-react';
+import { Eye, Trash2, Loader2, AlertCircle, RefreshCw, Calendar, Activity, Download } from 'lucide-react';
 import { analyzeAPI } from '../../services/api';
 import { useWizard } from '../../hooks/useWizard';
 import type { SessionSummary } from '../../types/analysis';
@@ -325,14 +325,26 @@ export function SessionHistory({ onViewChange }: SessionHistoryProps) {
                     {session.charts_count} graphiques, {session.tables_count} tableaux
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => handleViewSession(session.session_id)}
-                      disabled={isLoading}
-                      className="inline-flex items-center bg-primary-dark text-white px-3 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <Eye className="w-4 h-4 mr-1.5" />
-                      Consulter
-                    </button>
+                    <div className="flex items-center justify-end space-x-2">
+                      {session.status === 'completed' && (
+                        <button
+                          onClick={() => analyzeAPI.downloadReport(session.session_id)}
+                          disabled={isLoading}
+                          className="inline-flex items-center bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                          title="Télécharger le rapport"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleViewSession(session.session_id)}
+                        disabled={isLoading}
+                        className="inline-flex items-center bg-primary-dark text-white px-3 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Eye className="w-4 h-4 mr-1.5" />
+                        Consulter
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -102,4 +102,13 @@ export const analyzeAPI = {
     });
     return response.data;
   },
+
+  /**
+   * Télécharge le rapport Word d'une session
+   */
+  downloadReport: async (sessionId: string): Promise<void> => {
+    // Use window.open to trigger download
+    const url = `${API_BASE_URL}/sessions/${sessionId}/report`;
+    window.open(url, '_blank');
+  },
 };

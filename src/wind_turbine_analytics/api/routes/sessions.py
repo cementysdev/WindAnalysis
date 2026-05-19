@@ -3,7 +3,9 @@ Session management endpoints for listing, viewing, and deleting sessions.
 """
 import json
 from typing import List
+from pathlib import Path
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from src.logger_config import get_logger
@@ -309,4 +311,69 @@ async def delete_multiple_sessions(request: BulkDeleteRequest):
         raise HTTPException(
             status_code=500,
             detail=f"Failed to delete sessions: {str(e)}"
+        )
+
+
+@router.get("/{session_id}/report")
+async def download_report(session_id: str):
+    """
+    Download the Word report for a session.
+
+    Args:
+        session_id: Session identifier
+
+    Returns:
+        FileResponse with the .docx report
+
+    Raises:
+        HTTPException 404: If session or report not found
+        HTTPException 500: If download fails
+
+    Example:
+        GET /sessions/{session_id}/report
+        → Downloads scada_report.docx or runtest_report.docx
+    """
+    try:
+        session_manager = SessionManager()
+
+        # Check if session exists
+        if not session_manager.session_exists(session_id):
+            logger.warning(f"Session not found for report download: {session_id}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Session {session_id} not found"
+            )
+
+        # Get reports path
+        reports_path = session_manager.get_reports_path(session_id)
+
+        # Find .docx file in reports directory
+        report_files = list(reports_path.glob("*.docx"))
+
+        if not report_files:
+            logger.warning(f"No report found for session {session_id}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"No report found for session {session_id}"
+            )
+
+        # Get the first report file (should be only one)
+        report_file = report_files[0]
+
+        logger.info(f"Serving report for session {session_id}: {report_file.name}")
+
+        # Return file as download
+        return FileResponse(
+            path=str(report_file),
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            filename=report_file.name
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error downloading report for session {session_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to download report: {str(e)}"
         )
