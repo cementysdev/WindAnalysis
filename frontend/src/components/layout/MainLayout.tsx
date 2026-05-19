@@ -5,9 +5,10 @@ interface MainLayoutProps {
   children: React.ReactNode;
   currentView: 'wizard' | 'history';
   onViewChange: (view: 'wizard' | 'history') => void;
+  onNewAnalysis?: () => void;
 }
 
-export function MainLayout({ children, currentView, onViewChange }: MainLayoutProps) {
+export function MainLayout({ children, currentView, onViewChange, onNewAnalysis }: MainLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -24,7 +25,12 @@ export function MainLayout({ children, currentView, onViewChange }: MainLayoutPr
             {/* Navigation */}
             <nav className="flex space-x-2">
               <button
-                onClick={() => onViewChange('wizard')}
+                onClick={() => {
+                  if (onNewAnalysis) {
+                    onNewAnalysis();
+                  }
+                  onViewChange('wizard');
+                }}
                 className={`flex items-center px-4 py-2 rounded-md font-semibold transition-colors ${
                   currentView === 'wizard'
                     ? 'bg-white text-primary-dark'

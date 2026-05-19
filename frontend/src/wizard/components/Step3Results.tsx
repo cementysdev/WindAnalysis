@@ -6,7 +6,7 @@ import { ScadaResults } from '../../components/results/ScadaResults';
 import { Loader2, AlertCircle, RefreshCw, Download } from 'lucide-react';
 
 export function Step3Results() {
-  const { state, setAnalysisResult, setLoading, setError, previousStep, reset } = useWizard();
+  const { state, setAnalysisResult, setLoading, setError, previousStep, reset, goToStep } = useWizard();
   const hasTriggeredRef = useRef(false);
 
   // Trigger analysis when component mounts if no result yet
@@ -141,6 +141,11 @@ export function Step3Results() {
     }
   };
 
+  const handleNewAnalysis = () => {
+    reset();
+    goToStep('dataSource');
+  };
+
   // Display results
   return (
     <div>
@@ -159,10 +164,10 @@ export function Step3Results() {
             </button>
           )}
           <button
-            onClick={reset}
+            onClick={handleNewAnalysis}
             className="bg-green-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-green-700 transition-colors"
           >
-            Nouvelle analyse
+            Recommencer l'analyse
           </button>
         </div>
       </div>

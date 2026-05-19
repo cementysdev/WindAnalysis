@@ -3,10 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.pyc
-
+.claude/
 .docs/
 tmp/
 tests/
+frontend/.vite/
 # Jupyter Notebook
 *.ipynb
 .ipynb_checkpoints/
