@@ -11,7 +11,8 @@ export function Step3Results() {
 
   // Trigger analysis when component mounts if no result yet
   useEffect(() => {
-    if (!hasTriggeredRef.current && !state.analysisResult && state.folderPath && state.workflowType && !state.isLoading) {
+    const hasSource = state.sessionId || state.folderPath;
+    if (!hasTriggeredRef.current && !state.analysisResult && hasSource && state.workflowType && !state.isLoading) {
       hasTriggeredRef.current = true;
       triggerAnalysis();
     }
@@ -19,8 +20,14 @@ export function Step3Results() {
   }, []); // Empty deps array = run only once on mount
 
   const triggerAnalysis = async () => {
-    if (!state.folderPath || !state.workflowType) {
+    if (!state.workflowType) {
       setError('Configuration manquante. Veuillez retourner à l\'étape 1.');
+      return;
+    }
+
+    // Validate that we have either session_id or folder_path
+    if (!state.sessionId && !state.folderPath) {
+      setError('Aucune source de données définie. Veuillez retourner à l\'étape 1.');
       return;
     }
 
@@ -28,13 +35,15 @@ export function Step3Results() {
     setError(null);
 
     try {
+      const source = state.sessionId ? `session ${state.sessionId}` : state.folderPath;
       console.log('🚀 Lancement de l\'analyse...', {
-        folder: state.folderPath,
+        source,
         workflow: state.workflowType,
       });
 
       const response = await analyzeAPI.runAnalysis({
-        folder_path: state.folderPath,
+        session_id: state.sessionId || undefined,
+        folder_path: state.folderPath || undefined,
         workflow_type: state.workflowType,
         render_template: true,
       });
@@ -59,7 +68,8 @@ export function Step3Results() {
         <p className="text-gray-600 mb-4">Cette opération peut prendre entre 1 et 5 minutes.</p>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
           <p className="text-sm text-blue-900 break-all">
-            <strong>Dossier :</strong> {state.folderPath}
+            <strong>{state.sessionId ? 'Session :' : 'Dossier :'}</strong>{' '}
+            {state.sessionId || state.folderPath}
           </p>
           <p className="text-sm text-blue-900 mt-2">
             <strong>Type :</strong> {state.workflowType === 'runtest' ? 'RunTest' : 'SCADA'}

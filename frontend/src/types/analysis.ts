@@ -1,11 +1,37 @@
 export type WorkflowType = "runtest" | "scada";
 
 export interface AnalyzeRequest {
-  folder_path: string;
+  folder_path?: string;     // Legacy mode
+  session_id?: string;      // New session mode
   workflow_type: WorkflowType;
   template_path?: string;
   output_path?: string;
   render_template?: boolean;
+}
+
+export interface UploadResponse {
+  session_id: string;
+  original_filename: string;
+  workflow_type: WorkflowType;
+  config_preview: any;
+  created_at: string;
+  message: string;
+}
+
+export interface SessionSummary {
+  session_id: string;
+  created_at: string;
+  workflow_type: WorkflowType;
+  park_name?: string;
+  status: string;
+  charts_count: number;
+  tables_count: number;
+}
+
+export interface SessionDetail {
+  metadata: Record<string, any>;
+  charts: ChartData[];
+  tables: TableData[];
 }
 
 export interface ChartData {

@@ -6,6 +6,8 @@ import type { ParsedConfig } from '../types/config';
 const initialState: WizardState = {
   currentStep: 'dataSource',
   folderPath: null,
+  sessionId: null,
+  uploadedFile: null,
   workflowType: null,
   configData: null,
   analysisResult: null,
@@ -20,6 +22,12 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
 
     case 'SET_FOLDER_PATH':
       return { ...state, folderPath: action.payload };
+
+    case 'SET_SESSION_ID':
+      return { ...state, sessionId: action.payload };
+
+    case 'SET_UPLOADED_FILE':
+      return { ...state, uploadedFile: action.payload };
 
     case 'SET_WORKFLOW_TYPE':
       return { ...state, workflowType: action.payload };
@@ -52,6 +60,8 @@ export interface WizardContextValue {
   nextStep: () => void;
   previousStep: () => void;
   setFolderPath: (path: string) => void;
+  setSessionId: (sessionId: string) => void;
+  setUploadedFile: (file: File) => void;
   setWorkflowType: (type: 'runtest' | 'scada') => void;
   setConfigData: (config: ParsedConfig) => void;
   setAnalysisResult: (result: AnalyzeResponse) => void;
@@ -93,6 +103,14 @@ export function WizardProvider({ children }: WizardProviderProps) {
     dispatch({ type: 'SET_FOLDER_PATH', payload: path });
   };
 
+  const setSessionId = (sessionId: string) => {
+    dispatch({ type: 'SET_SESSION_ID', payload: sessionId });
+  };
+
+  const setUploadedFile = (file: File) => {
+    dispatch({ type: 'SET_UPLOADED_FILE', payload: file });
+  };
+
   const setWorkflowType = (type: 'runtest' | 'scada') => {
     dispatch({ type: 'SET_WORKFLOW_TYPE', payload: type });
   };
@@ -124,6 +142,8 @@ export function WizardProvider({ children }: WizardProviderProps) {
     nextStep,
     previousStep,
     setFolderPath,
+    setSessionId,
+    setUploadedFile,
     setWorkflowType,
     setConfigData,
     setAnalysisResult,
