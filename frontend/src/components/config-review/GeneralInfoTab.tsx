@@ -141,7 +141,7 @@ export function GeneralInfoTab({ generalInfo }: GeneralInfoTabProps) {
       )}
 
       {/* Équipe */}
-      {(generalInfo.author_name || generalInfo.writer_name || generalInfo.verficator_name) && (
+      {(generalInfo.author_name || generalInfo.writer_name || generalInfo.verificator_name) && (
         <div>
           <SectionTitle>Équipe du projet</SectionTitle>
           <div className="space-y-4">
@@ -196,13 +196,13 @@ export function GeneralInfoTab({ generalInfo }: GeneralInfoTabProps) {
             )}
 
             {/* Vérificateur */}
-            {generalInfo.verficator_name && (
+            {generalInfo.verificator_name && (
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <p className="text-sm font-semibold text-purple-900 mb-2">Vérificateur</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                   <div className="flex items-center space-x-2">
                     <User className="w-4 h-4 text-purple-600" />
-                    <span>{generalInfo.verficator_name}</span>
+                    <span>{generalInfo.verificator_name}</span>
                   </div>
                   {generalInfo.verficator_email && (
                     <div className="flex items-center space-x-2">

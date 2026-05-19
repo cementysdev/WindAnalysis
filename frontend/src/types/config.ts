@@ -30,9 +30,9 @@ export interface GeneralInformation {
   writer_name?: string;
   writer_email?: string;
   writer_phone?: string;
-  verficator_name?: string;
-  verficator_email?: string;
-  verficator_phone?: string;
+  verificator_name?: string;
+  verificator_email?: string;
+  verificator_phone?: string;
   date_archive?: string;
 }
 

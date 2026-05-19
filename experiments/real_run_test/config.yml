@@ -16,9 +16,9 @@ general_information:
   writer_name: Nicolas Bousquet
   writer_email: nicilas.bousquet@socotec.com
   writer_phone: "+33 6 12 34 56 78"
-  verficator_name: Nicolas Bousquet
-  verficator_email: nicolas.bousquet@socotec.com
-  verficator_phone: "+33 6 12 34 56 78"
+  verificator_name: Nicolas Bousquet
+  verificator_email: nicolas.bousquet@socotec.com
+  verificator_phone: "+33 6 12 34 56 78"
   date_archive: "2024-06-01"
 
 # Paramètres de génération de rapport Word
