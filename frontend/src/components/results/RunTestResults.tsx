@@ -91,6 +91,16 @@ export function RunTestResults({ result }: RunTestResultsProps) {
     c.name.toLowerCase().includes('wind_histogram') || c.name.toLowerCase().includes('histogram_chart')
   );
 
+  // Timeline Charts
+  const timelineCharts = result.charts.filter((c) =>
+    c.name.toLowerCase().includes('timeline')
+  );
+
+  // Power Curve Charts
+  const powerCurveCharts = result.charts.filter((c) =>
+    c.name.toLowerCase().includes('power_curve') || c.name.toLowerCase().includes('courbe')
+  );
+
   // Summary table (first table usually)
   const summaryTable = result.tables.find((t) =>
     t.name.toLowerCase().includes('summary') || t.name.toLowerCase().includes('résumé')
@@ -130,13 +140,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
     });
   }
 
-  // Cut-In to Cut-Out
-  if (cutInOutCharts.length > 0 || cutInOutTables.length > 0) {
+  // Cut-In to Cut-Out (includes timeline)
+  if (cutInOutCharts.length > 0 || cutInOutTables.length > 0 || timelineCharts.length > 0) {
     sidebarSections.push({
       id: 'cutinout',
       label: 'Cut-In à Cut-Out',
       icon: <Activity className="w-4 h-4" />,
-      chartsCount: cutInOutCharts.length,
+      chartsCount: cutInOutCharts.length + timelineCharts.length,
       tablesCount: cutInOutTables.length,
     });
   }
@@ -196,6 +206,18 @@ export function RunTestResults({ result }: RunTestResultsProps) {
     });
   }
 
+
+  // Power Curve
+  if (powerCurveCharts.length > 0) {
+    sidebarSections.push({
+      id: 'power-curve',
+      label: 'Courbe de puissance',
+      icon: <Zap className="w-4 h-4" />,
+      chartsCount: powerCurveCharts.length,
+      tablesCount: 0,
+    });
+  }
+
   return (
     <div className="flex gap-6">
       {/* Sidebar */}
@@ -241,11 +263,16 @@ export function RunTestResults({ result }: RunTestResultsProps) {
         )}
 
         {/* Cut-In to Cut-Out */}
-        {(cutInOutCharts.length > 0 || cutInOutTables.length > 0) && (
+        {(cutInOutCharts.length > 0 || cutInOutTables.length > 0 || timelineCharts.length > 0) && (
           <div id="cutinout">
             <CategoryCard title="Test Cut-In à Cut-Out" icon={Activity} defaultOpen={true}>
               <div className="space-y-6">
                 {cutInOutCharts.map((chart, idx) => (
+                  <div key={idx} className="mb-6">
+                    <ChartViewer charts={[chart]} />
+                  </div>
+                ))}
+                {timelineCharts.map((chart, idx) => (
                   <div key={idx} className="mb-6">
                     <ChartViewer charts={[chart]} />
                   </div>
@@ -335,6 +362,21 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             <CategoryCard title="Distribution de la vitesse du vent" icon={BarChart3} defaultOpen={true}>
               <div className="space-y-6">
                 {windHistogramCharts.map((chart, idx) => (
+                  <div key={idx} className="mb-6">
+                    <ChartViewer charts={[chart]} />
+                  </div>
+                ))}
+              </div>
+            </CategoryCard>
+          </div>
+        )}
+
+        {/* Power Curve */}
+        {powerCurveCharts.length > 0 && (
+          <div id="power-curve">
+            <CategoryCard title="Courbe de puissance" icon={Zap} defaultOpen={true}>
+              <div className="space-y-6">
+                {powerCurveCharts.map((chart, idx) => (
                   <div key={idx} className="mb-6">
                     <ChartViewer charts={[chart]} />
                   </div>
