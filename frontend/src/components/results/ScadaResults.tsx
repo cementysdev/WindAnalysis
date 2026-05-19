@@ -3,7 +3,7 @@ import { CategoryCard } from '../shared/CategoryCard';
 import { PaginatedTable } from '../shared/PaginatedTable';
 import { ChartViewer } from '../ChartViewer';
 import { DownloadButton } from '../shared/DownloadButton';
-import { Zap, AlertTriangle, Database, Wind, Gauge, TrendingUp, Compass } from 'lucide-react';
+import { Zap, AlertTriangle, Database, Wind, Gauge, TrendingUp, Compass, Clock, Settings, Activity, Info } from 'lucide-react';
 
 interface ScadaResultsProps {
   result: AnalyzeResponse;
@@ -16,12 +16,24 @@ export function ScadaResults({ result }: ScadaResultsProps) {
   );
   const ebaTables = result.tables.filter((t) => t.name.toLowerCase().includes('eba'));
 
-  const errorCodeCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('error') || c.name.toLowerCase().includes('code')
-  );
-  const errorCodeTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('error') || t.name.toLowerCase().includes('code')
-  );
+  const errorCodeCharts = result.charts.filter((c) => {
+    const name = c.name.toLowerCase();
+    return (
+      name.includes('error_code') ||
+      name.includes('top_error') ||
+      name.includes('treemap_error') ||
+      (name.includes('error') && name.includes('frequency')) ||
+      (name.includes('code') && !name.includes('gps'))
+    );
+  });
+  const errorCodeTables = result.tables.filter((t) => {
+    const name = t.name.toLowerCase();
+    return (
+      name.includes('error') ||
+      name.includes('code_pareto') ||
+      (name.includes('code') && !name.includes('gps'))
+    );
+  });
 
   const dataAvailabilityCharts = result.charts.filter((c) =>
     c.name.toLowerCase().includes('availability') || c.name.toLowerCase().includes('heatmap')
@@ -59,9 +71,41 @@ export function ScadaResults({ result }: ScadaResultsProps) {
     c.name.toLowerCase().includes('power_rose') || c.name.toLowerCase().includes('rose') && c.name.toLowerCase().includes('power')
   );
 
+  // TBA Analysis
+  const tbaCharts = result.charts.filter((c) =>
+    c.name.toLowerCase().includes('tba')
+  );
+  const tbaTables = result.tables.filter((t) =>
+    t.name.toLowerCase().includes('tba')
+  );
+
+  // Pitch Analysis
+  const pitchCharts = result.charts.filter((c) =>
+    c.name.toLowerCase().includes('pitch')
+  );
+  const pitchTables = result.tables.filter((t) =>
+    t.name.toLowerCase().includes('pitch')
+  );
+
+  // Performance Level
+  const performanceCharts = result.charts.filter((c) =>
+    c.name.toLowerCase().includes('performance') && c.name.toLowerCase().includes('level')
+  );
+  const performanceTables = result.tables.filter((t) =>
+    t.name.toLowerCase().includes('performance') && t.name.toLowerCase().includes('level')
+  );
+
+  // Summary Section
+  const summaryTables = result.tables.filter((t) =>
+    t.name.toLowerCase().includes('summary') ||
+    t.name.toLowerCase().includes('gps') ||
+    t.name.toLowerCase().includes('coordinates')
+  );
+
   // Remaining charts/tables not categorized
   const categorizedChartNames = new Set([
     ...ebaCharts,
+    ...tbaCharts,
     ...errorCodeCharts,
     ...dataAvailabilityCharts,
     ...windDirectionCharts,
@@ -69,23 +113,43 @@ export function ScadaResults({ result }: ScadaResultsProps) {
     ...normativeCharts,
     ...windRoseCharts,
     ...powerRoseCharts,
+    ...pitchCharts,
+    ...performanceCharts,
   ].map((c) => c.name));
 
   const otherCharts = result.charts.filter((c) => !categorizedChartNames.has(c.name));
 
   const categorizedTableNames = new Set([
     ...ebaTables,
+    ...tbaTables,
     ...errorCodeTables,
     ...dataAvailabilityTables,
     ...windDirectionTables,
     ...tipSpeedTables,
     ...normativeTables,
+    ...pitchTables,
+    ...performanceTables,
+    ...summaryTables,
   ].map((t) => t.name));
 
   const otherTables = result.tables.filter((t) => !categorizedTableNames.has(t.name));
 
   return (
     <div className="space-y-6">
+      {/* Summary Section */}
+      {summaryTables.length > 0 && (
+        <CategoryCard title="Résumé du Parc" icon={Info} defaultOpen={true}>
+          <div className="space-y-6">
+            {summaryTables.map((table, idx) => (
+              <div key={idx} className="mt-6">
+                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
+                <PaginatedTable table={table} itemsPerPage={10} />
+              </div>
+            ))}
+          </div>
+        </CategoryCard>
+      )}
+
       {/* EBA Analysis */}
       {(ebaCharts.length > 0 || ebaTables.length > 0) && (
         <CategoryCard title="Analyse EBA (Energy-Based Availability)" icon={Zap} defaultOpen={true}>
@@ -96,6 +160,25 @@ export function ScadaResults({ result }: ScadaResultsProps) {
               </div>
             ))}
             {ebaTables.map((table, idx) => (
+              <div key={idx} className="mt-6">
+                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
+                <PaginatedTable table={table} itemsPerPage={10} />
+              </div>
+            ))}
+          </div>
+        </CategoryCard>
+      )}
+
+      {/* TBA Analysis */}
+      {(tbaCharts.length > 0 || tbaTables.length > 0) && (
+        <CategoryCard title="Analyse TBA (Time-Based Availability)" icon={Clock} defaultOpen={true}>
+          <div className="space-y-6">
+            {tbaCharts.map((chart, idx) => (
+              <div key={idx} className="mb-6">
+                <ChartViewer charts={[chart]} />
+              </div>
+            ))}
+            {tbaTables.map((table, idx) => (
               <div key={idx} className="mt-6">
                 <h4 className="text-md font-semibold mb-3">{table.name}</h4>
                 <PaginatedTable table={table} itemsPerPage={10} />
@@ -220,6 +303,44 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             {powerRoseCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
                 <ChartViewer charts={[chart]} />
+              </div>
+            ))}
+          </div>
+        </CategoryCard>
+      )}
+
+      {/* Pitch Analysis */}
+      {(pitchCharts.length > 0 || pitchTables.length > 0) && (
+        <CategoryCard title="Analyse du Pitch" icon={Settings} defaultOpen={true}>
+          <div className="space-y-6">
+            {pitchCharts.map((chart, idx) => (
+              <div key={idx} className="mb-6">
+                <ChartViewer charts={[chart]} />
+              </div>
+            ))}
+            {pitchTables.map((table, idx) => (
+              <div key={idx} className="mt-6">
+                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
+                <PaginatedTable table={table} itemsPerPage={10} />
+              </div>
+            ))}
+          </div>
+        </CategoryCard>
+      )}
+
+      {/* Performance Level */}
+      {(performanceCharts.length > 0 || performanceTables.length > 0) && (
+        <CategoryCard title="Niveau de Performance (Classification des Zones)" icon={Activity} defaultOpen={true}>
+          <div className="space-y-6">
+            {performanceCharts.map((chart, idx) => (
+              <div key={idx} className="mb-6">
+                <ChartViewer charts={[chart]} />
+              </div>
+            ))}
+            {performanceTables.map((table, idx) => (
+              <div key={idx} className="mt-6">
+                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
+                <PaginatedTable table={table} itemsPerPage={10} />
               </div>
             ))}
           </div>

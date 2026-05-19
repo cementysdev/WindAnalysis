@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useWizard } from '../../hooks/useWizard';
 import { analyzeAPI } from '../../services/api';
 import { RunTestResults } from '../../components/results/RunTestResults';
@@ -7,13 +7,16 @@ import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 
 export function Step3Results() {
   const { state, setAnalysisResult, setLoading, setError, previousStep, reset } = useWizard();
+  const hasTriggeredRef = useRef(false);
 
   // Trigger analysis when component mounts if no result yet
   useEffect(() => {
-    if (!state.analysisResult && state.folderPath && state.workflowType && !state.isLoading) {
+    if (!hasTriggeredRef.current && !state.analysisResult && state.folderPath && state.workflowType && !state.isLoading) {
+      hasTriggeredRef.current = true;
       triggerAnalysis();
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps array = run only once on mount
 
   const triggerAnalysis = async () => {
     if (!state.folderPath || !state.workflowType) {

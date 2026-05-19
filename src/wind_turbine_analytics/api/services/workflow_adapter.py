@@ -18,7 +18,7 @@ from src.wind_turbine_analytics.application.configuration.config_models import (
 )
 from src.wind_turbine_analytics.data_processing.visualizer.base_visualizer import BaseVisualizer
 from src.wind_turbine_analytics.data_processing.tabler.base_tabler import BaseTabler
-from src.wind_turbine_analytics.presentation.presenter import PipelinePresenter
+from src.wind_turbine_analytics.presentation.cli_presenter import CLIPipelinePresenter
 from src.wind_turbine_analytics.api.models.responses import (
     AnalyzeResponse,
     ChartData,
@@ -105,8 +105,8 @@ class WorkflowAdapter:
         self._patch_tabler()
 
         try:
-            # Instantiate workflow with a no-op presenter
-            presenter = PipelinePresenter()
+            # Instantiate workflow with CLI presenter
+            presenter = CLIPipelinePresenter()
             workflow = workflow_class(config=config, presenter=presenter)
 
             logger.debug("Running workflow validation and processing...")
