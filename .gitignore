@@ -5,7 +5,7 @@ __pycache__/
 *.pyc
 
 .docs/
-
+tmp/
 # Jupyter Notebook
 *.ipynb
 .ipynb_checkpoints/
