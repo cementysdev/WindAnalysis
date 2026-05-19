@@ -204,16 +204,16 @@ export function GeneralInfoTab({ generalInfo }: GeneralInfoTabProps) {
                     <User className="w-4 h-4 text-purple-600" />
                     <span>{generalInfo.verificator_name}</span>
                   </div>
-                  {generalInfo.verficator_email && (
+                  {generalInfo.verificator_email && (
                     <div className="flex items-center space-x-2">
                       <Mail className="w-4 h-4 text-purple-600" />
-                      <span className="break-all">{generalInfo.verficator_email}</span>
+                      <span className="break-all">{generalInfo.verificator_email}</span>
                     </div>
                   )}
-                  {generalInfo.verficator_phone && (
+                  {generalInfo.verificator_phone && (
                     <div className="flex items-center space-x-2">
                       <Phone className="w-4 h-4 text-purple-600" />
-                      <span>{generalInfo.verficator_phone}</span>
+                      <span>{generalInfo.verificator_phone}</span>
                     </div>
                   )}
                 </div>

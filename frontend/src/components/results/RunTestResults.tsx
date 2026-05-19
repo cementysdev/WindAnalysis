@@ -237,11 +237,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Cut-In to Cut-Out */}
-      {(cutInOutCharts.length > 0 || cutInOutTables.length > 0) && (
-        <CategoryCard title="Test Cut-In à Cut-Out" icon={Activity} defaultOpen={true}>
+        {/* Cut-In to Cut-Out */}
+        {(cutInOutCharts.length > 0 || cutInOutTables.length > 0) && (
+          <div id="cutinout">
+            <CategoryCard title="Test Cut-In à Cut-Out" icon={Activity} defaultOpen={true}>
           <div className="space-y-6">
             {cutInOutCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -256,11 +258,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Nominal Power */}
-      {(nominalPowerCharts.length > 0 || nominalPowerTables.length > 0) && (
-        <CategoryCard title="Puissance nominale" icon={Zap} defaultOpen={true}>
+        {/* Nominal Power */}
+        {(nominalPowerCharts.length > 0 || nominalPowerTables.length > 0) && (
+          <div id="nominal">
+            <CategoryCard title="Puissance nominale" icon={Zap} defaultOpen={true}>
           <div className="space-y-6">
             {nominalPowerCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -275,11 +279,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Local Restarts */}
-      {restartsTables.length > 0 && (
-        <CategoryCard title="Redémarrages locaux" icon={RotateCcw} defaultOpen={true}>
+        {/* Local Restarts */}
+        {restartsTables.length > 0 && (
+          <div id="restarts">
+            <CategoryCard title="Redémarrages locaux" icon={RotateCcw} defaultOpen={true}>
           <div className="space-y-4">
             {restartsTables.map((table, idx) => (
               <div key={idx}>
@@ -289,11 +295,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Availability */}
-      {availabilityTables.length > 0 && (
-        <CategoryCard title="Disponibilité" icon={CheckCircle} defaultOpen={true}>
+        {/* Availability */}
+        {availabilityTables.length > 0 && (
+          <div id="availability">
+            <CategoryCard title="Disponibilité" icon={CheckCircle} defaultOpen={true}>
           <div className="space-y-4">
             {availabilityTables.map((table, idx) => (
               <div key={idx}>
@@ -303,11 +311,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Wind Rose */}
-      {windRoseCharts.length > 0 && (
-        <CategoryCard title="Rose des vents" icon={Wind} defaultOpen={true}>
+        {/* Wind Rose */}
+        {windRoseCharts.length > 0 && (
+          <div id="wind-rose">
+            <CategoryCard title="Rose des vents" icon={Wind} defaultOpen={true}>
           <div className="space-y-6">
             {windRoseCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -316,11 +326,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Wind Histogram */}
-      {windHistogramCharts.length > 0 && (
-        <CategoryCard title="Distribution de la vitesse du vent" icon={BarChart3} defaultOpen={true}>
+        {/* Wind Histogram */}
+        {windHistogramCharts.length > 0 && (
+          <div id="wind-histogram">
+            <CategoryCard title="Distribution de la vitesse du vent" icon={BarChart3} defaultOpen={true}>
           <div className="space-y-6">
             {windHistogramCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -329,12 +341,14 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Download Report */}
-      <CategoryCard title="Téléchargement" icon={CheckCircle} defaultOpen={true} collapsible={false}>
-        <DownloadButton reportPath={result.report_path} />
-      </CategoryCard>
+        {/* Download Report */}
+        <CategoryCard title="Téléchargement" icon={CheckCircle} defaultOpen={true} collapsible={false}>
+          <DownloadButton reportPath={result.report_path} />
+        </CategoryCard>
+      </div>
     </div>
   );
 }

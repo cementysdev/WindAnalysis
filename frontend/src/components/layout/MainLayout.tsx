@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { History, Home } from 'lucide-react';
 
 interface MainLayoutProps {

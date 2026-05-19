@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useWizard } from '../../hooks/useWizard';
 import { analyzeAPI } from '../../services/api';
-import { RunTestResults } from '../../components/results/RunTestResults';
+import { RunTestResults } from '../../components/results/RuntestResults';
 import { ScadaResults } from '../../components/results/ScadaResults';
 import { Loader2, AlertCircle, RefreshCw, Download } from 'lucide-react';
 

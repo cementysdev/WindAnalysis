@@ -3,6 +3,7 @@ import { Eye, Trash2, Loader2, AlertCircle, RefreshCw, Calendar, Activity, Downl
 import { analyzeAPI } from '../../services/api';
 import { useWizard } from '../../hooks/useWizard';
 import type { SessionSummary } from '../../types/analysis';
+import type { ParsedConfig } from '../../types/config';
 
 interface SessionHistoryProps {
   onViewChange?: (view: 'wizard' | 'history') => void;
@@ -56,7 +57,7 @@ export function SessionHistory({ onViewChange }: SessionHistoryProps) {
       // Set session data
       setSessionId(sessionId);
       setWorkflowType(sessionSummary.workflow_type);
-      setConfigData(details.metadata);
+      setConfigData(details.metadata as ParsedConfig);
 
       // Set analysis result
       setAnalysisResult({
