@@ -14,6 +14,7 @@ from src.wind_turbine_analytics.application.configuration.config_models import (
 from src.wind_turbine_analytics.application.workflows.runtest_workflow import RunTestWorkflow
 from src.wind_turbine_analytics.application.workflows.scada_workflow import ScadaWorkflow
 from src.wind_turbine_analytics.api.services.workflow_adapter import WorkflowAdapter
+from src.wind_turbine_analytics.api.services.session_manager import SessionManager
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/analyze", tags=["Analysis"])
@@ -28,37 +29,63 @@ async def run_runtest_analysis(request: AnalyzeRequest):
     all generated charts and tables as JSON, along with metadata.
 
     Args:
-        request: Analysis request with folder_path and configuration options
+        request: Analysis request with folder_path OR session_id
 
     Returns:
         AnalyzeResponse with charts, tables, and metadata
 
     Raises:
-        HTTPException 400: If folder_path or config.yml is invalid
+        HTTPException 400: If folder_path/session_id or config.yml is invalid
         HTTPException 500: If workflow execution fails
     """
-    logger.debug(f"Received RunTest analysis request for: {request.folder_path}")
+    # Determine source: session_id or folder_path
+    session_id = None
+    if request.session_id:
+        logger.debug(f"Received RunTest analysis request for session: {request.session_id}")
+        session_manager = SessionManager()
 
-    # Validate folder and config.yml
-    folder = Path(request.folder_path)
-    if not folder.exists():
-        raise HTTPException(
-            status_code=400,
-            detail=f"Le dossier {request.folder_path} n'existe pas."
-        )
+        if not session_manager.session_exists(request.session_id):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Session {request.session_id} introuvable."
+            )
 
+        folder = session_manager.get_uploaded_path(request.session_id)
+        session_id = request.session_id
+    else:
+        logger.debug(f"Received RunTest analysis request for folder: {request.folder_path}")
+        folder = Path(request.folder_path)
+
+        if not folder.exists():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Le dossier {request.folder_path} n'existe pas."
+            )
+
+    # Validate config.yml
     config_file = folder / "config.yml"
     if not config_file.exists():
-        raise HTTPException(
-            status_code=400,
-            detail=f"Le fichier config.yml est introuvable dans {request.folder_path}."
-        )
+        # Try searching recursively (for ZIP extracts)
+        config_files = list(folder.rglob("config.yml"))
+        if not config_files:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Le fichier config.yml est introuvable dans {folder}."
+            )
+        config_file = config_files[0]
+        folder = config_file.parent  # Use the directory containing config.yml
 
     # Create workflow configuration
+    if session_id:
+        session_manager = SessionManager()
+        output_path = session_manager.get_reports_path(session_id) / "runtest_report.docx"
+    else:
+        output_path = request.output_path or f"./output/runtest_{folder.name}.docx"
+
     config = RunTestPipelineConfig(
         root_path=str(folder),
         template_path=request.template_path or "./assets/templates/template_runtest.docx",
-        output_path=request.output_path or f"./output/runtest_{folder.name}.docx",
+        output_path=str(output_path),
         render_template=request.render_template,
     )
 
@@ -67,7 +94,7 @@ async def run_runtest_analysis(request: AnalyzeRequest):
     # Execute workflow via adapter
     try:
         adapter = WorkflowAdapter()
-        result = adapter.run_workflow(config, RunTestWorkflow)
+        result = adapter.run_workflow(config, RunTestWorkflow, session_id=session_id)
 
         if result.status == "error":
             logger.error(f"RunTest workflow returned error: {result.message}")
@@ -95,37 +122,63 @@ async def run_scada_analysis(request: AnalyzeRequest):
     all generated charts and tables as JSON, along with metadata.
 
     Args:
-        request: Analysis request with folder_path and configuration options
+        request: Analysis request with folder_path OR session_id
 
     Returns:
         AnalyzeResponse with charts, tables, and metadata
 
     Raises:
-        HTTPException 400: If folder_path or config.yml is invalid
+        HTTPException 400: If folder_path/session_id or config.yml is invalid
         HTTPException 500: If workflow execution fails
     """
-    logger.debug(f"Received SCADA analysis request for: {request.folder_path}")
+    # Determine source: session_id or folder_path
+    session_id = None
+    if request.session_id:
+        logger.debug(f"Received SCADA analysis request for session: {request.session_id}")
+        session_manager = SessionManager()
 
-    # Validate folder and config.yml
-    folder = Path(request.folder_path)
-    if not folder.exists():
-        raise HTTPException(
-            status_code=400,
-            detail=f"Le dossier {request.folder_path} n'existe pas."
-        )
+        if not session_manager.session_exists(request.session_id):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Session {request.session_id} introuvable."
+            )
 
+        folder = session_manager.get_uploaded_path(request.session_id)
+        session_id = request.session_id
+    else:
+        logger.debug(f"Received SCADA analysis request for folder: {request.folder_path}")
+        folder = Path(request.folder_path)
+
+        if not folder.exists():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Le dossier {request.folder_path} n'existe pas."
+            )
+
+    # Validate config.yml
     config_file = folder / "config.yml"
     if not config_file.exists():
-        raise HTTPException(
-            status_code=400,
-            detail=f"Le fichier config.yml est introuvable dans {request.folder_path}."
-        )
+        # Try searching recursively (for ZIP extracts)
+        config_files = list(folder.rglob("config.yml"))
+        if not config_files:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Le fichier config.yml est introuvable dans {folder}."
+            )
+        config_file = config_files[0]
+        folder = config_file.parent  # Use the directory containing config.yml
 
     # Create workflow configuration
+    if session_id:
+        session_manager = SessionManager()
+        output_path = session_manager.get_reports_path(session_id) / "scada_report.docx"
+    else:
+        output_path = request.output_path or f"./output/scada_{folder.name}.docx"
+
     config = ScadaRunnerConfig(
         root_path=str(folder),
         template_path=request.template_path or "./assets/templates/template_scada.docx",
-        output_path=request.output_path or f"./output/scada_{folder.name}.docx",
+        output_path=str(output_path),
         render_template=request.render_template,
     )
 
@@ -134,7 +187,7 @@ async def run_scada_analysis(request: AnalyzeRequest):
     # Execute workflow via adapter
     try:
         adapter = WorkflowAdapter()
-        result = adapter.run_workflow(config, ScadaWorkflow)
+        result = adapter.run_workflow(config, ScadaWorkflow, session_id=session_id)
 
         if result.status == "error":
             logger.error(f"SCADA workflow returned error: {result.message}")

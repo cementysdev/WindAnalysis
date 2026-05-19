@@ -4,9 +4,10 @@ Configuration endpoint for reading config.yml without running full analysis.
 from fastapi import APIRouter, HTTPException, Query
 from pathlib import Path
 import yaml
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from src.logger_config import get_logger
+from src.wind_turbine_analytics.api.services.session_manager import SessionManager
 
 logger = get_logger(__name__)
 
@@ -14,38 +15,67 @@ router = APIRouter(prefix="/config", tags=["Configuration"])
 
 
 @router.get("", response_model=Dict[str, Any])
-async def read_config(folder_path: str = Query(..., description="Path to folder containing config.yml")):
+async def read_config(
+    folder_path: Optional[str] = Query(None, description="Path to folder containing config.yml (legacy)"),
+    session_id: Optional[str] = Query(None, description="Session ID from ZIP upload")
+):
     """
     Read and parse config.yml file without running analysis.
 
     Args:
-        folder_path: Path to folder containing config.yml
+        folder_path: (Legacy) Path to folder containing config.yml
+        session_id: (New) Session ID from ZIP upload
 
     Returns:
         Parsed YAML configuration as dictionary
 
     Raises:
-        HTTPException 400: If folder doesn't exist
+        HTTPException 400: If neither folder_path nor session_id provided, or if they don't exist
         HTTPException 404: If config.yml not found
         HTTPException 500: If YAML parsing fails
     """
     try:
-        folder = Path(folder_path)
-
-        # Validate folder exists
-        if not folder.exists():
+        # Validate that at least one parameter is provided
+        if not folder_path and not session_id:
             raise HTTPException(
                 status_code=400,
-                detail=f"Folder not found: {folder_path}"
+                detail="You must provide either 'folder_path' or 'session_id'"
             )
 
-        # Validate config.yml exists
+        # Determine folder based on source
+        if session_id:
+            logger.debug(f"Reading config for session: {session_id}")
+            session_manager = SessionManager()
+
+            if not session_manager.session_exists(session_id):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Session {session_id} not found"
+                )
+
+            folder = session_manager.get_uploaded_path(session_id)
+        else:
+            logger.debug(f"Reading config from folder: {folder_path}")
+            folder = Path(folder_path)
+
+            # Validate folder exists
+            if not folder.exists():
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Folder not found: {folder_path}"
+                )
+
+        # Find config.yml (search recursively for session uploads)
         config_file = folder / "config.yml"
         if not config_file.exists():
-            raise HTTPException(
-                status_code=404,
-                detail=f"config.yml not found in {folder_path}"
-            )
+            # Try searching recursively
+            config_files = list(folder.rglob("config.yml"))
+            if not config_files:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"config.yml not found in {folder}"
+                )
+            config_file = config_files[0]
 
         # Read and parse YAML
         logger.debug(f"Reading config from: {config_file}")
