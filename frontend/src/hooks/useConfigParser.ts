@@ -3,7 +3,7 @@ import { analyzeAPI } from '../services/api';
 import type { ParsedConfig } from '../types/config';
 
 interface UseConfigParserReturn {
-  loadConfig: (folderPath: string) => Promise<ParsedConfig | null>;
+  loadConfig: (folderPathOrSessionId: string, isSessionId?: boolean) => Promise<ParsedConfig | null>;
   isLoading: boolean;
   error: string | null;
 }
@@ -15,13 +15,15 @@ export function useConfigParser(): UseConfigParserReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadConfig = async (folderPath: string): Promise<ParsedConfig | null> => {
+  const loadConfig = async (folderPathOrSessionId: string, isSessionId: boolean = false): Promise<ParsedConfig | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      console.log('📂 Loading config from:', folderPath);
-      const configData = await analyzeAPI.readConfig(folderPath);
+      const source = isSessionId ? `session ${folderPathOrSessionId}` : folderPathOrSessionId;
+      console.log('📂 Loading config from:', source);
+
+      const configData = await analyzeAPI.readConfig(folderPathOrSessionId, isSessionId);
       console.log('✅ Config loaded successfully:', configData);
 
       // Backend returns the config.yml structure directly

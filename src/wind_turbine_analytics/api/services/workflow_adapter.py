@@ -4,7 +4,7 @@ Workflow adapter to intercept results from existing workflows.
 This adapter uses monkey-patching to capture Plotly figures and table data
 from the workflow execution without modifying the core business logic.
 """
-from typing import Any, Dict, List, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
 from pathlib import Path
 import traceback
 import json
@@ -75,6 +75,7 @@ class WorkflowAdapter:
         self,
         config: Union[RunTestPipelineConfig, ScadaRunnerConfig],
         workflow_class: Type[BaseWorkflow],
+        session_id: Optional[str] = None,
     ) -> AnalyzeResponse:
         """
         Execute a workflow and capture its results.
@@ -82,6 +83,7 @@ class WorkflowAdapter:
         Args:
             config: Workflow configuration (RunTestPipelineConfig or ScadaRunnerConfig)
             workflow_class: Workflow class to instantiate (RunTestWorkflow or ScadaWorkflow)
+            session_id: Optional session ID for saving outputs to session directories
 
         Returns:
             AnalyzeResponse with charts, tables, and metadata
@@ -90,6 +92,8 @@ class WorkflowAdapter:
             Exception: If workflow execution fails
         """
         logger.debug(f"Starting workflow execution: {workflow_class.__name__}")
+        if session_id:
+            logger.debug(f"  Using session: {session_id}")
 
         # Reset captured data
         self.captured_charts = []
@@ -114,6 +118,10 @@ class WorkflowAdapter:
 
             # Extract metadata from workflow
             self._extract_metadata(workflow)
+
+            # Save to session if session_id provided
+            if session_id:
+                self._save_to_session(session_id)
 
             logger.debug(
                 f"Workflow completed: {len(self.captured_charts)} charts, "
@@ -272,3 +280,72 @@ class WorkflowAdapter:
 
         except Exception as e:
             logger.warning(f"Failed to extract some metadata: {e}")
+
+    def _save_to_session(self, session_id: str):
+        """
+        Save captured charts and tables to session directories.
+
+        Args:
+            session_id: Session identifier
+        """
+        from src.wind_turbine_analytics.api.services.session_manager import SessionManager
+
+        logger.info(f"Starting to save session results for {session_id}")
+        logger.debug(f"  Charts to save: {len(self.captured_charts)}")
+        logger.debug(f"  Tables to save: {len(self.captured_tables)}")
+
+        try:
+            session_manager = SessionManager()
+
+            # Save charts to session/charts/
+            charts_path = session_manager.get_charts_path(session_id)
+            charts_saved = 0
+            for i, chart in enumerate(self.captured_charts):
+                try:
+                    chart_name = chart.get('name', f'chart_{i}')
+                    chart_file = charts_path / f"{chart_name}.json"
+
+                    with open(chart_file, 'w', encoding='utf-8') as f:
+                        json.dump(chart['plotly_json'], f, indent=2, ensure_ascii=False)
+
+                    charts_saved += 1
+                    logger.debug(f"  Saved chart: {chart_name}")
+
+                except Exception as e:
+                    logger.warning(f"  Failed to save chart {chart.get('name', i)}: {e}")
+
+            logger.info(f"Saved {charts_saved}/{len(self.captured_charts)} charts to {charts_path}")
+
+            # Save tables to session/tables/
+            tables_path = session_manager.get_tables_path(session_id)
+            tables_saved = 0
+            for i, table in enumerate(self.captured_tables):
+                try:
+                    table_name = table.get('name', f'table_{i}')
+                    table_file = tables_path / f"{table_name}.json"
+
+                    with open(table_file, 'w', encoding='utf-8') as f:
+                        json.dump(table, f, indent=2, ensure_ascii=False)
+
+                    tables_saved += 1
+                    logger.debug(f"  Saved table: {table_name}")
+
+                except Exception as e:
+                    logger.warning(f"  Failed to save table {table.get('name', i)}: {e}")
+
+            logger.info(f"Saved {tables_saved}/{len(self.captured_tables)} tables to {tables_path}")
+
+            # Update session metadata
+            session_metadata = {
+                "status": "completed",
+                "charts_count": len(self.captured_charts),
+                "tables_count": len(self.captured_tables),
+                **self.metadata
+            }
+            session_manager.save_session_metadata(session_id, session_metadata)
+
+            logger.info(f"Session {session_id} metadata updated successfully")
+
+        except Exception as e:
+            logger.error(f"Failed to save session results: {e}")
+            logger.error(traceback.format_exc())

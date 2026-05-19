@@ -1,17 +1,18 @@
 import { useEffect, useRef } from 'react';
 import { useWizard } from '../../hooks/useWizard';
 import { analyzeAPI } from '../../services/api';
-import { RunTestResults } from '../../components/results/RunTestResults';
+import { RunTestResults } from '../../components/results/RuntestResults';
 import { ScadaResults } from '../../components/results/ScadaResults';
-import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw, Download } from 'lucide-react';
 
 export function Step3Results() {
-  const { state, setAnalysisResult, setLoading, setError, previousStep, reset } = useWizard();
+  const { state, setAnalysisResult, setLoading, setError, previousStep, reset, goToStep } = useWizard();
   const hasTriggeredRef = useRef(false);
 
   // Trigger analysis when component mounts if no result yet
   useEffect(() => {
-    if (!hasTriggeredRef.current && !state.analysisResult && state.folderPath && state.workflowType && !state.isLoading) {
+    const hasSource = state.sessionId || state.folderPath;
+    if (!hasTriggeredRef.current && !state.analysisResult && hasSource && state.workflowType && !state.isLoading) {
       hasTriggeredRef.current = true;
       triggerAnalysis();
     }
@@ -19,8 +20,14 @@ export function Step3Results() {
   }, []); // Empty deps array = run only once on mount
 
   const triggerAnalysis = async () => {
-    if (!state.folderPath || !state.workflowType) {
+    if (!state.workflowType) {
       setError('Configuration manquante. Veuillez retourner à l\'étape 1.');
+      return;
+    }
+
+    // Validate that we have either session_id or folder_path
+    if (!state.sessionId && !state.folderPath) {
+      setError('Aucune source de données définie. Veuillez retourner à l\'étape 1.');
       return;
     }
 
@@ -28,13 +35,15 @@ export function Step3Results() {
     setError(null);
 
     try {
+      const source = state.sessionId ? `session ${state.sessionId}` : state.folderPath;
       console.log('🚀 Lancement de l\'analyse...', {
-        folder: state.folderPath,
+        source,
         workflow: state.workflowType,
       });
 
       const response = await analyzeAPI.runAnalysis({
-        folder_path: state.folderPath,
+        session_id: state.sessionId || undefined,
+        folder_path: state.folderPath || undefined,
         workflow_type: state.workflowType,
         render_template: true,
       });
@@ -59,7 +68,8 @@ export function Step3Results() {
         <p className="text-gray-600 mb-4">Cette opération peut prendre entre 1 et 5 minutes.</p>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
           <p className="text-sm text-blue-900 break-all">
-            <strong>Dossier :</strong> {state.folderPath}
+            <strong>{state.sessionId ? 'Session :' : 'Dossier :'}</strong>{' '}
+            {state.sessionId || state.folderPath}
           </p>
           <p className="text-sm text-blue-900 mt-2">
             <strong>Type :</strong> {state.workflowType === 'runtest' ? 'RunTest' : 'SCADA'}
@@ -122,6 +132,20 @@ export function Step3Results() {
     );
   }
 
+  const handleDownloadReport = () => {
+    if (state.sessionId) {
+      analyzeAPI.downloadReport(state.sessionId);
+    } else if (state.analysisResult?.report_path) {
+      // Legacy mode - report path is local, can't download
+      alert('Le rapport est disponible localement à : ' + state.analysisResult.report_path);
+    }
+  };
+
+  const handleNewAnalysis = () => {
+    reset();
+    goToStep('dataSource');
+  };
+
   // Display results
   return (
     <div>
@@ -129,12 +153,23 @@ export function Step3Results() {
         <h2 className="text-2xl font-bold text-primary-dark">
           Résultats de l'analyse {state.workflowType === 'runtest' ? 'RunTest' : 'SCADA'}
         </h2>
-        <button
-          onClick={reset}
-          className="bg-green-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-green-700 transition-colors"
-        >
-          Nouvelle analyse
-        </button>
+        <div className="flex space-x-3">
+          {state.sessionId && (
+            <button
+              onClick={handleDownloadReport}
+              className="bg-blue-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors flex items-center"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Télécharger le rapport
+            </button>
+          )}
+          <button
+            onClick={handleNewAnalysis}
+            className="bg-green-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-green-700 transition-colors"
+          >
+            Recommencer l'analyse
+          </button>
+        </div>
       </div>
 
       {/* Metadata Summary */}

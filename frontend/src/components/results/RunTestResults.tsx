@@ -3,7 +3,8 @@ import { CategoryCard } from '../shared/CategoryCard';
 import { PaginatedTable } from '../shared/PaginatedTable';
 import { ChartViewer } from '../ChartViewer';
 import { DownloadButton } from '../shared/DownloadButton';
-import { CheckCircle, Clock, Zap, RotateCcw, Activity, Wind, BarChart3 } from 'lucide-react';
+import { ResultsSidebar, type SidebarSection } from './ResultsSidebar';
+import { CheckCircle, Clock, Zap, RotateCcw, Activity, Wind, BarChart3, Info } from 'lucide-react';
 
 interface RunTestResultsProps {
   result: AnalyzeResponse;
@@ -95,23 +96,133 @@ export function RunTestResults({ result }: RunTestResultsProps) {
     t.name.toLowerCase().includes('summary') || t.name.toLowerCase().includes('résumé')
   ) || result.tables[0];
 
+  // Build sidebar sections
+  const sidebarSections: SidebarSection[] = [];
+
+  // Validation Summary
+  sidebarSections.push({
+    id: 'validation',
+    label: 'Résumé de validation',
+    icon: <CheckCircle className="w-4 h-4" />,
+    chartsCount: 0,
+    tablesCount: 0,
+  });
+
+  // Summary Table
+  if (summaryTable) {
+    sidebarSections.push({
+      id: 'summary',
+      label: 'Tableau récapitulatif',
+      icon: <Info className="w-4 h-4" />,
+      chartsCount: 0,
+      tablesCount: 1,
+    });
+  }
+
+  // 120 Consecutive Hours
+  if (consecutiveHoursCharts.length > 0 || consecutiveHoursTables.length > 0) {
+    sidebarSections.push({
+      id: 'consecutive',
+      label: '120h consécutives',
+      icon: <Clock className="w-4 h-4" />,
+      chartsCount: consecutiveHoursCharts.length,
+      tablesCount: consecutiveHoursTables.length,
+    });
+  }
+
+  // Cut-In to Cut-Out
+  if (cutInOutCharts.length > 0 || cutInOutTables.length > 0) {
+    sidebarSections.push({
+      id: 'cutinout',
+      label: 'Cut-In à Cut-Out',
+      icon: <Activity className="w-4 h-4" />,
+      chartsCount: cutInOutCharts.length,
+      tablesCount: cutInOutTables.length,
+    });
+  }
+
+  // Nominal Power
+  if (nominalPowerCharts.length > 0 || nominalPowerTables.length > 0) {
+    sidebarSections.push({
+      id: 'nominal',
+      label: 'Puissance nominale',
+      icon: <Zap className="w-4 h-4" />,
+      chartsCount: nominalPowerCharts.length,
+      tablesCount: nominalPowerTables.length,
+    });
+  }
+
+  // Local Restarts
+  if (restartsTables.length > 0) {
+    sidebarSections.push({
+      id: 'restarts',
+      label: 'Redémarrages locaux',
+      icon: <RotateCcw className="w-4 h-4" />,
+      chartsCount: 0,
+      tablesCount: restartsTables.length,
+    });
+  }
+
+  // Availability
+  if (availabilityTables.length > 0) {
+    sidebarSections.push({
+      id: 'availability',
+      label: 'Disponibilité',
+      icon: <CheckCircle className="w-4 h-4" />,
+      chartsCount: 0,
+      tablesCount: availabilityTables.length,
+    });
+  }
+
+  // Wind Rose
+  if (windRoseCharts.length > 0) {
+    sidebarSections.push({
+      id: 'wind-rose',
+      label: 'Rose des vents',
+      icon: <Wind className="w-4 h-4" />,
+      chartsCount: windRoseCharts.length,
+      tablesCount: 0,
+    });
+  }
+
+  // Wind Histogram
+  if (windHistogramCharts.length > 0) {
+    sidebarSections.push({
+      id: 'wind-histogram',
+      label: 'Distribution vent',
+      icon: <BarChart3 className="w-4 h-4" />,
+      chartsCount: windHistogramCharts.length,
+      tablesCount: 0,
+    });
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Validation Summary */}
-      <CategoryCard title="Résumé de validation" icon={CheckCircle} defaultOpen={true}>
-        <ValidationSummary result={result} />
-      </CategoryCard>
+    <div className="flex gap-6">
+      {/* Sidebar */}
+      <ResultsSidebar sections={sidebarSections} />
 
-      {/* Summary Table */}
-      {summaryTable && (
-        <CategoryCard title={summaryTable.name} icon={Activity} defaultOpen={true}>
-          <PaginatedTable table={summaryTable} itemsPerPage={10} />
-        </CategoryCard>
-      )}
+      {/* Main Content */}
+      <div className="flex-1 space-y-6">
+        {/* Validation Summary */}
+        <div id="validation">
+          <CategoryCard title="Résumé de validation" icon={CheckCircle} defaultOpen={true}>
+            <ValidationSummary result={result} />
+          </CategoryCard>
+        </div>
 
-      {/* 120 Consecutive Hours */}
-      {(consecutiveHoursCharts.length > 0 || consecutiveHoursTables.length > 0) && (
-        <CategoryCard title="120 heures consécutives" icon={Clock} defaultOpen={true}>
+        {/* Summary Table */}
+        {summaryTable && (
+          <div id="summary">
+            <CategoryCard title={summaryTable.name} icon={Activity} defaultOpen={true}>
+              <PaginatedTable table={summaryTable} itemsPerPage={10} />
+            </CategoryCard>
+          </div>
+        )}
+
+        {/* 120 Consecutive Hours */}
+        {(consecutiveHoursCharts.length > 0 || consecutiveHoursTables.length > 0) && (
+          <div id="consecutive">
+            <CategoryCard title="120 heures consécutives" icon={Clock} defaultOpen={true}>
           <div className="space-y-6">
             {consecutiveHoursCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -126,11 +237,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Cut-In to Cut-Out */}
-      {(cutInOutCharts.length > 0 || cutInOutTables.length > 0) && (
-        <CategoryCard title="Test Cut-In à Cut-Out" icon={Activity} defaultOpen={true}>
+        {/* Cut-In to Cut-Out */}
+        {(cutInOutCharts.length > 0 || cutInOutTables.length > 0) && (
+          <div id="cutinout">
+            <CategoryCard title="Test Cut-In à Cut-Out" icon={Activity} defaultOpen={true}>
           <div className="space-y-6">
             {cutInOutCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -145,11 +258,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Nominal Power */}
-      {(nominalPowerCharts.length > 0 || nominalPowerTables.length > 0) && (
-        <CategoryCard title="Puissance nominale" icon={Zap} defaultOpen={true}>
+        {/* Nominal Power */}
+        {(nominalPowerCharts.length > 0 || nominalPowerTables.length > 0) && (
+          <div id="nominal">
+            <CategoryCard title="Puissance nominale" icon={Zap} defaultOpen={true}>
           <div className="space-y-6">
             {nominalPowerCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -164,11 +279,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Local Restarts */}
-      {restartsTables.length > 0 && (
-        <CategoryCard title="Redémarrages locaux" icon={RotateCcw} defaultOpen={true}>
+        {/* Local Restarts */}
+        {restartsTables.length > 0 && (
+          <div id="restarts">
+            <CategoryCard title="Redémarrages locaux" icon={RotateCcw} defaultOpen={true}>
           <div className="space-y-4">
             {restartsTables.map((table, idx) => (
               <div key={idx}>
@@ -178,11 +295,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Availability */}
-      {availabilityTables.length > 0 && (
-        <CategoryCard title="Disponibilité" icon={CheckCircle} defaultOpen={true}>
+        {/* Availability */}
+        {availabilityTables.length > 0 && (
+          <div id="availability">
+            <CategoryCard title="Disponibilité" icon={CheckCircle} defaultOpen={true}>
           <div className="space-y-4">
             {availabilityTables.map((table, idx) => (
               <div key={idx}>
@@ -192,11 +311,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Wind Rose */}
-      {windRoseCharts.length > 0 && (
-        <CategoryCard title="Rose des vents" icon={Wind} defaultOpen={true}>
+        {/* Wind Rose */}
+        {windRoseCharts.length > 0 && (
+          <div id="wind-rose">
+            <CategoryCard title="Rose des vents" icon={Wind} defaultOpen={true}>
           <div className="space-y-6">
             {windRoseCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -205,11 +326,13 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Wind Histogram */}
-      {windHistogramCharts.length > 0 && (
-        <CategoryCard title="Distribution de la vitesse du vent" icon={BarChart3} defaultOpen={true}>
+        {/* Wind Histogram */}
+        {windHistogramCharts.length > 0 && (
+          <div id="wind-histogram">
+            <CategoryCard title="Distribution de la vitesse du vent" icon={BarChart3} defaultOpen={true}>
           <div className="space-y-6">
             {windHistogramCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -218,12 +341,14 @@ export function RunTestResults({ result }: RunTestResultsProps) {
             ))}
           </div>
         </CategoryCard>
-      )}
+          </div>
+        )}
 
-      {/* Download Report */}
-      <CategoryCard title="Téléchargement" icon={CheckCircle} defaultOpen={true} collapsible={false}>
-        <DownloadButton reportPath={result.report_path} />
-      </CategoryCard>
+        {/* Download Report */}
+        <CategoryCard title="Téléchargement" icon={CheckCircle} defaultOpen={true} collapsible={false}>
+          <DownloadButton reportPath={result.report_path} />
+        </CategoryCard>
+      </div>
     </div>
   );
 }

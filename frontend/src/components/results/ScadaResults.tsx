@@ -3,6 +3,7 @@ import { CategoryCard } from '../shared/CategoryCard';
 import { PaginatedTable } from '../shared/PaginatedTable';
 import { ChartViewer } from '../ChartViewer';
 import { DownloadButton } from '../shared/DownloadButton';
+import { ResultsSidebar, type SidebarSection } from './ResultsSidebar';
 import { Zap, AlertTriangle, Database, Wind, Gauge, TrendingUp, Compass, Clock, Settings, Activity, Info } from 'lucide-react';
 
 interface ScadaResultsProps {
@@ -134,11 +135,150 @@ export function ScadaResults({ result }: ScadaResultsProps) {
 
   const otherTables = result.tables.filter((t) => !categorizedTableNames.has(t.name));
 
+  // Build sidebar sections
+  const sidebarSections: SidebarSection[] = [];
+
+  if (summaryTables.length > 0) {
+    sidebarSections.push({
+      id: 'summary',
+      label: 'Résumé',
+      icon: <Info className="w-4 h-4" />,
+      chartsCount: 0,
+      tablesCount: summaryTables.length,
+    });
+  }
+
+  if (ebaCharts.length > 0 || ebaTables.length > 0) {
+    sidebarSections.push({
+      id: 'eba',
+      label: 'Analyse EBA',
+      icon: <Zap className="w-4 h-4" />,
+      chartsCount: ebaCharts.length,
+      tablesCount: ebaTables.length,
+    });
+  }
+
+  if (tbaCharts.length > 0 || tbaTables.length > 0) {
+    sidebarSections.push({
+      id: 'tba',
+      label: 'Analyse TBA',
+      icon: <Clock className="w-4 h-4" />,
+      chartsCount: tbaCharts.length,
+      tablesCount: tbaTables.length,
+    });
+  }
+
+  if (errorCodeCharts.length > 0 || errorCodeTables.length > 0) {
+    sidebarSections.push({
+      id: 'error-codes',
+      label: 'Codes d\'erreur',
+      icon: <AlertTriangle className="w-4 h-4" />,
+      chartsCount: errorCodeCharts.length,
+      tablesCount: errorCodeTables.length,
+    });
+  }
+
+  if (dataAvailabilityCharts.length > 0 || dataAvailabilityTables.length > 0) {
+    sidebarSections.push({
+      id: 'data-availability',
+      label: 'Disponibilité données',
+      icon: <Database className="w-4 h-4" />,
+      chartsCount: dataAvailabilityCharts.length,
+      tablesCount: dataAvailabilityTables.length,
+    });
+  }
+
+  if (windDirectionCharts.length > 0 || windDirectionTables.length > 0) {
+    sidebarSections.push({
+      id: 'wind-direction',
+      label: 'Calibration vent',
+      icon: <Compass className="w-4 h-4" />,
+      chartsCount: windDirectionCharts.length,
+      tablesCount: windDirectionTables.length,
+    });
+  }
+
+  if (windRoseCharts.length > 0) {
+    sidebarSections.push({
+      id: 'wind-rose',
+      label: 'Rose des vents',
+      icon: <Wind className="w-4 h-4" />,
+      chartsCount: windRoseCharts.length,
+      tablesCount: 0,
+    });
+  }
+
+  if (powerRoseCharts.length > 0) {
+    sidebarSections.push({
+      id: 'power-rose',
+      label: 'Rose des puissances',
+      icon: <TrendingUp className="w-4 h-4" />,
+      chartsCount: powerRoseCharts.length,
+      tablesCount: 0,
+    });
+  }
+
+  if (tipSpeedCharts.length > 0 || tipSpeedTables.length > 0) {
+    sidebarSections.push({
+      id: 'tip-speed',
+      label: 'Tip Speed Ratio',
+      icon: <Gauge className="w-4 h-4" />,
+      chartsCount: tipSpeedCharts.length,
+      tablesCount: tipSpeedTables.length,
+    });
+  }
+
+  if (normativeCharts.length > 0 || normativeTables.length > 0) {
+    sidebarSections.push({
+      id: 'normative',
+      label: 'Rendement normatif',
+      icon: <Activity className="w-4 h-4" />,
+      chartsCount: normativeCharts.length,
+      tablesCount: normativeTables.length,
+    });
+  }
+
+  if (pitchCharts.length > 0 || pitchTables.length > 0) {
+    sidebarSections.push({
+      id: 'pitch',
+      label: 'Analyse Pitch',
+      icon: <Settings className="w-4 h-4" />,
+      chartsCount: pitchCharts.length,
+      tablesCount: pitchTables.length,
+    });
+  }
+
+  if (performanceCharts.length > 0 || performanceTables.length > 0) {
+    sidebarSections.push({
+      id: 'performance',
+      label: 'Performance niveau',
+      icon: <TrendingUp className="w-4 h-4" />,
+      chartsCount: performanceCharts.length,
+      tablesCount: performanceTables.length,
+    });
+  }
+
+  if (otherCharts.length > 0 || otherTables.length > 0) {
+    sidebarSections.push({
+      id: 'other',
+      label: 'Autres résultats',
+      icon: <Database className="w-4 h-4" />,
+      chartsCount: otherCharts.length,
+      tablesCount: otherTables.length,
+    });
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="flex gap-6">
+      {/* Sidebar */}
+      <ResultsSidebar sections={sidebarSections} />
+
+      {/* Main Content */}
+      <div className="flex-1 space-y-6">
       {/* Summary Section */}
       {summaryTables.length > 0 && (
-        <CategoryCard title="Résumé du Parc" icon={Info} defaultOpen={true}>
+        <div id="summary">
+          <CategoryCard title="Résumé du Parc" icon={Info} defaultOpen={true}>
           <div className="space-y-6">
             {summaryTables.map((table, idx) => (
               <div key={idx} className="mt-6">
@@ -148,30 +288,34 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             ))}
           </div>
         </CategoryCard>
+        </div>
       )}
 
       {/* EBA Analysis */}
       {(ebaCharts.length > 0 || ebaTables.length > 0) && (
-        <CategoryCard title="Analyse EBA (Energy-Based Availability)" icon={Zap} defaultOpen={true}>
-          <div className="space-y-6">
-            {ebaCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
-              </div>
-            ))}
-            {ebaTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
+        <div id="eba">
+          <CategoryCard title="Analyse EBA (Energy-Based Availability)" icon={Zap} defaultOpen={true}>
+            <div className="space-y-6">
+              {ebaCharts.map((chart, idx) => (
+                <div key={idx} className="mb-6">
+                  <ChartViewer charts={[chart]} />
+                </div>
+              ))}
+              {ebaTables.map((table, idx) => (
+                <div key={idx} className="mt-6">
+                  <h4 className="text-md font-semibold mb-3">{table.name}</h4>
+                  <PaginatedTable table={table} itemsPerPage={10} />
+                </div>
+              ))}
+            </div>
+          </CategoryCard>
+        </div>
       )}
 
       {/* TBA Analysis */}
       {(tbaCharts.length > 0 || tbaTables.length > 0) && (
-        <CategoryCard title="Analyse TBA (Time-Based Availability)" icon={Clock} defaultOpen={true}>
+        <div id="tba">
+          <CategoryCard title="Analyse TBA (Time-Based Availability)" icon={Clock} defaultOpen={true}>
           <div className="space-y-6">
             {tbaCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -186,11 +330,13 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             ))}
           </div>
         </CategoryCard>
+        </div>
       )}
 
       {/* Error Code Analysis */}
       {(errorCodeCharts.length > 0 || errorCodeTables.length > 0) && (
-        <CategoryCard title="Analyse des codes d'erreur" icon={AlertTriangle} defaultOpen={true}>
+        <div id="error-codes">
+          <CategoryCard title="Analyse des codes d'erreur" icon={AlertTriangle} defaultOpen={true}>
           <div className="space-y-6">
             {errorCodeCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -205,11 +351,13 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             ))}
           </div>
         </CategoryCard>
+        </div>
       )}
 
       {/* Data Availability */}
       {(dataAvailabilityCharts.length > 0 || dataAvailabilityTables.length > 0) && (
-        <CategoryCard title="Disponibilité des données" icon={Database} defaultOpen={true}>
+        <div id="data-availability">
+          <CategoryCard title="Disponibilité des données" icon={Database} defaultOpen={true}>
           <div className="space-y-6">
             {dataAvailabilityCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -224,11 +372,13 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             ))}
           </div>
         </CategoryCard>
+        </div>
       )}
 
       {/* Wind Direction Calibration */}
       {(windDirectionCharts.length > 0 || windDirectionTables.length > 0) && (
-        <CategoryCard title="Calibration de la direction du vent" icon={Wind} defaultOpen={true}>
+        <div id="wind-direction">
+          <CategoryCard title="Calibration de la direction du vent" icon={Wind} defaultOpen={true}>
           <div className="space-y-6">
             {windDirectionCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -243,11 +393,13 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             ))}
           </div>
         </CategoryCard>
+        </div>
       )}
 
       {/* Tip Speed Ratio */}
       {(tipSpeedCharts.length > 0 || tipSpeedTables.length > 0) && (
-        <CategoryCard title="Tip Speed Ratio" icon={Gauge} defaultOpen={true}>
+        <div id="tip-speed">
+          <CategoryCard title="Tip Speed Ratio" icon={Gauge} defaultOpen={true}>
           <div className="space-y-6">
             {tipSpeedCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -262,11 +414,13 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             ))}
           </div>
         </CategoryCard>
+        </div>
       )}
 
       {/* Normative Yield */}
       {(normativeCharts.length > 0 || normativeTables.length > 0) && (
-        <CategoryCard title="Rendement normatif (IEC 61400-12-2)" icon={TrendingUp} defaultOpen={true}>
+        <div id="normative">
+          <CategoryCard title="Rendement normatif (IEC 61400-12-2)" icon={TrendingUp} defaultOpen={true}>
           <div className="space-y-6">
             {normativeCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -281,11 +435,13 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             ))}
           </div>
         </CategoryCard>
+        </div>
       )}
 
       {/* Wind Rose */}
       {windRoseCharts.length > 0 && (
-        <CategoryCard title="Rose des vents" icon={Wind} defaultOpen={true}>
+        <div id="wind-rose">
+          <CategoryCard title="Rose des vents" icon={Wind} defaultOpen={true}>
           <div className="space-y-6">
             {windRoseCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -294,11 +450,13 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             ))}
           </div>
         </CategoryCard>
+        </div>
       )}
 
       {/* Power Rose */}
       {powerRoseCharts.length > 0 && (
-        <CategoryCard title="Rose de puissance" icon={Compass} defaultOpen={true}>
+        <div id="power-rose">
+          <CategoryCard title="Rose de puissance" icon={Compass} defaultOpen={true}>
           <div className="space-y-6">
             {powerRoseCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -307,11 +465,13 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             ))}
           </div>
         </CategoryCard>
+        </div>
       )}
 
       {/* Pitch Analysis */}
       {(pitchCharts.length > 0 || pitchTables.length > 0) && (
-        <CategoryCard title="Analyse du Pitch" icon={Settings} defaultOpen={true}>
+        <div id="pitch">
+          <CategoryCard title="Analyse du Pitch" icon={Settings} defaultOpen={true}>
           <div className="space-y-6">
             {pitchCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -326,11 +486,13 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             ))}
           </div>
         </CategoryCard>
+        </div>
       )}
 
       {/* Performance Level */}
       {(performanceCharts.length > 0 || performanceTables.length > 0) && (
-        <CategoryCard title="Niveau de Performance (Classification des Zones)" icon={Activity} defaultOpen={true}>
+        <div id="performance">
+          <CategoryCard title="Niveau de Performance (Classification des Zones)" icon={Activity} defaultOpen={true}>
           <div className="space-y-6">
             {performanceCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -345,11 +507,13 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             ))}
           </div>
         </CategoryCard>
+        </div>
       )}
 
       {/* Other Results */}
       {(otherCharts.length > 0 || otherTables.length > 0) && (
-        <CategoryCard title="Autres résultats" icon={Database} defaultOpen={false}>
+        <div id="other">
+          <CategoryCard title="Autres résultats" icon={Database} defaultOpen={false}>
           <div className="space-y-6">
             {otherCharts.map((chart, idx) => (
               <div key={idx} className="mb-6">
@@ -364,12 +528,14 @@ export function ScadaResults({ result }: ScadaResultsProps) {
             ))}
           </div>
         </CategoryCard>
+        </div>
       )}
 
       {/* Download Report */}
       <CategoryCard title="Téléchargement" icon={Zap} defaultOpen={true} collapsible={false}>
         <DownloadButton reportPath={result.report_path} />
       </CategoryCard>
+    </div>
     </div>
   );
 }

@@ -14,16 +14,29 @@ export function Step2ConfigReview() {
 
   useEffect(() => {
     // Load config when component mounts
-    if (state.folderPath && !state.configData) {
-      loadConfig(state.folderPath).then((config) => {
-        if (config) {
-          setConfigData(config);
-        } else if (configError) {
-          setError(configError);
-        }
-      });
+    // Support both session_id (new) and folder_path (legacy)
+    if (!state.configData) {
+      if (state.sessionId) {
+        // New mode: load from session_id
+        loadConfig(state.sessionId, true).then((config) => {
+          if (config) {
+            setConfigData(config);
+          } else if (configError) {
+            setError(configError);
+          }
+        });
+      } else if (state.folderPath) {
+        // Legacy mode: load from folder_path
+        loadConfig(state.folderPath, false).then((config) => {
+          if (config) {
+            setConfigData(config);
+          } else if (configError) {
+            setError(configError);
+          }
+        });
+      }
     }
-  }, [state.folderPath, state.configData, loadConfig, setConfigData, setError, configError]);
+  }, [state.sessionId, state.folderPath, state.configData, loadConfig, setConfigData, setError, configError]);
 
   // Loading state
   if (isLoading) {
@@ -31,7 +44,9 @@ export function Step2ConfigReview() {
       <div className="flex flex-col items-center justify-center py-20">
         <Loader2 className="w-12 h-12 text-primary-dark animate-spin mb-4" />
         <p className="text-gray-600">Chargement de la configuration...</p>
-        <p className="text-sm text-gray-500 mt-2">{state.folderPath}</p>
+        <p className="text-sm text-gray-500 mt-2">
+          {state.sessionId ? `Session: ${state.sessionId}` : state.folderPath}
+        </p>
       </div>
     );
   }

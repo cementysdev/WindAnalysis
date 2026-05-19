@@ -1,10 +1,10 @@
 import { WizardProvider } from "./wizard/WizardContext";
-import { WizardContainer } from "./wizard/WizardContainer";
+import { AppContent } from "./AppContent";
 
 function App() {
   return (
     <WizardProvider>
-      <WizardContainer />
+      <AppContent />
     </WizardProvider>
   );
 }

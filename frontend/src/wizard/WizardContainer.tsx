@@ -9,17 +9,9 @@ export function WizardContainer() {
   const { state, setError } = useWizard();
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-primary-dark text-white py-3 sm:py-4 lg:py-6 shadow-md">
-        <div className="container mx-auto px-3 sm:px-4 lg:px-6">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Wind Turbine Analytics Wizard</h1>
-          <p className="text-xs sm:text-sm mt-1">Assistant d'analyse de performance d'éoliennes</p>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       {/* Main Content */}
-      <main className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 max-w-[98%] sm:max-w-[96%] lg:max-w-[95%] xl:max-w-[92%]">
+      <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 max-w-[98%] sm:max-w-[96%] lg:max-w-[95%] xl:max-w-[92%]">
         {/* Step Indicator - Centered */}
         <div className="max-w-4xl mx-auto mb-4 sm:mb-6">
           <StepIndicator currentStep={state.currentStep} />
@@ -31,7 +23,7 @@ export function WizardContainer() {
           {state.currentStep === 'configReview' && <Step2ConfigReview />}
           {state.currentStep === 'results' && <Step3Results />}
         </div>
-      </main>
+      </div>
 
       {/* Error Notification */}
       {state.error && (
