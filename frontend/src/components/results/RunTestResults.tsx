@@ -223,20 +223,20 @@ export function RunTestResults({ result }: RunTestResultsProps) {
         {(consecutiveHoursCharts.length > 0 || consecutiveHoursTables.length > 0) && (
           <div id="consecutive">
             <CategoryCard title="120 heures consécutives" icon={Clock} defaultOpen={true}>
-          <div className="space-y-6">
-            {consecutiveHoursCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
+              <div className="space-y-6">
+                {consecutiveHoursCharts.map((chart, idx) => (
+                  <div key={idx} className="mb-6">
+                    <ChartViewer charts={[chart]} />
+                  </div>
+                ))}
+                {consecutiveHoursTables.map((table, idx) => (
+                  <div key={idx} className="mt-6">
+                    <h4 className="text-md font-semibold mb-3">{table.name}</h4>
+                    <PaginatedTable table={table} itemsPerPage={10} />
+                  </div>
+                ))}
               </div>
-            ))}
-            {consecutiveHoursTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
+            </CategoryCard>
           </div>
         )}
 
@@ -244,20 +244,20 @@ export function RunTestResults({ result }: RunTestResultsProps) {
         {(cutInOutCharts.length > 0 || cutInOutTables.length > 0) && (
           <div id="cutinout">
             <CategoryCard title="Test Cut-In à Cut-Out" icon={Activity} defaultOpen={true}>
-          <div className="space-y-6">
-            {cutInOutCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
+              <div className="space-y-6">
+                {cutInOutCharts.map((chart, idx) => (
+                  <div key={idx} className="mb-6">
+                    <ChartViewer charts={[chart]} />
+                  </div>
+                ))}
+                {cutInOutTables.map((table, idx) => (
+                  <div key={idx} className="mt-6">
+                    <h4 className="text-md font-semibold mb-3">{table.name}</h4>
+                    <PaginatedTable table={table} itemsPerPage={10} />
+                  </div>
+                ))}
               </div>
-            ))}
-            {cutInOutTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
+            </CategoryCard>
           </div>
         )}
 
@@ -265,20 +265,20 @@ export function RunTestResults({ result }: RunTestResultsProps) {
         {(nominalPowerCharts.length > 0 || nominalPowerTables.length > 0) && (
           <div id="nominal">
             <CategoryCard title="Puissance nominale" icon={Zap} defaultOpen={true}>
-          <div className="space-y-6">
-            {nominalPowerCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
+              <div className="space-y-6">
+                {nominalPowerCharts.map((chart, idx) => (
+                  <div key={idx} className="mb-6">
+                    <ChartViewer charts={[chart]} />
+                  </div>
+                ))}
+                {nominalPowerTables.map((table, idx) => (
+                  <div key={idx} className="mt-6">
+                    <h4 className="text-md font-semibold mb-3">{table.name}</h4>
+                    <PaginatedTable table={table} itemsPerPage={10} />
+                  </div>
+                ))}
               </div>
-            ))}
-            {nominalPowerTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
+            </CategoryCard>
           </div>
         )}
 
@@ -286,15 +286,15 @@ export function RunTestResults({ result }: RunTestResultsProps) {
         {restartsTables.length > 0 && (
           <div id="restarts">
             <CategoryCard title="Redémarrages locaux" icon={RotateCcw} defaultOpen={true}>
-          <div className="space-y-4">
-            {restartsTables.map((table, idx) => (
-              <div key={idx}>
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
+              <div className="space-y-4">
+                {restartsTables.map((table, idx) => (
+                  <div key={idx}>
+                    <h4 className="text-md font-semibold mb-3">{table.name}</h4>
+                    <PaginatedTable table={table} itemsPerPage={10} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </CategoryCard>
+            </CategoryCard>
           </div>
         )}
 
@@ -302,15 +302,15 @@ export function RunTestResults({ result }: RunTestResultsProps) {
         {availabilityTables.length > 0 && (
           <div id="availability">
             <CategoryCard title="Disponibilité" icon={CheckCircle} defaultOpen={true}>
-          <div className="space-y-4">
-            {availabilityTables.map((table, idx) => (
-              <div key={idx}>
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
+              <div className="space-y-4">
+                {availabilityTables.map((table, idx) => (
+                  <div key={idx}>
+                    <h4 className="text-md font-semibold mb-3">{table.name}</h4>
+                    <PaginatedTable table={table} itemsPerPage={10} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </CategoryCard>
+            </CategoryCard>
           </div>
         )}
 
@@ -318,14 +318,14 @@ export function RunTestResults({ result }: RunTestResultsProps) {
         {windRoseCharts.length > 0 && (
           <div id="wind-rose">
             <CategoryCard title="Rose des vents" icon={Wind} defaultOpen={true}>
-          <div className="space-y-6">
-            {windRoseCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
+              <div className="space-y-6">
+                {windRoseCharts.map((chart, idx) => (
+                  <div key={idx} className="mb-6">
+                    <ChartViewer charts={[chart]} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </CategoryCard>
+            </CategoryCard>
           </div>
         )}
 
@@ -333,14 +333,14 @@ export function RunTestResults({ result }: RunTestResultsProps) {
         {windHistogramCharts.length > 0 && (
           <div id="wind-histogram">
             <CategoryCard title="Distribution de la vitesse du vent" icon={BarChart3} defaultOpen={true}>
-          <div className="space-y-6">
-            {windHistogramCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
+              <div className="space-y-6">
+                {windHistogramCharts.map((chart, idx) => (
+                  <div key={idx} className="mb-6">
+                    <ChartViewer charts={[chart]} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </CategoryCard>
+            </CategoryCard>
           </div>
         )}
 
