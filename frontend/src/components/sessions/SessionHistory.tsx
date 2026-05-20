@@ -18,6 +18,10 @@ export function SessionHistory({ onViewChange }: SessionHistoryProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   useEffect(() => {
     loadSessions();
   }, []);
@@ -29,6 +33,7 @@ export function SessionHistory({ onViewChange }: SessionHistoryProps) {
     try {
       const data = await analyzeAPI.listSessions();
       setSessions(data);
+      setCurrentPage(1); // Reset to first page when reloading
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.message || 'Erreur lors du chargement des sessions';
       setError(errorMessage);
@@ -125,12 +130,28 @@ export function SessionHistory({ onViewChange }: SessionHistoryProps) {
   };
 
   const toggleSelectAll = () => {
-    if (selectedSessions.size === sessions.length) {
-      setSelectedSessions(new Set());
+    if (selectedSessions.size === paginatedSessions.length && paginatedSessions.length > 0) {
+      // Deselect all on current page
+      const newSet = new Set(selectedSessions);
+      paginatedSessions.forEach(s => newSet.delete(s.session_id));
+      setSelectedSessions(newSet);
     } else {
-      setSelectedSessions(new Set(sessions.map(s => s.session_id)));
+      // Select all on current page
+      const newSet = new Set(selectedSessions);
+      paginatedSessions.forEach(s => newSet.add(s.session_id));
+      setSelectedSessions(newSet);
     }
   };
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sessions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedSessions = sessions.slice(startIndex, endIndex);
+
+  // Check if all sessions on current page are selected
+  const allPageSelected = paginatedSessions.length > 0 &&
+    paginatedSessions.every(s => selectedSessions.has(s.session_id));
 
   const formatDate = (isoDate: string): string => {
     try {
@@ -257,7 +278,7 @@ export function SessionHistory({ onViewChange }: SessionHistoryProps) {
                 <th className="px-6 py-3 text-left">
                   <input
                     type="checkbox"
-                    checked={selectedSessions.size === sessions.length && sessions.length > 0}
+                    checked={allPageSelected}
                     onChange={toggleSelectAll}
                     className="w-4 h-4 text-primary-dark rounded focus:ring-primary-dark"
                   />
@@ -283,7 +304,7 @@ export function SessionHistory({ onViewChange }: SessionHistoryProps) {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sessions.map((session) => (
+              {paginatedSessions.map((session) => (
                 <tr
                   key={session.session_id}
                   className={`hover:bg-gray-50 transition-colors ${
@@ -351,6 +372,49 @@ export function SessionHistory({ onViewChange }: SessionHistoryProps) {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Affichage de {startIndex + 1} à {Math.min(endIndex, sessions.length)} sur {sessions.length} sessions
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded-md border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  Précédent
+                </button>
+
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                        currentPage === page
+                          ? 'bg-primary-dark text-white'
+                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 rounded-md border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  Suivant
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
