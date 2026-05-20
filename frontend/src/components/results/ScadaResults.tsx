@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo, type JSX } from 'react';
 import type { AnalyzeResponse } from '../../types/analysis';
 import { CategoryCard } from '../shared/CategoryCard';
 import { PaginatedTable } from '../shared/PaginatedTable';
@@ -10,532 +11,430 @@ interface ScadaResultsProps {
   result: AnalyzeResponse;
 }
 
+interface SectionData {
+  charts: AnalyzeResponse['charts'];
+  tables: AnalyzeResponse['tables'];
+  loaded: boolean;
+}
+
 export function ScadaResults({ result }: ScadaResultsProps) {
-  // Group charts and tables by category
-  const ebaCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('eba') || c.name.toLowerCase().includes('loss')
-  );
-  const ebaTables = result.tables.filter((t) => t.name.toLowerCase().includes('eba'));
+  // État de la section active
+  const [activeSection, setActiveSection] = useState<string>('summary');
 
-  const errorCodeCharts = result.charts.filter((c) => {
-    const name = c.name.toLowerCase();
-    return (
-      name.includes('error_code') ||
-      name.includes('top_error') ||
-      name.includes('treemap_error') ||
-      (name.includes('error') && name.includes('frequency')) ||
-      (name.includes('code') && !name.includes('gps'))
-    );
-  });
-  const errorCodeTables = result.tables.filter((t) => {
-    const name = t.name.toLowerCase();
-    return (
-      name.includes('error') ||
-      name.includes('code_pareto') ||
-      (name.includes('code') && !name.includes('gps'))
-    );
-  });
+  // État des sections chargées (lazy loading)
+  const [loadedSections, setLoadedSections] = useState<Record<string, SectionData>>({});
 
-  const dataAvailabilityCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('availability') || c.name.toLowerCase().includes('heatmap')
-  );
-  const dataAvailabilityTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('availability')
-  );
+  // Fonction pour charger les données d'une section à la demande
+  const loadSectionData = (sectionId: string): SectionData => {
+    // Si déjà chargée, retourner depuis le cache
+    if (loadedSections[sectionId]?.loaded) {
+      return loadedSections[sectionId];
+    }
 
-  const windDirectionCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('direction') || c.name.toLowerCase().includes('calibration')
-  );
-  const windDirectionTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('direction')
-  );
+    let charts = result.charts;
+    let tables = result.tables;
 
-  const tipSpeedCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('tip') || c.name.toLowerCase().includes('speed ratio')
-  );
-  const tipSpeedTables = result.tables.filter((t) => t.name.toLowerCase().includes('tip'));
+    // Filtrer selon la section
+    switch (sectionId) {
+      case 'eba':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('eba') || c.name.toLowerCase().includes('loss')
+        );
+        tables = result.tables.filter((t) => t.name.toLowerCase().includes('eba'));
+        break;
 
-  const normativeCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('normative') || c.name.toLowerCase().includes('yield')
-  );
-  const normativeTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('normative') || t.name.toLowerCase().includes('yield')
-  );
+      case 'tba':
+        charts = result.charts.filter((c) => c.name.toLowerCase().includes('tba'));
+        tables = result.tables.filter((t) => t.name.toLowerCase().includes('tba'));
+        break;
 
-  // Wind Rose Charts
-  const windRoseCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('wind_rose') && !c.name.toLowerCase().includes('power')
-  );
+      case 'error-codes':
+        charts = result.charts.filter((c) => {
+          const name = c.name.toLowerCase();
+          return (
+            name.includes('error_code') ||
+            name.includes('top_error') ||
+            name.includes('treemap_error') ||
+            (name.includes('error') && name.includes('frequency')) ||
+            (name.includes('code') && !name.includes('gps'))
+          );
+        });
+        tables = result.tables.filter((t) => {
+          const name = t.name.toLowerCase();
+          return (
+            name.includes('error') ||
+            name.includes('code_pareto') ||
+            (name.includes('code') && !name.includes('gps'))
+          );
+        });
+        break;
 
-  // Power Rose Charts
-  const powerRoseCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('power_rose') || c.name.toLowerCase().includes('rose') && c.name.toLowerCase().includes('power')
-  );
+      case 'data-availability':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('availability') || c.name.toLowerCase().includes('heatmap')
+        );
+        tables = result.tables.filter((t) =>
+          t.name.toLowerCase().includes('availability')
+        );
+        break;
 
-  // TBA Analysis
-  const tbaCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('tba')
-  );
-  const tbaTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('tba')
-  );
+      case 'wind-direction':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('direction') || c.name.toLowerCase().includes('calibration')
+        );
+        tables = result.tables.filter((t) => t.name.toLowerCase().includes('direction'));
+        break;
 
-  // Pitch Analysis
-  const pitchCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('pitch')
-  );
-  const pitchTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('pitch')
-  );
+      case 'tip-speed':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('tip') || c.name.toLowerCase().includes('speed ratio')
+        );
+        tables = result.tables.filter((t) => t.name.toLowerCase().includes('tip'));
+        break;
 
-  // Performance Level
-  const performanceCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('performance') && c.name.toLowerCase().includes('level')
-  );
-  const performanceTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('performance') && t.name.toLowerCase().includes('level')
-  );
+      case 'normative':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('normative') || c.name.toLowerCase().includes('yield')
+        );
+        tables = result.tables.filter((t) =>
+          t.name.toLowerCase().includes('normative') || t.name.toLowerCase().includes('yield')
+        );
+        break;
 
-  // Summary Section
-  const summaryTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('summary') ||
-    t.name.toLowerCase().includes('gps') ||
-    t.name.toLowerCase().includes('coordinates')
-  );
+      case 'wind-rose':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('wind_rose') && !c.name.toLowerCase().includes('power')
+        );
+        tables = [];
+        break;
 
-  // Remaining charts/tables not categorized
-  const categorizedChartNames = new Set([
-    ...ebaCharts,
-    ...tbaCharts,
-    ...errorCodeCharts,
-    ...dataAvailabilityCharts,
-    ...windDirectionCharts,
-    ...tipSpeedCharts,
-    ...normativeCharts,
-    ...windRoseCharts,
-    ...powerRoseCharts,
-    ...pitchCharts,
-    ...performanceCharts,
-  ].map((c) => c.name));
+      case 'power-rose':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('power_rose') || (c.name.toLowerCase().includes('rose') && c.name.toLowerCase().includes('power'))
+        );
+        tables = [];
+        break;
 
-  const otherCharts = result.charts.filter((c) => !categorizedChartNames.has(c.name));
+      case 'pitch':
+        charts = result.charts.filter((c) => c.name.toLowerCase().includes('pitch'));
+        tables = result.tables.filter((t) => t.name.toLowerCase().includes('pitch'));
+        break;
 
-  const categorizedTableNames = new Set([
-    ...ebaTables,
-    ...tbaTables,
-    ...errorCodeTables,
-    ...dataAvailabilityTables,
-    ...windDirectionTables,
-    ...tipSpeedTables,
-    ...normativeTables,
-    ...pitchTables,
-    ...performanceTables,
-    ...summaryTables,
-  ].map((t) => t.name));
+      case 'performance':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('performance') && c.name.toLowerCase().includes('level')
+        );
+        tables = result.tables.filter((t) =>
+          t.name.toLowerCase().includes('performance') && t.name.toLowerCase().includes('level')
+        );
+        break;
 
-  const otherTables = result.tables.filter((t) => !categorizedTableNames.has(t.name));
+      case 'summary':
+        charts = [];
+        tables = result.tables.filter((t) =>
+          t.name.toLowerCase().includes('summary') ||
+          t.name.toLowerCase().includes('gps') ||
+          t.name.toLowerCase().includes('coordinates')
+        );
+        break;
+
+      case 'other':
+        const categorizedChartNames = new Set(
+          result.charts.filter((c) => {
+            const name = c.name.toLowerCase();
+            return (
+              name.includes('eba') || name.includes('loss') || name.includes('tba') ||
+              name.includes('error_code') || name.includes('top_error') || name.includes('treemap_error') ||
+              (name.includes('error') && name.includes('frequency')) ||
+              name.includes('availability') || name.includes('heatmap') ||
+              name.includes('direction') || name.includes('calibration') ||
+              name.includes('tip') || name.includes('speed ratio') ||
+              name.includes('normative') || name.includes('yield') ||
+              name.includes('wind_rose') || name.includes('power_rose') ||
+              name.includes('pitch') ||
+              (name.includes('performance') && name.includes('level'))
+            );
+          }).map((c) => c.name)
+        );
+
+        const categorizedTableNames = new Set(
+          result.tables.filter((t) => {
+            const name = t.name.toLowerCase();
+            return (
+              name.includes('eba') || name.includes('tba') ||
+              name.includes('error') || name.includes('code_pareto') ||
+              name.includes('availability') ||
+              name.includes('direction') ||
+              name.includes('tip') ||
+              name.includes('normative') || name.includes('yield') ||
+              name.includes('pitch') ||
+              (name.includes('performance') && name.includes('level')) ||
+              name.includes('summary') || name.includes('gps') || name.includes('coordinates')
+            );
+          }).map((t) => t.name)
+        );
+
+        charts = result.charts.filter((c) => !categorizedChartNames.has(c.name));
+        tables = result.tables.filter((t) => !categorizedTableNames.has(t.name));
+        break;
+
+      default:
+        charts = [];
+        tables = [];
+    }
+
+    const sectionData: SectionData = { charts, tables, loaded: true };
+
+    // Mettre en cache
+    setLoadedSections((prev) => ({
+      ...prev,
+      [sectionId]: sectionData,
+    }));
+
+    return sectionData;
+  };
+
+  // Charger la section active quand elle change
+  useEffect(() => {
+    if (!loadedSections[activeSection]?.loaded) {
+      loadSectionData(activeSection);
+    }
+  }, [activeSection]);
+
+  // Obtenir les données de la section active (lazy loaded)
+  const activeSectionData = useMemo(() => {
+    return loadedSections[activeSection] || { charts: [], tables: [], loaded: false };
+  }, [loadedSections, activeSection]);
+
+  // Fonction helper pour compter rapidement les éléments d'une section
+  // (sans charger les données complètes, juste pour la sidebar)
+  const countSectionItems = (sectionId: string): { chartsCount: number; tablesCount: number } => {
+    // Si déjà chargée, utiliser le cache
+    if (loadedSections[sectionId]?.loaded) {
+      return {
+        chartsCount: loadedSections[sectionId].charts.length,
+        tablesCount: loadedSections[sectionId].tables.length,
+      };
+    }
+
+    // Sinon, calculer rapidement (filtre léger pour comptage uniquement)
+    const data = loadSectionData(sectionId);
+    return {
+      chartsCount: data.charts.length,
+      tablesCount: data.tables.length,
+    };
+  };
 
   // Build sidebar sections
   const sidebarSections: SidebarSection[] = [];
 
-  if (summaryTables.length > 0) {
+  const summaryCount = countSectionItems('summary');
+  if (summaryCount.chartsCount > 0 || summaryCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'summary',
       label: 'Résumé',
       icon: <Info className="w-4 h-4" />,
-      chartsCount: 0,
-      tablesCount: summaryTables.length,
+      chartsCount: summaryCount.chartsCount,
+      tablesCount: summaryCount.tablesCount,
     });
   }
 
-  if (ebaCharts.length > 0 || ebaTables.length > 0) {
+  const ebaCount = countSectionItems('eba');
+  if (ebaCount.chartsCount > 0 || ebaCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'eba',
       label: 'Analyse EBA',
       icon: <Zap className="w-4 h-4" />,
-      chartsCount: ebaCharts.length,
-      tablesCount: ebaTables.length,
+      chartsCount: ebaCount.chartsCount,
+      tablesCount: ebaCount.tablesCount,
     });
   }
 
-  if (tbaCharts.length > 0 || tbaTables.length > 0) {
+  const tbaCount = countSectionItems('tba');
+  if (tbaCount.chartsCount > 0 || tbaCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'tba',
       label: 'Analyse TBA',
       icon: <Clock className="w-4 h-4" />,
-      chartsCount: tbaCharts.length,
-      tablesCount: tbaTables.length,
+      chartsCount: tbaCount.chartsCount,
+      tablesCount: tbaCount.tablesCount,
     });
   }
 
-  if (errorCodeCharts.length > 0 || errorCodeTables.length > 0) {
+  const errorCodesCount = countSectionItems('error-codes');
+  if (errorCodesCount.chartsCount > 0 || errorCodesCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'error-codes',
       label: 'Codes d\'erreur',
       icon: <AlertTriangle className="w-4 h-4" />,
-      chartsCount: errorCodeCharts.length,
-      tablesCount: errorCodeTables.length,
+      chartsCount: errorCodesCount.chartsCount,
+      tablesCount: errorCodesCount.tablesCount,
     });
   }
 
-  if (dataAvailabilityCharts.length > 0 || dataAvailabilityTables.length > 0) {
+  const dataAvailabilityCount = countSectionItems('data-availability');
+  if (dataAvailabilityCount.chartsCount > 0 || dataAvailabilityCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'data-availability',
       label: 'Disponibilité données',
       icon: <Database className="w-4 h-4" />,
-      chartsCount: dataAvailabilityCharts.length,
-      tablesCount: dataAvailabilityTables.length,
+      chartsCount: dataAvailabilityCount.chartsCount,
+      tablesCount: dataAvailabilityCount.tablesCount,
     });
   }
 
-  if (windDirectionCharts.length > 0 || windDirectionTables.length > 0) {
+  const windDirectionCount = countSectionItems('wind-direction');
+  if (windDirectionCount.chartsCount > 0 || windDirectionCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'wind-direction',
       label: 'Calibration vent',
       icon: <Compass className="w-4 h-4" />,
-      chartsCount: windDirectionCharts.length,
-      tablesCount: windDirectionTables.length,
+      chartsCount: windDirectionCount.chartsCount,
+      tablesCount: windDirectionCount.tablesCount,
     });
   }
 
-  if (windRoseCharts.length > 0) {
+  const windRoseCount = countSectionItems('wind-rose');
+  if (windRoseCount.chartsCount > 0 || windRoseCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'wind-rose',
       label: 'Rose des vents',
       icon: <Wind className="w-4 h-4" />,
-      chartsCount: windRoseCharts.length,
-      tablesCount: 0,
+      chartsCount: windRoseCount.chartsCount,
+      tablesCount: windRoseCount.tablesCount,
     });
   }
 
-  if (powerRoseCharts.length > 0) {
+  const powerRoseCount = countSectionItems('power-rose');
+  if (powerRoseCount.chartsCount > 0 || powerRoseCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'power-rose',
       label: 'Rose des puissances',
       icon: <TrendingUp className="w-4 h-4" />,
-      chartsCount: powerRoseCharts.length,
-      tablesCount: 0,
+      chartsCount: powerRoseCount.chartsCount,
+      tablesCount: powerRoseCount.tablesCount,
     });
   }
 
-  if (tipSpeedCharts.length > 0 || tipSpeedTables.length > 0) {
+  const tipSpeedCount = countSectionItems('tip-speed');
+  if (tipSpeedCount.chartsCount > 0 || tipSpeedCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'tip-speed',
       label: 'Tip Speed Ratio',
       icon: <Gauge className="w-4 h-4" />,
-      chartsCount: tipSpeedCharts.length,
-      tablesCount: tipSpeedTables.length,
+      chartsCount: tipSpeedCount.chartsCount,
+      tablesCount: tipSpeedCount.tablesCount,
     });
   }
 
-  if (normativeCharts.length > 0 || normativeTables.length > 0) {
+  const normativeCount = countSectionItems('normative');
+  if (normativeCount.chartsCount > 0 || normativeCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'normative',
-      label: 'Rendement normatif',
+      label: 'Analyse normative',
       icon: <Activity className="w-4 h-4" />,
-      chartsCount: normativeCharts.length,
-      tablesCount: normativeTables.length,
+      chartsCount: normativeCount.chartsCount,
+      tablesCount: normativeCount.tablesCount,
     });
   }
 
-  if (pitchCharts.length > 0 || pitchTables.length > 0) {
+  const pitchCount = countSectionItems('pitch');
+  if (pitchCount.chartsCount > 0 || pitchCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'pitch',
       label: 'Analyse Pitch',
       icon: <Settings className="w-4 h-4" />,
-      chartsCount: pitchCharts.length,
-      tablesCount: pitchTables.length,
+      chartsCount: pitchCount.chartsCount,
+      tablesCount: pitchCount.tablesCount,
     });
   }
 
-  if (performanceCharts.length > 0 || performanceTables.length > 0) {
+  const performanceCount = countSectionItems('performance');
+  if (performanceCount.chartsCount > 0 || performanceCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'performance',
-      label: 'Performance niveau',
+      label: 'Performance Level',
       icon: <TrendingUp className="w-4 h-4" />,
-      chartsCount: performanceCharts.length,
-      tablesCount: performanceTables.length,
+      chartsCount: performanceCount.chartsCount,
+      tablesCount: performanceCount.tablesCount,
     });
   }
 
-  if (otherCharts.length > 0 || otherTables.length > 0) {
+  const otherCount = countSectionItems('other');
+  if (otherCount.chartsCount > 0 || otherCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'other',
-      label: 'Autres résultats',
-      icon: <Database className="w-4 h-4" />,
-      chartsCount: otherCharts.length,
-      tablesCount: otherTables.length,
+      label: 'Autres',
+      icon: <Activity className="w-4 h-4" />,
+      chartsCount: otherCount.chartsCount,
+      tablesCount: otherCount.tablesCount,
     });
   }
+
+  // Fonction helper pour rendre une section avec charts et tables
+  const renderSection = (title: string, icon: typeof Zap): JSX.Element => {
+    const { charts, tables } = activeSectionData;
+
+    return (
+      <CategoryCard title={title} icon={icon} defaultOpen={true}>
+        <div className="space-y-6">
+          {charts.map((chart: AnalyzeResponse['charts'][0], idx: number) => (
+            <div key={idx} className="mb-6">
+              <ChartViewer charts={[chart]} />
+            </div>
+          ))}
+          {tables.map((table: AnalyzeResponse['tables'][0], idx: number) => (
+            <div key={idx} className="mt-6">
+              <h4 className="text-md font-semibold mb-3">{table.name}</h4>
+              <PaginatedTable table={table} itemsPerPage={10} />
+            </div>
+          ))}
+        </div>
+      </CategoryCard>
+    );
+  };
+
+  // Section content map - render only active section (lazy loaded)
+  const sectionContentMap: Record<string, JSX.Element> = {
+    'summary': renderSection('Résumé du Parc', Info),
+    'eba': renderSection('Analyse EBA (Energy-Based Availability)', Zap),
+    'tba': renderSection('Analyse TBA (Time-Based Availability)', Clock),
+    'error-codes': renderSection('Analyse des codes d\'erreur', AlertTriangle),
+    'data-availability': renderSection('Disponibilité des données', Database),
+    'wind-direction': renderSection('Calibration de la direction du vent', Compass),
+    'tip-speed': renderSection('Tip Speed Ratio', Gauge),
+    'normative': renderSection('Analyse normative IEC', Activity),
+    'wind-rose': renderSection('Rose des vents', Wind),
+    'power-rose': renderSection('Rose des puissances', TrendingUp),
+    'pitch': renderSection('Analyse Pitch', Settings),
+    'performance': renderSection('Performance Level', TrendingUp),
+    'other': renderSection('Autres résultats', Activity),
+  };
 
   return (
     <div className="flex gap-6">
       {/* Sidebar */}
-      <ResultsSidebar sections={sidebarSections} />
+      <ResultsSidebar
+        sections={sidebarSections}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+      />
 
-      {/* Main Content */}
-      <div className="flex-1 space-y-6">
-      {/* Summary Section */}
-      {summaryTables.length > 0 && (
-        <div id="summary">
-          <CategoryCard title="Résumé du Parc" icon={Info} defaultOpen={true}>
-          <div className="space-y-6">
-            {summaryTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
+      {/* Main Content - Render only active section */}
+      <div className="flex-1">
+        {sectionContentMap[activeSection] || (
+          <div className="text-center text-gray-500 py-8">
+            Section non trouvée
           </div>
-        </CategoryCard>
-        </div>
-      )}
+        )}
 
-      {/* EBA Analysis */}
-      {(ebaCharts.length > 0 || ebaTables.length > 0) && (
-        <div id="eba">
-          <CategoryCard title="Analyse EBA (Energy-Based Availability)" icon={Zap} defaultOpen={true}>
-            <div className="space-y-6">
-              {ebaCharts.map((chart, idx) => (
-                <div key={idx} className="mb-6">
-                  <ChartViewer charts={[chart]} />
-                </div>
-              ))}
-              {ebaTables.map((table, idx) => (
-                <div key={idx} className="mt-6">
-                  <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                  <PaginatedTable table={table} itemsPerPage={10} />
-                </div>
-              ))}
-            </div>
+        {/* Download Report - Always visible at bottom */}
+        <div className="mt-6">
+          <CategoryCard title="Téléchargement" icon={Zap} defaultOpen={true} collapsible={false}>
+            <DownloadButton reportPath={result.report_path} />
           </CategoryCard>
         </div>
-      )}
-
-      {/* TBA Analysis */}
-      {(tbaCharts.length > 0 || tbaTables.length > 0) && (
-        <div id="tba">
-          <CategoryCard title="Analyse TBA (Time-Based Availability)" icon={Clock} defaultOpen={true}>
-          <div className="space-y-6">
-            {tbaCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
-              </div>
-            ))}
-            {tbaTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
-        </div>
-      )}
-
-      {/* Error Code Analysis */}
-      {(errorCodeCharts.length > 0 || errorCodeTables.length > 0) && (
-        <div id="error-codes">
-          <CategoryCard title="Analyse des codes d'erreur" icon={AlertTriangle} defaultOpen={true}>
-          <div className="space-y-6">
-            {errorCodeCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
-              </div>
-            ))}
-            {errorCodeTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
-        </div>
-      )}
-
-      {/* Data Availability */}
-      {(dataAvailabilityCharts.length > 0 || dataAvailabilityTables.length > 0) && (
-        <div id="data-availability">
-          <CategoryCard title="Disponibilité des données" icon={Database} defaultOpen={true}>
-          <div className="space-y-6">
-            {dataAvailabilityCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
-              </div>
-            ))}
-            {dataAvailabilityTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
-        </div>
-      )}
-
-      {/* Wind Direction Calibration */}
-      {(windDirectionCharts.length > 0 || windDirectionTables.length > 0) && (
-        <div id="wind-direction">
-          <CategoryCard title="Calibration de la direction du vent" icon={Wind} defaultOpen={true}>
-          <div className="space-y-6">
-            {windDirectionCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
-              </div>
-            ))}
-            {windDirectionTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
-        </div>
-      )}
-
-      {/* Tip Speed Ratio */}
-      {(tipSpeedCharts.length > 0 || tipSpeedTables.length > 0) && (
-        <div id="tip-speed">
-          <CategoryCard title="Tip Speed Ratio" icon={Gauge} defaultOpen={true}>
-          <div className="space-y-6">
-            {tipSpeedCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
-              </div>
-            ))}
-            {tipSpeedTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
-        </div>
-      )}
-
-      {/* Normative Yield */}
-      {(normativeCharts.length > 0 || normativeTables.length > 0) && (
-        <div id="normative">
-          <CategoryCard title="Rendement normatif (IEC 61400-12-2)" icon={TrendingUp} defaultOpen={true}>
-          <div className="space-y-6">
-            {normativeCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
-              </div>
-            ))}
-            {normativeTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
-        </div>
-      )}
-
-      {/* Wind Rose */}
-      {windRoseCharts.length > 0 && (
-        <div id="wind-rose">
-          <CategoryCard title="Rose des vents" icon={Wind} defaultOpen={true}>
-          <div className="space-y-6">
-            {windRoseCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
-        </div>
-      )}
-
-      {/* Power Rose */}
-      {powerRoseCharts.length > 0 && (
-        <div id="power-rose">
-          <CategoryCard title="Rose de puissance" icon={Compass} defaultOpen={true}>
-          <div className="space-y-6">
-            {powerRoseCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
-        </div>
-      )}
-
-      {/* Pitch Analysis */}
-      {(pitchCharts.length > 0 || pitchTables.length > 0) && (
-        <div id="pitch">
-          <CategoryCard title="Analyse du Pitch" icon={Settings} defaultOpen={true}>
-          <div className="space-y-6">
-            {pitchCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
-              </div>
-            ))}
-            {pitchTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
-        </div>
-      )}
-
-      {/* Performance Level */}
-      {(performanceCharts.length > 0 || performanceTables.length > 0) && (
-        <div id="performance">
-          <CategoryCard title="Niveau de Performance (Classification des Zones)" icon={Activity} defaultOpen={true}>
-          <div className="space-y-6">
-            {performanceCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
-              </div>
-            ))}
-            {performanceTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
-        </div>
-      )}
-
-      {/* Other Results */}
-      {(otherCharts.length > 0 || otherTables.length > 0) && (
-        <div id="other">
-          <CategoryCard title="Autres résultats" icon={Database} defaultOpen={false}>
-          <div className="space-y-6">
-            {otherCharts.map((chart, idx) => (
-              <div key={idx} className="mb-6">
-                <ChartViewer charts={[chart]} />
-              </div>
-            ))}
-            {otherTables.map((table, idx) => (
-              <div key={idx} className="mt-6">
-                <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                <PaginatedTable table={table} itemsPerPage={10} />
-              </div>
-            ))}
-          </div>
-        </CategoryCard>
-        </div>
-      )}
-
-      {/* Download Report */}
-      <CategoryCard title="Téléchargement" icon={Zap} defaultOpen={true} collapsible={false}>
-        <DownloadButton reportPath={result.report_path} />
-      </CategoryCard>
-    </div>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { ChevronRight, BarChart3, Table2 } from 'lucide-react';
 
 export interface SidebarSection {
@@ -11,33 +10,11 @@ export interface SidebarSection {
 
 interface ResultsSidebarProps {
   sections: SidebarSection[];
-  activeSection?: string;
+  activeSection: string;
+  onSectionChange: (sectionId: string) => void;
 }
 
-export function ResultsSidebar({ sections, activeSection }: ResultsSidebarProps) {
-  const [currentSection, setCurrentSection] = useState<string>(activeSection || sections[0]?.id || '');
-
-  useEffect(() => {
-    if (activeSection) {
-      setCurrentSection(activeSection);
-    }
-  }, [activeSection]);
-
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const offset = 100; // Offset pour le header
-      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
-      const offsetPosition = elementPosition - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-
-      setCurrentSection(sectionId);
-    }
-  };
+export function ResultsSidebar({ sections, activeSection, onSectionChange }: ResultsSidebarProps) {
 
   return (
     <aside className="w-64 bg-white rounded-lg shadow-lg p-4 sticky top-24 self-start">
@@ -50,13 +27,13 @@ export function ResultsSidebar({ sections, activeSection }: ResultsSidebarProps)
 
       <nav className="space-y-1">
         {sections.map((section) => {
-          const isActive = currentSection === section.id;
+          const isActive = activeSection === section.id;
           const totalItems = (section.chartsCount || 0) + (section.tablesCount || 0);
 
           return (
             <button
               key={section.id}
-              onClick={() => scrollToSection(section.id)}
+              onClick={() => onSectionChange(section.id)}
               className={`w-full text-left px-3 py-2 rounded-md transition-all duration-200 ${
                 isActive
                   ? 'bg-primary-dark text-white shadow-sm'

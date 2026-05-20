@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo, type JSX } from 'react';
 import type { AnalyzeResponse } from '../../types/analysis';
 import { CategoryCard } from '../shared/CategoryCard';
 import { PaginatedTable } from '../shared/PaginatedTable';
@@ -8,6 +9,12 @@ import { CheckCircle, Clock, Zap, RotateCcw, Activity, Wind, BarChart3, Info } f
 
 interface RunTestResultsProps {
   result: AnalyzeResponse;
+}
+
+interface SectionData {
+  charts: AnalyzeResponse['charts'];
+  tables: AnalyzeResponse['tables'];
+  loaded: boolean;
 }
 
 function ValidationSummary({ result }: { result: AnalyzeResponse }) {
@@ -51,65 +58,150 @@ function ValidationSummary({ result }: { result: AnalyzeResponse }) {
 }
 
 export function RunTestResults({ result }: RunTestResultsProps) {
-  // Group charts and tables by category
-  const consecutiveHoursCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('consecutive') && !c.name.toLowerCase().includes('heatmap')
-  );
-  const consecutiveHoursTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('consecutive')
-  );
+  // État de la section active
+  const [activeSection, setActiveSection] = useState<string>('validation');
 
-  const cutInOutCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('cut') || c.name.toLowerCase().includes('power')
-  );
-  const cutInOutTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('cut')
-  );
+  // État des sections chargées (lazy loading)
+  const [loadedSections, setLoadedSections] = useState<Record<string, SectionData>>({});
 
-  const nominalPowerCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('nominal')
-  );
-  const nominalPowerTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('nominal')
-  );
+  // Fonction pour charger les données d'une section à la demande
+  const loadSectionData = (sectionId: string): SectionData => {
+    // Si déjà chargée, retourner depuis le cache
+    if (loadedSections[sectionId]?.loaded) {
+      return loadedSections[sectionId];
+    }
 
-  const restartsTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('restart') || t.name.toLowerCase().includes('autonomous')
-  );
+    let charts = result.charts;
+    let tables = result.tables;
 
-  const availabilityTables = result.tables.filter((t) =>
-    t.name.toLowerCase().includes('availability') || t.name.toLowerCase().includes('disponibilit')
-  );
+    // Filtrer selon la section
+    switch (sectionId) {
+      case 'validation':
+        charts = [];
+        tables = [];
+        break;
 
-  // Wind Rose Charts
-  const windRoseCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('wind_rose') || c.name.toLowerCase().includes('rose_chart')
-  );
+      case 'summary':
+        charts = [];
+        tables = result.tables.filter((t) =>
+          t.name.toLowerCase().includes('summary') || t.name.toLowerCase().includes('résumé')
+        );
+        break;
 
-  // Wind Histogram Charts
-  const windHistogramCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('wind_histogram') || c.name.toLowerCase().includes('histogram_chart')
-  );
+      case 'consecutive':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('consecutive') && !c.name.toLowerCase().includes('heatmap')
+        );
+        tables = result.tables.filter((t) =>
+          t.name.toLowerCase().includes('consecutive')
+        );
+        break;
 
-  // Timeline Charts
-  const timelineCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('timeline')
-  );
+      case 'cutinout':
+        const cutInOutCharts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('cut') || c.name.toLowerCase().includes('power')
+        );
+        const timelineCharts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('timeline')
+        );
+        charts = [...cutInOutCharts, ...timelineCharts];
+        tables = result.tables.filter((t) =>
+          t.name.toLowerCase().includes('cut')
+        );
+        break;
 
-  // Power Curve Charts
-  const powerCurveCharts = result.charts.filter((c) =>
-    c.name.toLowerCase().includes('power_curve') || c.name.toLowerCase().includes('courbe')
-  );
+      case 'nominal':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('nominal')
+        );
+        tables = result.tables.filter((t) =>
+          t.name.toLowerCase().includes('nominal')
+        );
+        break;
 
-  // Summary table (first table usually)
-  const summaryTable = result.tables.find((t) =>
-    t.name.toLowerCase().includes('summary') || t.name.toLowerCase().includes('résumé')
-  ) || result.tables[0];
+      case 'restarts':
+        charts = [];
+        tables = result.tables.filter((t) =>
+          t.name.toLowerCase().includes('restart') || t.name.toLowerCase().includes('autonomous')
+        );
+        break;
+
+      case 'availability':
+        charts = [];
+        tables = result.tables.filter((t) =>
+          t.name.toLowerCase().includes('availability') || t.name.toLowerCase().includes('disponibilit')
+        );
+        break;
+
+      case 'wind-rose':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('wind_rose') || c.name.toLowerCase().includes('rose_chart')
+        );
+        tables = [];
+        break;
+
+      case 'wind-histogram':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('wind_histogram') || c.name.toLowerCase().includes('histogram_chart')
+        );
+        tables = [];
+        break;
+
+      case 'power-curve':
+        charts = result.charts.filter((c) =>
+          c.name.toLowerCase().includes('power_curve') || c.name.toLowerCase().includes('courbe')
+        );
+        tables = [];
+        break;
+
+      default:
+        charts = [];
+        tables = [];
+    }
+
+    const sectionData: SectionData = { charts, tables, loaded: true };
+
+    // Mettre en cache
+    setLoadedSections((prev) => ({
+      ...prev,
+      [sectionId]: sectionData,
+    }));
+
+    return sectionData;
+  };
+
+  // Charger la section active quand elle change
+  useEffect(() => {
+    if (!loadedSections[activeSection]?.loaded) {
+      loadSectionData(activeSection);
+    }
+  }, [activeSection, loadedSections]);
+
+  // Obtenir les données de la section active (lazy loaded)
+  const activeSectionData = useMemo(() => {
+    return loadedSections[activeSection] || { charts: [], tables: [], loaded: false };
+  }, [loadedSections, activeSection]);
+
+  // Fonction helper pour compter rapidement les éléments d'une section
+  const countSectionItems = (sectionId: string): { chartsCount: number; tablesCount: number } => {
+    if (loadedSections[sectionId]?.loaded) {
+      return {
+        chartsCount: loadedSections[sectionId].charts.length,
+        tablesCount: loadedSections[sectionId].tables.length,
+      };
+    }
+
+    const data = loadSectionData(sectionId);
+    return {
+      chartsCount: data.charts.length,
+      tablesCount: data.tables.length,
+    };
+  };
 
   // Build sidebar sections
   const sidebarSections: SidebarSection[] = [];
 
-  // Validation Summary
+  // Validation Summary - always visible
   sidebarSections.push({
     id: 'validation',
     label: 'Résumé de validation',
@@ -119,277 +211,177 @@ export function RunTestResults({ result }: RunTestResultsProps) {
   });
 
   // Summary Table
-  if (summaryTable) {
+  const summaryCount = countSectionItems('summary');
+  if (summaryCount.chartsCount > 0 || summaryCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'summary',
       label: 'Tableau récapitulatif',
       icon: <Info className="w-4 h-4" />,
-      chartsCount: 0,
-      tablesCount: 1,
+      chartsCount: summaryCount.chartsCount,
+      tablesCount: summaryCount.tablesCount,
     });
   }
 
   // 120 Consecutive Hours
-  if (consecutiveHoursCharts.length > 0 || consecutiveHoursTables.length > 0) {
+  const consecutiveCount = countSectionItems('consecutive');
+  if (consecutiveCount.chartsCount > 0 || consecutiveCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'consecutive',
       label: '120h consécutives',
       icon: <Clock className="w-4 h-4" />,
-      chartsCount: consecutiveHoursCharts.length,
-      tablesCount: consecutiveHoursTables.length,
+      chartsCount: consecutiveCount.chartsCount,
+      tablesCount: consecutiveCount.tablesCount,
     });
   }
 
-  // Cut-In to Cut-Out (includes timeline)
-  if (cutInOutCharts.length > 0 || cutInOutTables.length > 0 || timelineCharts.length > 0) {
+  // Cut-In to Cut-Out
+  const cutinoutCount = countSectionItems('cutinout');
+  if (cutinoutCount.chartsCount > 0 || cutinoutCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'cutinout',
       label: 'Cut-In à Cut-Out',
       icon: <Activity className="w-4 h-4" />,
-      chartsCount: cutInOutCharts.length + timelineCharts.length,
-      tablesCount: cutInOutTables.length,
+      chartsCount: cutinoutCount.chartsCount,
+      tablesCount: cutinoutCount.tablesCount,
     });
   }
 
   // Nominal Power
-  if (nominalPowerCharts.length > 0 || nominalPowerTables.length > 0) {
+  const nominalCount = countSectionItems('nominal');
+  if (nominalCount.chartsCount > 0 || nominalCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'nominal',
       label: 'Puissance nominale',
       icon: <Zap className="w-4 h-4" />,
-      chartsCount: nominalPowerCharts.length,
-      tablesCount: nominalPowerTables.length,
+      chartsCount: nominalCount.chartsCount,
+      tablesCount: nominalCount.tablesCount,
     });
   }
 
   // Local Restarts
-  if (restartsTables.length > 0) {
+  const restartsCount = countSectionItems('restarts');
+  if (restartsCount.chartsCount > 0 || restartsCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'restarts',
       label: 'Redémarrages locaux',
       icon: <RotateCcw className="w-4 h-4" />,
-      chartsCount: 0,
-      tablesCount: restartsTables.length,
+      chartsCount: restartsCount.chartsCount,
+      tablesCount: restartsCount.tablesCount,
     });
   }
 
   // Availability
-  if (availabilityTables.length > 0) {
+  const availabilityCount = countSectionItems('availability');
+  if (availabilityCount.chartsCount > 0 || availabilityCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'availability',
       label: 'Disponibilité',
       icon: <CheckCircle className="w-4 h-4" />,
-      chartsCount: 0,
-      tablesCount: availabilityTables.length,
+      chartsCount: availabilityCount.chartsCount,
+      tablesCount: availabilityCount.tablesCount,
     });
   }
 
   // Wind Rose
-  if (windRoseCharts.length > 0) {
+  const windRoseCount = countSectionItems('wind-rose');
+  if (windRoseCount.chartsCount > 0 || windRoseCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'wind-rose',
       label: 'Rose des vents',
       icon: <Wind className="w-4 h-4" />,
-      chartsCount: windRoseCharts.length,
-      tablesCount: 0,
+      chartsCount: windRoseCount.chartsCount,
+      tablesCount: windRoseCount.tablesCount,
     });
   }
 
   // Wind Histogram
-  if (windHistogramCharts.length > 0) {
+  const windHistogramCount = countSectionItems('wind-histogram');
+  if (windHistogramCount.chartsCount > 0 || windHistogramCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'wind-histogram',
       label: 'Distribution vent',
       icon: <BarChart3 className="w-4 h-4" />,
-      chartsCount: windHistogramCharts.length,
-      tablesCount: 0,
+      chartsCount: windHistogramCount.chartsCount,
+      tablesCount: windHistogramCount.tablesCount,
     });
   }
 
-
   // Power Curve
-  if (powerCurveCharts.length > 0) {
+  const powerCurveCount = countSectionItems('power-curve');
+  if (powerCurveCount.chartsCount > 0 || powerCurveCount.tablesCount > 0) {
     sidebarSections.push({
       id: 'power-curve',
       label: 'Courbe de puissance',
       icon: <Zap className="w-4 h-4" />,
-      chartsCount: powerCurveCharts.length,
-      tablesCount: 0,
+      chartsCount: powerCurveCount.chartsCount,
+      tablesCount: powerCurveCount.tablesCount,
     });
   }
+
+  // Fonction helper pour rendre une section avec charts et tables
+  const renderSection = (title: string, icon: typeof Zap): JSX.Element => {
+    const { charts, tables } = activeSectionData;
+
+    return (
+      <CategoryCard title={title} icon={icon} defaultOpen={true}>
+        <div className="space-y-6">
+          {charts.map((chart: AnalyzeResponse['charts'][0], idx: number) => (
+            <div key={idx} className="mb-6">
+              <ChartViewer charts={[chart]} />
+            </div>
+          ))}
+          {tables.map((table: AnalyzeResponse['tables'][0], idx: number) => (
+            <div key={idx} className="mt-6">
+              <h4 className="text-md font-semibold mb-3">{table.name}</h4>
+              <PaginatedTable table={table} itemsPerPage={10} />
+            </div>
+          ))}
+        </div>
+      </CategoryCard>
+    );
+  };
+
+  // Section content map - render only active section (lazy loaded)
+  const sectionContentMap: Record<string, JSX.Element> = {
+    'validation': (
+      <CategoryCard title="Résumé de validation" icon={CheckCircle} defaultOpen={true}>
+        <ValidationSummary result={result} />
+      </CategoryCard>
+    ),
+    'summary': renderSection('Tableau récapitulatif', Info),
+    'consecutive': renderSection('120 heures consécutives', Clock),
+    'cutinout': renderSection('Test Cut-In à Cut-Out', Activity),
+    'nominal': renderSection('Puissance nominale', Zap),
+    'restarts': renderSection('Redémarrages locaux', RotateCcw),
+    'availability': renderSection('Disponibilité', CheckCircle),
+    'wind-rose': renderSection('Rose des vents', Wind),
+    'wind-histogram': renderSection('Distribution de la vitesse du vent', BarChart3),
+    'power-curve': renderSection('Courbe de puissance', Zap),
+  };
 
   return (
     <div className="flex gap-6">
       {/* Sidebar */}
-      <ResultsSidebar sections={sidebarSections} />
+      <ResultsSidebar
+        sections={sidebarSections}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+      />
 
-      {/* Main Content */}
-      <div className="flex-1 space-y-6">
-        {/* Validation Summary */}
-        <div id="validation">
-          <CategoryCard title="Résumé de validation" icon={CheckCircle} defaultOpen={true}>
-            <ValidationSummary result={result} />
+      {/* Main Content - Render only active section */}
+      <div className="flex-1">
+        {sectionContentMap[activeSection] || (
+          <div className="text-center text-gray-500 py-8">
+            Section non trouvée
+          </div>
+        )}
+
+        {/* Download Report - Always visible at bottom */}
+        <div className="mt-6">
+          <CategoryCard title="Téléchargement" icon={CheckCircle} defaultOpen={true} collapsible={false}>
+            <DownloadButton reportPath={result.report_path} />
           </CategoryCard>
         </div>
-
-        {/* Summary Table */}
-        {summaryTable && (
-          <div id="summary">
-            <CategoryCard title={summaryTable.name} icon={Activity} defaultOpen={true}>
-              <PaginatedTable table={summaryTable} itemsPerPage={10} />
-            </CategoryCard>
-          </div>
-        )}
-
-        {/* 120 Consecutive Hours */}
-        {(consecutiveHoursCharts.length > 0 || consecutiveHoursTables.length > 0) && (
-          <div id="consecutive">
-            <CategoryCard title="120 heures consécutives" icon={Clock} defaultOpen={true}>
-              <div className="space-y-6">
-                {consecutiveHoursCharts.map((chart, idx) => (
-                  <div key={idx} className="mb-6">
-                    <ChartViewer charts={[chart]} />
-                  </div>
-                ))}
-                {consecutiveHoursTables.map((table, idx) => (
-                  <div key={idx} className="mt-6">
-                    <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                    <PaginatedTable table={table} itemsPerPage={10} />
-                  </div>
-                ))}
-              </div>
-            </CategoryCard>
-          </div>
-        )}
-
-        {/* Cut-In to Cut-Out */}
-        {(cutInOutCharts.length > 0 || cutInOutTables.length > 0 || timelineCharts.length > 0) && (
-          <div id="cutinout">
-            <CategoryCard title="Test Cut-In à Cut-Out" icon={Activity} defaultOpen={true}>
-              <div className="space-y-6">
-                {cutInOutCharts.map((chart, idx) => (
-                  <div key={idx} className="mb-6">
-                    <ChartViewer charts={[chart]} />
-                  </div>
-                ))}
-                {timelineCharts.map((chart, idx) => (
-                  <div key={idx} className="mb-6">
-                    <ChartViewer charts={[chart]} />
-                  </div>
-                ))}
-                {cutInOutTables.map((table, idx) => (
-                  <div key={idx} className="mt-6">
-                    <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                    <PaginatedTable table={table} itemsPerPage={10} />
-                  </div>
-                ))}
-              </div>
-            </CategoryCard>
-          </div>
-        )}
-
-        {/* Nominal Power */}
-        {(nominalPowerCharts.length > 0 || nominalPowerTables.length > 0) && (
-          <div id="nominal">
-            <CategoryCard title="Puissance nominale" icon={Zap} defaultOpen={true}>
-              <div className="space-y-6">
-                {nominalPowerCharts.map((chart, idx) => (
-                  <div key={idx} className="mb-6">
-                    <ChartViewer charts={[chart]} />
-                  </div>
-                ))}
-                {nominalPowerTables.map((table, idx) => (
-                  <div key={idx} className="mt-6">
-                    <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                    <PaginatedTable table={table} itemsPerPage={10} />
-                  </div>
-                ))}
-              </div>
-            </CategoryCard>
-          </div>
-        )}
-
-        {/* Local Restarts */}
-        {restartsTables.length > 0 && (
-          <div id="restarts">
-            <CategoryCard title="Redémarrages locaux" icon={RotateCcw} defaultOpen={true}>
-              <div className="space-y-4">
-                {restartsTables.map((table, idx) => (
-                  <div key={idx}>
-                    <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                    <PaginatedTable table={table} itemsPerPage={10} />
-                  </div>
-                ))}
-              </div>
-            </CategoryCard>
-          </div>
-        )}
-
-        {/* Availability */}
-        {availabilityTables.length > 0 && (
-          <div id="availability">
-            <CategoryCard title="Disponibilité" icon={CheckCircle} defaultOpen={true}>
-              <div className="space-y-4">
-                {availabilityTables.map((table, idx) => (
-                  <div key={idx}>
-                    <h4 className="text-md font-semibold mb-3">{table.name}</h4>
-                    <PaginatedTable table={table} itemsPerPage={10} />
-                  </div>
-                ))}
-              </div>
-            </CategoryCard>
-          </div>
-        )}
-
-        {/* Wind Rose */}
-        {windRoseCharts.length > 0 && (
-          <div id="wind-rose">
-            <CategoryCard title="Rose des vents" icon={Wind} defaultOpen={true}>
-              <div className="space-y-6">
-                {windRoseCharts.map((chart, idx) => (
-                  <div key={idx} className="mb-6">
-                    <ChartViewer charts={[chart]} />
-                  </div>
-                ))}
-              </div>
-            </CategoryCard>
-          </div>
-        )}
-
-        {/* Wind Histogram */}
-        {windHistogramCharts.length > 0 && (
-          <div id="wind-histogram">
-            <CategoryCard title="Distribution de la vitesse du vent" icon={BarChart3} defaultOpen={true}>
-              <div className="space-y-6">
-                {windHistogramCharts.map((chart, idx) => (
-                  <div key={idx} className="mb-6">
-                    <ChartViewer charts={[chart]} />
-                  </div>
-                ))}
-              </div>
-            </CategoryCard>
-          </div>
-        )}
-
-        {/* Power Curve */}
-        {powerCurveCharts.length > 0 && (
-          <div id="power-curve">
-            <CategoryCard title="Courbe de puissance" icon={Zap} defaultOpen={true}>
-              <div className="space-y-6">
-                {powerCurveCharts.map((chart, idx) => (
-                  <div key={idx} className="mb-6">
-                    <ChartViewer charts={[chart]} />
-                  </div>
-                ))}
-              </div>
-            </CategoryCard>
-          </div>
-        )}
-
-        {/* Download Report */}
-        <CategoryCard title="Téléchargement" icon={CheckCircle} defaultOpen={true} collapsible={false}>
-          <DownloadButton reportPath={result.report_path} />
-        </CategoryCard>
       </div>
     </div>
   );
