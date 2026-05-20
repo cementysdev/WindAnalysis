@@ -105,8 +105,9 @@ class WindDirectionCalibrationVisualizer(BaseVisualizer):
                 )
                 continue
 
-            df_daily["date"] = pd.to_datetime(df_daily["date"])
-            all_timestamps.extend(df_daily["date"].tolist())
+            # Convert to datetime and then to string format for Plotly compatibility
+            df_daily["date"] = pd.to_datetime(df_daily["date"]).dt.strftime("%Y-%m-%d")
+            all_timestamps.extend(pd.to_datetime(df_daily["date"]).tolist())
             valid_turbines.append(turbine_id)  # Mark this turbine as having valid data
 
             threshold = turbine_data.get("threshold_degrees", 5.0)

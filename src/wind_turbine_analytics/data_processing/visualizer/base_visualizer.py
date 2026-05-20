@@ -57,6 +57,7 @@ class BaseVisualizer(ABC):
         # Sauvegarder selon le type
         if self.use_plotly:
             # Plotly: sauvegarder PNG et JSON
+            # Utiliser la hauteur définie dans la figure, sinon 800px par défaut
             fig.write_image(str(png_path), width=1200, height=800)
             fig.write_json(str(json_path))
             logger.debug(f"✅ Graphique Plotly sauvegardé: {png_path} + {json_path}")
