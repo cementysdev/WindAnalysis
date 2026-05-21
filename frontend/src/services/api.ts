@@ -8,7 +8,18 @@ import type {
   SessionDetail
 } from "../types/analysis";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// Auto-detect API URL based on environment
+const API_BASE_URL = (() => {
+  // Development mode: use VITE_API_URL or default to localhost
+  if (import.meta.env.DEV) {
+    return import.meta.env.VITE_API_URL || "http://localhost:8000";
+  }
+
+  // Production mode: frontend served by FastAPI, API on same origin
+  return window.location.origin;
+})();
+
+console.log('[API Client] Base URL:', API_BASE_URL);
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

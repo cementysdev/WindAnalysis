@@ -39,11 +39,15 @@ output/
 # Frontend
 frontend/node_modules/
 frontend/dist/
+frontend/.env
 frontend/.env.local
 frontend/.env.production
 
 # API logs
 *.log
 
-/frontend/dist/
-/frontend/node_modules/
+# Environment files (keep .env.example)
+.env
+
+# Databricks config (keep .example files)
+.databricks/project.json

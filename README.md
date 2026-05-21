@@ -108,18 +108,30 @@ npm install
 
 ### Lancer l'Application Complète
 
-**Option 1 : Interface Web (Recommandé)**
+**Option 1 : Interface Web - Mode Développement (Recommandé)**
 ```bash
 # Terminal 1 - Backend API (FastAPI)
 uvicorn src.wind_turbine_analytics.api.main:app --reload --port 8000
 
-# Terminal 2 - Frontend React
+# Terminal 2 - Frontend React (avec hot reload)
 cd frontend
 npm run dev
 ```
 Puis ouvrir http://localhost:5173 dans votre navigateur.
 
-**Option 2 : Ligne de Commande**
+**Option 2 : Interface Web - Mode Production Local**
+```bash
+# Build le frontend
+cd frontend
+npm run build
+cd ..
+
+# Démarrer FastAPI (sert automatiquement le frontend)
+uvicorn src.wind_turbine_analytics.api.main:app --host 0.0.0.0 --port 8000
+```
+Puis ouvrir http://localhost:8000 dans votre navigateur.
+
+**Option 3 : Ligne de Commande**
 ```bash
 # Analyse SCADA
 python scada_main.py ./experiments/scada_analyse
@@ -127,6 +139,21 @@ python scada_main.py ./experiments/scada_analyse
 # Analyse RunTest
 python runtest_main.py ./experiments/runtest_example
 ```
+
+### Déploiement Cloud (Databricks Apps)
+
+L'application peut être déployée sur Databricks Apps pour un accès centralisé :
+
+```bash
+# Build complet
+./build_app.sh
+
+# Déployer sur Databricks (après configuration CLI)
+databricks apps deploy wind-turbine-analytics --source-path .
+databricks apps start wind-turbine-analytics
+```
+
+Voir [DEPLOYMENT.md](./DEPLOYMENT.md) pour le guide complet de déploiement.
 
 ### Configuration YAML
 Fichiers dans `experiments/*/config.yml` définissent :

@@ -4,6 +4,7 @@ Session Manager for Wind Turbine Analytics.
 Manages temporary sessions for ZIP uploads, extracts files, and organizes outputs.
 """
 import json
+import os
 import shutil
 import uuid
 import zipfile
@@ -17,12 +18,18 @@ from src.logger_config import get_logger
 
 logger = get_logger(__name__)
 
+# Volume path configuration (can be local or remote like Databricks Volumes)
+VOLUME_BASE_PATH = os.getenv(
+    "VOLUME_PATH",
+    "tmp"  # Default to local tmp/ for backward compatibility
+)
+
 
 class SessionManager:
     """Manages session lifecycle for uploaded ZIP files and analysis results."""
 
-    SESSIONS_ROOT = Path("tmp/sessions")
-    CLI_SESSIONS_ROOT = Path("tmp/cli_sessions")
+    SESSIONS_ROOT = Path(VOLUME_BASE_PATH) / "sessions"
+    CLI_SESSIONS_ROOT = Path(VOLUME_BASE_PATH) / "cli_sessions"
 
     def __init__(self):
         """Initialize SessionManager and ensure root directories exist."""
