@@ -1,0 +1,5 @@
+{
+  "profile": "DEFAULT",
+  "host": "https://<workspace-url>.cloud.databricks.com",
+  "app_path": "/Workspace/Users/<your-email>/wind-turbine-analytics"
+}
