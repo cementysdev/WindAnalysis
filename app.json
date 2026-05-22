@@ -1,0 +1,25 @@
+{
+  "name": "wind-turbine-analytics",
+  "description": "Système d'analyse SCADA pour parcs éoliens avec interface web interactive",
+  "resources": [
+    {
+      "name": "main-compute",
+      "description": "Compute resources for the app",
+      "compute": {
+        "spec": {
+          "kind": "serverless"
+        }
+      }
+    }
+  ],
+  "env": [
+    {
+      "name": "VOLUME_PATH",
+      "value": "/Workspace/Users/gottfried.jacquet@socotec.com/wind_analytics_data"
+    },
+    {
+      "name": "PYTHONPATH",
+      "value": "/Workspace/Applications/wind-turbine-analytics"
+    }
+  ]
+}
