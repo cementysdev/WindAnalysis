@@ -1,0 +1,71 @@
+# Databricks Asset Bundle for Wind Turbine Analytics
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+
+bundle:
+  name: wind-turbine-analytics
+
+include:
+  - resources/*.yml
+
+variables:
+  env:
+    default: "development"
+    description: "The environment: development, staging, or production"
+
+  catalog:
+    default: "development-bronze"
+    description: "Unity Catalog for storage"
+
+  volume_path:
+    default: "/Workspace/Users/gottfried.jacquet@socotec.com/wind_analytics_data"
+    description: "Path for session storage"
+
+  compute_type:
+    default: "serverless"
+    description: "Compute type for the app: serverless or standard"
+
+targets:
+  # Développement personnel (votre workspace local)
+  dev:
+    variables:
+      env: "development"
+      catalog: "development-bronze"
+      volume_path: "/Workspace/Users/gottfried.jacquet@socotec.com/wind_analytics_data"
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-2bfbd02e-3e5e.cloud.databricks.com
+      root_path: "/Users/gottfried.jacquet@socotec.com/.bundle/wind-turbine-analytics/dev"
+
+  # Développement partagé (équipe)
+  development:
+    variables:
+      env: "development"
+      catalog: "development-bronze"
+      volume_path: "/Volumes/development-bronze/wind_analytics/sessions"
+    mode: production
+    workspace:
+      host: https://dbc-2bfbd02e-3e5e.cloud.databricks.com
+      root_path: "/apps/wind-turbine-analytics/development"
+
+  # Staging (pré-production)
+  staging:
+    variables:
+      env: "staging"
+      catalog: "staging-bronze"
+      volume_path: "/Volumes/staging-bronze/wind_analytics/sessions"
+    mode: production
+    workspace:
+      host: https://dbc-2bfbd02e-3e5e.cloud.databricks.com
+      root_path: "/apps/wind-turbine-analytics/staging"
+
+  # Production
+  production:
+    variables:
+      env: "production"
+      catalog: "production-bronze"
+      volume_path: "/Volumes/production-bronze/wind_analytics/sessions"
+    mode: production
+    workspace:
+      host: https://dbc-2bfbd02e-3e5e.cloud.databricks.com
+      root_path: "/apps/wind-turbine-analytics/production"
