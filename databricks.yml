@@ -4,10 +4,10 @@
 bundle:
   name: wind-turbine-analytics
 
-artifacts:
-  default:
-    type: whl
-    path: .
+# artifacts:
+#   default:
+#     type: whl
+#     path: .
 
 include:
   - resources/*.yml

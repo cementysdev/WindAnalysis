@@ -36,6 +36,11 @@ build/
 outputs/
 output/
 
+# Experiments (test data - large files, not for deployment)
+experiments/*.zip
+experiments/*/DATA/
+experiments/*/*.csv
+
 # Frontend
 frontend/node_modules/
 frontend/dist/

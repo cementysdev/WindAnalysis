@@ -40,6 +40,20 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo.
 echo [4/4] Deploiement de l'application (2-3 minutes)...
+
+REM Verifier si l'app existe, sinon la creer
+C:\WINDOWS\databricks.exe apps get wind-analytics-dev >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    echo App inexistante, creation en cours...
+    C:\WINDOWS\databricks.exe bundle deploy -t dev
+    if %ERRORLEVEL% NEQ 0 (
+        echo ERREUR: Echec de creation via bundle
+        pause
+        exit /b 1
+    )
+)
+
+REM Deployer le code
 C:\WINDOWS\databricks.exe apps deploy wind-analytics-dev --source-code-path /Workspace/Users/gottfried.jacquet@socotec.com/wind-analytics-dev
 
 if %ERRORLEVEL% NEQ 0 (

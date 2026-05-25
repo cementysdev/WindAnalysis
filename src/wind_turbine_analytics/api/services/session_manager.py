@@ -74,6 +74,9 @@ class SessionManager:
             # Validate config.yml exists
             self._validate_config_yml(uploaded_path)
 
+            # Normalize paths in config.yml (experiments/ -> relative paths)
+            self._normalize_config_paths(uploaded_path)
+
             # Remove temporary ZIP
             zip_temp_path.unlink()
 
@@ -137,6 +140,9 @@ class SessionManager:
 
             # Validate config.yml
             self._validate_config_yml(uploaded_path)
+
+            # Normalize paths in config.yml
+            self._normalize_config_paths(uploaded_path)
 
             # Save metadata
             metadata = {
@@ -351,10 +357,24 @@ class SessionManager:
         """
         try:
             with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                # Log ZIP contents before extraction
+                file_list = zip_ref.namelist()
+                logger.info(f"ZIP contains {len(file_list)} files/folders")
+                logger.debug(f"ZIP structure: {file_list[:10]}")  # Log first 10 entries
+
                 zip_ref.extractall(destination)
 
-            file_count = sum(1 for _ in destination.rglob("*") if _.is_file())
-            logger.debug(f"Extracted {file_count} files from ZIP to {destination}")
+            # Count extracted files
+            extracted_files = list(destination.rglob("*"))
+            file_count = sum(1 for f in extracted_files if f.is_file())
+            logger.info(f"✅ Extracted {file_count} files from ZIP to {destination}")
+
+            # Log directory structure for debugging
+            if file_count == 0:
+                logger.error(f"❌ No files extracted! ZIP was empty or structure invalid")
+            else:
+                csv_files = list(destination.rglob("*.csv"))
+                logger.info(f"Found {len(csv_files)} CSV files after extraction")
 
         except zipfile.BadZipFile as e:
             raise ValueError(f"Invalid ZIP file: {e}")
@@ -379,3 +399,79 @@ class SessionManager:
             )
 
         logger.debug(f"config.yml found at: {config_files[0].relative_to(uploaded_path)}")
+
+    def _normalize_config_paths(self, uploaded_path: Path) -> None:
+        """
+        Normalize file paths in config.yml to be relative to uploaded/ directory.
+
+        Replaces patterns like:
+        - .\\experiments\\scada_analyse\\DATA\\LU09\\file.csv
+        - experiments/scada_analyse/DATA/LU09/file.csv
+        - ./experiments/scada_analyse/DATA/LU09/file.csv
+
+        With relative paths:
+        - DATA/LU09/file.csv
+
+        Args:
+            uploaded_path: Path to uploaded files directory containing config.yml
+        """
+        import re
+        import yaml
+
+        # Find config.yml
+        config_files = list(uploaded_path.rglob("config.yml"))
+        if not config_files:
+            logger.warning("No config.yml found for path normalization")
+            return
+
+        config_path = config_files[0]
+        logger.info(f"Normalizing paths in {config_path}")
+
+        try:
+            # Read config.yml content as text
+            with open(config_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            original_content = content
+
+            # Pattern 1: .\experiments\scada_analyse\ (Windows backslash)
+            content = re.sub(
+                r'[.]\\+experiments\\+[^\\]+\\+',
+                '',
+                content
+            )
+
+            # Pattern 2: ./experiments/scada_analyse/ (Unix forward slash)
+            content = re.sub(
+                r'\./experiments/[^/]+/',
+                '',
+                content
+            )
+
+            # Pattern 3: experiments/scada_analyse/ (no leading dot)
+            content = re.sub(
+                r'experiments/[^/]+/',
+                '',
+                content
+            )
+
+            # Pattern 4: experiments\scada_analyse\ (Windows, no leading dot)
+            content = re.sub(
+                r'experiments\\+[^\\]+\\+',
+                '',
+                content
+            )
+
+            # If changes were made, save the normalized config
+            if content != original_content:
+                with open(config_path, "w", encoding="utf-8") as f:
+                    f.write(content)
+
+                logger.info(f"✅ Config paths normalized in {config_path.name}")
+                logger.debug(f"Removed 'experiments/...' prefixes from paths")
+            else:
+                logger.debug("No path normalization needed")
+
+        except Exception as e:
+            logger.error(f"Failed to normalize config paths: {e}")
+            # Non-fatal: continue without normalization
