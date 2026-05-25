@@ -81,6 +81,28 @@ class WordPresenter(ABC):
             # Préparer le contexte complet (métadonnées + données)
             full_context = self._prepare_context(context, metadata)
 
+            # Ajouter note sur visualisations si PNG manquants
+            chart_paths = full_context.get("chart_paths", {})
+            missing_png_count = sum(
+                1 for path in chart_paths.values() if path is None
+            )
+
+            if missing_png_count > 0 and doc.paragraphs:
+                # Insérer paragraphe au début
+                intro_para = doc.paragraphs[0].insert_paragraph_before()
+                run1 = intro_para.add_run(
+                    "📊 Note sur les visualisations\n"
+                )
+                run1.bold = True
+                intro_para.add_run(
+                    f"{missing_png_count} graphique(s) non affichés "
+                    f"(Chrome/Kaleido requis).\n"
+                    f"Pour visualiser tous les graphiques de manière "
+                    f"interactive (zoom, filtres, export), "
+                    f"veuillez consulter l'interface web de l'application "
+                    f"Databricks Apps.\n\n"
+                )
+
             # Remplir les tableaux (stratégie spécifique à chaque workflow)
             self._process_tables(doc, full_context)
 
@@ -346,7 +368,11 @@ class WordPresenter(ABC):
                     # Si PNG non disponible (Kaleido échoué), afficher message
                     if image_path is None or not Path(image_path).exists():
                         logger.warning(f"⚠️ PNG not available for {chart_name} (Kaleido unavailable)")
-                        para.text = para.text.replace(tag, f"[Graphique {chart_name} disponible sur l'interface web interactive]")
+                        para.text = para.text.replace(
+                            tag,
+                            f"⚠️ Graphique non affiché (nécessite Chrome)\n"
+                            f"→ Consultez l'interface web Databricks Apps pour visualiser ce graphique de manière interactive avec zoom et filtres."
+                        )
                         continue
 
                     # Supprimer le texte de la balise

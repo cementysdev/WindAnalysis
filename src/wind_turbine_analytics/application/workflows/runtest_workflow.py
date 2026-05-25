@@ -256,6 +256,23 @@ class RunTestWorkflow(BaseWorkflow):
                             chart_paths[chart_name] = chart_info["png_path"]
                             logger.debug(f"Chemin d'image collecté: {chart_name} -> {chart_info['png_path']}")
 
+            # Log diagnostic PNG disponibilité
+            png_available = sum(
+                1 for path in chart_paths.values() if path is not None
+            )
+            total_charts = len(chart_paths)
+            logger.info(
+                f"📊 Charts collectés : {png_available}/{total_charts} "
+                f"avec PNG disponible"
+            )
+
+            if png_available < total_charts:
+                logger.warning(
+                    f"⚠️ {total_charts - png_available} PNG manquants "
+                    f"(Kaleido non disponible). "
+                    f"Graphiques visibles sur interface web uniquement."
+                )
+
             # Ajouter les chemins d'images au contexte
             context["chart_paths"] = chart_paths
 
