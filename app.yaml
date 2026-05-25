@@ -1,43 +1,19 @@
-name: wind-turbine-analytics
-display_name: Wind Turbine Analytics
-description: "Système d'analyse SCADA pour parcs éoliens avec interface web interactive"
+# Wind Turbine Analytics - Databricks App Configuration
 
-# Version
-version: 1.0.0
+# Command to start the app (OpenTelemetry disabled for now)
+command:
+  - python
+  - run_app.py
 
-# Ressources
-resources:
-  # Compute pour l'app
-  - name: main
-    type: compute
-    spec:
-      node_type_id: Standard_DS3_v2  # Azure (adapter selon cloud)
-      num_workers: 0                  # Mode single-node
-      spark_version: 14.3.x-scala2.12
-
-  # Volume pour sessions (existant)
-  - name: sessions_volume
-    type: volume
-    spec:
-      catalog: development-bronze
-      schema: wind_analytics
-      volume_name: sessions/uploaded_data
-
-# Entrypoint
-entrypoint:
-  command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# Variables d'environnement
+# Environment variables
 env:
-  VOLUME_PATH: /Volumes/development-bronze/wind_analytics/sessions/uploaded_data
-  PYTHONPATH: /app
-
-# Ports exposés
-ports:
-  - 8000
-
-# Permissions
-permissions:
-  - resource: volumes
-    actions: [READ, WRITE]
-    path: /Volumes/development-bronze/wind_analytics/sessions/uploaded_data
+  - name: VOLUME_PATH
+    value: /tmp/wind_analytics_data
+  - name: OTEL_SERVICE_NAME
+    value: wind-analytics
+  - name: OTEL_TRACES_EXPORTER
+    value: otlp
+  - name: OTEL_METRICS_EXPORTER
+    value: otlp
+  - name: OTEL_LOGS_EXPORTER
+    value: otlp

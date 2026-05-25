@@ -49,7 +49,11 @@ app.include_router(analyze_router)
 app.include_router(config_router)
 
 # Serve frontend static files (production mode)
-FRONTEND_BUILD_DIR = Path(__file__).parent.parent.parent.parent / "frontend" / "dist"
+# Priority: static_frontend (Databricks) > frontend/dist (local)
+project_root = Path(__file__).parent.parent.parent.parent
+FRONTEND_BUILD_DIR = project_root / "static_frontend"
+if not FRONTEND_BUILD_DIR.exists():
+    FRONTEND_BUILD_DIR = project_root / "frontend" / "dist"
 
 if FRONTEND_BUILD_DIR.exists():
     logger.debug(f"Frontend build directory found at {FRONTEND_BUILD_DIR}")

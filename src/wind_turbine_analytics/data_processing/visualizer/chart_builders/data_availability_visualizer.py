@@ -198,7 +198,7 @@ class DataAvailabilityVisualizer(BaseVisualizer):
                     marker=dict(
                         color=color, line_width=0
                     ),  # line_width=0 pour éviter les contours blancs
-                    base=segment_start,  # Date de début
+                    base=segment_start.isoformat() if hasattr(segment_start, 'isoformat') else segment_start,  # Date de début
                     legendgroup=legend_group,
                     name=legend_name,
                     showlegend=show_legend,

@@ -4,13 +4,18 @@
 bundle:
   name: wind-turbine-analytics
 
+artifacts:
+  default:
+    type: whl
+    path: .
+
 include:
   - resources/*.yml
 
 variables:
   env:
-    default: "development"
-    description: "The environment: development, staging, or production"
+    default: "dev"
+    description: "The environment: dev, staging, or prod"
 
   catalog:
     default: "development-bronze"
@@ -28,7 +33,7 @@ targets:
   # Développement personnel (votre workspace local)
   dev:
     variables:
-      env: "development"
+      env: "dev"
       catalog: "development-bronze"
       volume_path: "/Workspace/Users/gottfried.jacquet@socotec.com/wind_analytics_data"
     mode: development
@@ -62,7 +67,7 @@ targets:
   # Production
   production:
     variables:
-      env: "production"
+      env: "prod"
       catalog: "production-bronze"
       volume_path: "/Volumes/production-bronze/wind_analytics/sessions"
     mode: production

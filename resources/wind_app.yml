@@ -3,31 +3,8 @@
 resources:
   apps:
     wind_turbine_app:
-      name: "wind-turbine-analytics-${var.env}"
+      name: "wind-analytics-${var.env}"
       description: "Système d'analyse SCADA pour parcs éoliens - ${var.env}"
 
-      resources:
-        - name: main-compute
-          description: "Compute resources for the app"
-          compute:
-            spec:
-              kind: ${var.compute_type}
-
-      config:
-        # Command to start the app
-        command:
-          - uvicorn
-          - src.wind_turbine_analytics.api.main:app
-          - --host
-          - "0.0.0.0"
-          - --port
-          - "8000"
-
-        # Environment variables
-        env:
-          - name: VOLUME_PATH
-            value: ${var.volume_path}
-          - name: PYTHONPATH
-            value: /Workspace/.bundle/${bundle.name}/${bundle.target}/files
-          - name: ENV
-            value: ${var.env}
+      # Source code path (required for Databricks Apps)
+      source_code_path: .
