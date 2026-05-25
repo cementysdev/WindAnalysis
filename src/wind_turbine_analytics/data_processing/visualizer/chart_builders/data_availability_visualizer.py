@@ -142,7 +142,8 @@ class DataAvailabilityVisualizer(BaseVisualizer):
                             for tid in turbine_ids
                             if "availability_table" in turbine_results[tid]
                         ]
-                    )
+                    ) if any("availability_table" in turbine_results[tid] for tid in turbine_ids)
+                    else pd.Series(dtype='datetime64[ns]')  # Series vide si pas de données
                 ),
             ),
         )

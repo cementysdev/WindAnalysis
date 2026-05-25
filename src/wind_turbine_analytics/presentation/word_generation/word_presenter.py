@@ -338,11 +338,15 @@ class WordPresenter(ABC):
                     # Vérifier si l'image existe
                     if chart_name not in chart_paths:
                         logger.warning(f"⚠️ Image not found for {chart_name}")
+                        para.text = para.text.replace(tag, f"[Graphique {chart_name} non disponible - Consultez l'interface web]")
                         continue
 
                     image_path = chart_paths[chart_name]
-                    if not Path(image_path).exists():
-                        logger.warning(f"⚠️ Image file not found: {image_path}")
+
+                    # Si PNG non disponible (Kaleido échoué), afficher message
+                    if image_path is None or not Path(image_path).exists():
+                        logger.warning(f"⚠️ PNG not available for {chart_name} (Kaleido unavailable)")
+                        para.text = para.text.replace(tag, f"[Graphique {chart_name} disponible sur l'interface web interactive]")
                         continue
 
                     # Supprimer le texte de la balise
@@ -355,5 +359,6 @@ class WordPresenter(ABC):
                         logger.debug(f"✅ Image inserted: {chart_name}")
                     except Exception as e:
                         logger.error(f"❌ Error inserting {chart_name}: {e}")
+                        para.add_run(f"[Erreur insertion {chart_name}: {str(e)}]")
 
         logger.debug("✅ Images inserted in document")

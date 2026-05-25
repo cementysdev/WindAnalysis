@@ -64,6 +64,8 @@ class TbaManufacturerVisualizer(BaseVisualizer):
         # Collecter toutes les périodes uniques pour la moyenne du parc
         all_months = set()
         monthly_data_by_turbine = {}
+        all_months_sorted = []  # Initialiser pour éviter UnboundLocalError
+        wind_farm_avg = []  # Initialiser pour éviter UnboundLocalError
 
         # Ajouter une ligne pour chaque turbine
         for idx, turbine_id in enumerate(turbine_ids):

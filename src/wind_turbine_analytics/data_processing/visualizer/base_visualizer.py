@@ -1,11 +1,12 @@
 from src.wind_turbine_analytics.data_processing.data_result_models import (
     AnalysisResult,
 )
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Optional, Union
 from pathlib import Path
 from abc import ABC, abstractmethod
 from src.logger_config import get_logger
 import plotly.graph_objects as go
+import os
 
 logger = get_logger(__name__)
 
@@ -56,16 +57,32 @@ class BaseVisualizer(ABC):
 
         # Sauvegarder selon le type
         if self.use_plotly:
-            # Plotly: sauvegarder PNG et JSON
-            # Utiliser la hauteur définie dans la figure, sinon 800px par défaut
-            fig.write_image(str(png_path), width=1200, height=800)
+            # Plotly: sauvegarder JSON uniquement (PNG nécessite Chrome/Kaleido)
+            try:
+                # Tenter d'exporter PNG si possible (local avec Kaleido installé)
+                fig.write_image(str(png_path), width=1200, height=800)
+                png_saved = True
+                logger.debug(f"✅ PNG exporté: {png_path}")
+            except Exception as e:
+                # Sur Databricks ou sans Chrome, ignorer l'erreur PNG
+                logger.warning(f"Export PNG ignoré (Chrome/Kaleido non disponible): {e}")
+                png_saved = False
+
+            # JSON toujours sauvegardé (pas besoin de Chrome)
             fig.write_json(str(json_path))
-            logger.debug(f"✅ Graphique Plotly sauvegardé: {png_path} + {json_path}")
+            logger.debug(f"✅ Graphique Plotly JSON sauvegardé: {json_path}")
 
             # Stocker les chemins dans metadata
-            self._store_in_metadata(result, str(png_path), str(json_path))
+            self._store_in_metadata(
+                result,
+                str(png_path) if png_saved else None,
+                str(json_path)
+            )
 
-            return {"png_path": str(png_path), "json_path": str(json_path)}
+            return {
+                "png_path": str(png_path) if png_saved else None,
+                "json_path": str(json_path)
+            }
         else:
             # Matplotlib/Seaborn: sauvegarder PNG uniquement
             fig.savefig(str(png_path), dpi=150, bbox_inches="tight")
@@ -77,7 +94,7 @@ class BaseVisualizer(ABC):
             return {"png_path": str(png_path)}
 
     def _store_in_metadata(
-        self, result: AnalysisResult, png_path: str, json_path: Optional[str]
+        self, result: AnalysisResult, png_path: Optional[str], json_path: Optional[str]
     ) -> None:
         """
         Stocke les chemins des fichiers dans result.metadata.
@@ -92,7 +109,9 @@ class BaseVisualizer(ABC):
         if "charts" not in result.metadata:
             result.metadata["charts"] = {}
 
-        chart_info = {"png_path": png_path}
+        chart_info = {}
+        if png_path:
+            chart_info["png_path"] = png_path
         if json_path:
             chart_info["json_path"] = json_path
 

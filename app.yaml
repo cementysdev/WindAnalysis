@@ -1,6 +1,6 @@
 # Wind Turbine Analytics - Databricks App Configuration
 
-# Command to start the app (OpenTelemetry disabled for now)
+# Command to start the app
 command:
   - python
   - run_app.py
