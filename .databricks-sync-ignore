@@ -1,0 +1,70 @@
+# Databricks Sync Ignore File
+# Files and directories to exclude from sync/deploy
+
+# Experiments (test data - too large)
+experiments/
+
+# Node modules
+frontend/node_modules/
+node_modules/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# Temporary files
+tmp/
+*.log
+
+# Documentation markdown (keep README.md, app.yaml, etc)
+docs/
+PHASE_*.md
+MIGRATION_*.md
+BUNDLE_*.md
+DEPLOYMENT.md
+FEATURE_*.md
+QUICK_*.md
+UPLOAD_GUIDE.md
+BUGFIX_SUMMARY.md
+DATABRICKS_DEPLOYMENT_GUIDE.md
+
+# Build artifacts
+frontend/.next/
+frontend/out/
+
+# Lock files (large but needed: keep uv.lock, exclude package-lock)
+package-lock.json
+
+# Test files
+tests/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Databricks state
+.databricks/

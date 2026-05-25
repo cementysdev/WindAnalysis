@@ -1,0 +1,16 @@
+# Databricks Ignore File
+# This file OVERRIDES .gitignore for databricks sync
+# Format: lines starting with ! force inclusion
+
+# Force include frontend/dist (normally ignored by .gitignore)
+!frontend/dist
+!frontend/dist/**
+
+# But still exclude these
+experiments/
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.git/
+tmp/
