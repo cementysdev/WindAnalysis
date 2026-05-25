@@ -1,0 +1,54 @@
+[project]
+name = "wind-turbine-analytics"
+version = "1.0.0"
+description = "Système d'analyse SCADA pour parcs éoliens sur Databricks"
+readme = "README.md"
+requires-python = ">=3.10,<3.12"
+authors = [
+    { name = "Gottfried Jacquet", email = "gottfried.jacquet@socotec.com" }
+]
+
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "databricks-sdk>=0.30.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "python-multipart>=0.0.9",
+    "pandas>=2.2.3,<3.0.0",
+    "numpy>=1.26.4,<2.0.0",
+    "plotly>=5.20.0",
+    "python-docx>=1.1.0",
+    "PyYAML>=6.0.1",
+    "colorama>=0.4.6",
+    "seaborn>=0.13.0",
+    "matplotlib>=3.8.0",
+    "scipy>=1.11.0",
+    "scikit-learn>=1.5.0",
+    "openpyxl>=3.1.0",
+    "docxtpl>=0.16.0",
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-instrumentation-fastapi>=0.40b0",
+    "dateparser>=1.2.0",
+    "docxcompose>=2.1.0",
+    "lxml>=5.0.0",
+    "rich>=13.0.0",
+    "rich-pyfiglet>=1.0.0",
+    "kaleido>=1.3.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-timeout>=2.3.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# On retire la contrainte "src" pour plus de simplicité sur Databricks
+[tool.hatch.build.targets.wheel]
+packages = ["."]
