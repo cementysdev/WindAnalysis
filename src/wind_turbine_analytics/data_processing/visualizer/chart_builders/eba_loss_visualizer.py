@@ -21,8 +21,8 @@ class EbaLossVisualizer(BaseVisualizer):
     - Support PNG + JSON pour dashboard web futur
     """
 
-    def __init__(self):
-        super().__init__(chart_name="eba_loss_chart", use_plotly=True)
+    def __init__(self, output_dir=None):
+        super().__init__(chart_name="eba_loss_chart", use_plotly=True, output_dir=output_dir)
 
     def _create_figure(self, result: AnalysisResult) -> go.Figure:
         """

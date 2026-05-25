@@ -12,8 +12,8 @@ logger = get_logger(__name__)
 
 
 class TopErrorCodeFrequencyVisualizer(BaseVisualizer):
-    def __init__(self):
-        super().__init__(chart_name="top_error_code_frequency", use_plotly=True)
+    def __init__(self, output_dir=None):
+        super().__init__(chart_name="top_error_code_frequency", use_plotly=True, output_dir=output_dir)
 
     def _create_figure(self, result: AnalysisResult) -> go.Figure:
         if not result.detailed_results:

@@ -22,8 +22,8 @@ class PowerCurveChartVisualizer(BaseVisualizer):
     - Ligne horizontale pour le seuil de puissance nominale
     """
 
-    def __init__(self):
-        super().__init__(chart_name="power_curve_chart", use_plotly=True)
+    def __init__(self, output_dir=None):
+        super().__init__(chart_name="power_curve_chart", use_plotly=True, output_dir=output_dir)
 
     def _create_figure(self, result: AnalysisResult) -> go.Figure:
         """

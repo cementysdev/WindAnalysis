@@ -109,9 +109,23 @@ class WorkflowAdapter:
         self._patch_tabler()
 
         try:
-            # Instantiate workflow with CLI presenter
+            # Créer dossier charts pour la session
+            if session_id:
+                session_charts_dir = Path(f"tmp/sessions/{session_id}/charts")
+                session_charts_dir.mkdir(parents=True, exist_ok=True)
+                logger.info(f"📁 Charts directory: {session_charts_dir}")
+            else:
+                # Mode local sans session (experiments/)
+                session_charts_dir = Path("output/charts")
+                session_charts_dir.mkdir(parents=True, exist_ok=True)
+
+            # Instantiate workflow with CLI presenter and output_dir
             presenter = CLIPipelinePresenter()
-            workflow = workflow_class(config=config, presenter=presenter)
+            workflow = workflow_class(
+                config=config,
+                presenter=presenter,
+                output_dir=session_charts_dir
+            )
 
             logger.debug("Running workflow validation and processing...")
             workflow.run()  # Returns None but generates side effects

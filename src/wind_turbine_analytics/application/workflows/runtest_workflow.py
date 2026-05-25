@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from pathlib import Path
 from src.wind_turbine_analytics.application.configuration.config_models import (
     RunTestPipelineConfig,
 )
@@ -43,8 +44,15 @@ from src.wind_turbine_analytics.presentation.word_generation import RunTestWordP
 class RunTestWorkflow(BaseWorkflow):
     """Coordinates data loading, criteria evaluation, charts, and report rendering."""
 
-    def __init__(self, config: RunTestPipelineConfig, presenter) -> None:
+    def __init__(
+        self,
+        config: RunTestPipelineConfig,
+        presenter,
+        output_dir: Path = None
+    ) -> None:
         super().__init__(config, presenter)
+        # Stocker output_dir pour les visualiseurs
+        self.output_dir = output_dir if output_dir else Path("output/charts")
 
     def run(self) -> None:
         # Define pipeline steps
@@ -157,7 +165,7 @@ class RunTestWorkflow(BaseWorkflow):
         test_cut_in_cut_out_results = self._execute_step(
             "Criterion 2: Cut-In/Cut-Out",
             TestCutInCutOutAnalyzer(),
-            [CutInCutoutTimelineVisualizer()],
+            [CutInCutoutTimelineVisualizer(output_dir=self.output_dir)],
             CutInCutOutTabler(),
         )
         all_results["cut_in_cut_out"] = test_cut_in_cut_out_results
@@ -170,9 +178,9 @@ class RunTestWorkflow(BaseWorkflow):
             "Criterion 3: Nominal Power",
             NominalPowerAnalyzer(),
             [
-                PowerCurveChartVisualizer(),
-                WindRoseChartVisualizer(),
-                WindHistogramChartVisualizer(),
+                PowerCurveChartVisualizer(output_dir=self.output_dir),
+                WindRoseChartVisualizer(output_dir=self.output_dir),
+                WindHistogramChartVisualizer(output_dir=self.output_dir),
             ],
             [NominalPowerValuesTabler(), NominalPowerDurationTabler()],
         )
@@ -195,7 +203,7 @@ class RunTestWorkflow(BaseWorkflow):
         availability_result = self._execute_step(
             "Criterion 5: Availability",
             TestAvailabilityAnalyzer(),
-            [HeatmapChartVisualizer()],
+            [HeatmapChartVisualizer(output_dir=self.output_dir)],
             AvailabilityTabler(),
         )
         all_results["availability"] = availability_result

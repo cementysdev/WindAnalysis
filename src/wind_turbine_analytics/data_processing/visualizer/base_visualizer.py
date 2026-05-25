@@ -21,15 +21,27 @@ class BaseVisualizer(ABC):
     - Grid layout pour multi-turbines
     """
 
-    def __init__(self, chart_name: str, use_plotly: bool = True):
+    def __init__(
+        self,
+        chart_name: str,
+        use_plotly: bool = True,
+        output_dir: Optional[Path] = None
+    ):
         """
         Args:
             chart_name: Nom du graphique (ex: "power_curve_chart")
             use_plotly: True pour Plotly, False pour Seaborn/Matplotlib
+            output_dir: Dossier de sortie personnalisé (défaut: output/charts)
+                       Pour sessions: tmp/sessions/{session_id}/charts/
         """
         self.chart_name = chart_name
         self.use_plotly = use_plotly
-        self.output_dir = Path("output/charts")
+
+        # Utiliser output_dir fourni, sinon fallback output/charts
+        if output_dir is not None:
+            self.output_dir = Path(output_dir)
+        else:
+            self.output_dir = Path("output/charts")
 
     def generate(self, result: AnalysisResult) -> Dict[str, str]:
         """

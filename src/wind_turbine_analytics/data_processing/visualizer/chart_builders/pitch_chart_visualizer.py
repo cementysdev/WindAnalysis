@@ -6,8 +6,8 @@ from typing import Any
 
 
 class PitchChart(BaseVisualizer):
-    def __init__(self):
-        super().__init__(chart_name="consecutive_hours_chart")
+    def __init__(self, output_dir=None):
+        super().__init__(chart_name="consecutive_hours_chart", output_dir=output_dir)
 
     def generate(self, result: AnalysisResult) -> None:
         # Implement visualization logic here

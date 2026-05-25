@@ -13,8 +13,8 @@ logger = get_logger(__name__)
 
 
 class WindDirectionCalibrationVisualizer(BaseVisualizer):
-    def __init__(self):
-        super().__init__(chart_name="wind_direction_calibration", use_plotly=True)
+    def __init__(self, output_dir=None):
+        super().__init__(chart_name="wind_direction_calibration", use_plotly=True, output_dir=output_dir)
 
     def _create_empty_figure(self) -> go.Figure:
         """Create an empty figure with an informative message."""

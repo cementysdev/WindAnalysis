@@ -16,8 +16,12 @@ class CutInCutoutTimelineVisualizer(BaseVisualizer):
     Affiche RUN, STOP et UNAUTHORIZED STOP par turbine.
     """
 
-    def __init__(self):
-        super().__init__(chart_name="cutin_cutout_timeline_chart", use_plotly=True)
+    def __init__(self, output_dir=None):
+        super().__init__(
+            chart_name="cutin_cutout_timeline_chart",
+            use_plotly=True,
+            output_dir=output_dir
+        )
 
     def _create_figure(self, result: AnalysisResult) -> go.Figure:
         if not result.detailed_results:

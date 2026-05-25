@@ -18,8 +18,8 @@ from plotly.subplots import make_subplots
 
 
 class WindRoseChartVisualizer(BaseVisualizer):
-    def __init__(self):
-        super().__init__(chart_name="wind_rose_chart", use_plotly=True)
+    def __init__(self, output_dir=None):
+        super().__init__(chart_name="wind_rose_chart", use_plotly=True, output_dir=output_dir)
 
     def _create_figure(self, result: AnalysisResult) -> go.Figure:
         if not result.detailed_results:

@@ -16,9 +16,9 @@ class HeatmapChartVisualizer(BaseVisualizer):
     Compatible avec .write_image()
     """
 
-    def __init__(self):
+    def __init__(self, output_dir=None):
         # ✅ Changement crucial : use_plotly=True
-        super().__init__(chart_name="heatmap_chart", use_plotly=True)
+        super().__init__(chart_name="heatmap_chart", use_plotly=True, output_dir=output_dir)
 
     def _create_figure(self, result: AnalysisResult) -> go.Figure:
         # Gestion des données manquantes

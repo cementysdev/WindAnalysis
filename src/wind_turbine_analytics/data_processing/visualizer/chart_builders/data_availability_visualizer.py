@@ -23,8 +23,8 @@ class DataAvailabilityVisualizer(BaseVisualizer):
     - Format type Gantt chart pour voir la disponibilité temporelle
     """
 
-    def __init__(self):
-        super().__init__(chart_name="data_availability_chart", use_plotly=True)
+    def __init__(self, output_dir=None):
+        super().__init__(chart_name="data_availability_chart", use_plotly=True, output_dir=output_dir)
 
     def _calculate_optimal_tickformat(self, timestamps: pd.Series) -> dict:
         """

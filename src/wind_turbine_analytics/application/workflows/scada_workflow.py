@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import pandas as pd
 from typing import Dict, Any
+from pathlib import Path
 from src.wind_turbine_analytics.application.configuration.config_models import (
     ScadaRunnerConfig,
 )
@@ -81,8 +82,15 @@ logger = get_logger(__name__)
 class ScadaWorkflow(BaseWorkflow):
     """Coordinates SCADA data ingestion, criteria evaluation, and chart exports."""
 
-    def __init__(self, config: ScadaRunnerConfig, presenter) -> None:
+    def __init__(
+        self,
+        config: ScadaRunnerConfig,
+        presenter,
+        output_dir: Path = None
+    ) -> None:
         super().__init__(config, presenter)
+        # Stocker output_dir pour les visualiseurs
+        self.output_dir = output_dir if output_dir else Path("output/charts")
 
     def run(self) -> None:
         # Define pipeline steps
@@ -191,7 +199,7 @@ class ScadaWorkflow(BaseWorkflow):
         eba_cutin_result = self._execute_step(
             "EBA Cut-In/Cut-Out",
             EbACutInCutOutAnalyzer(),
-            [EbaCutInCutOutVisualizer()],
+            [EbaCutInCutOutVisualizer(output_dir=self.output_dir)],
             [EbaCutInCutOutTabler()],
         )
         all_results["eba_cut_in_cut_out"] = eba_cutin_result
@@ -204,7 +212,7 @@ class ScadaWorkflow(BaseWorkflow):
         eba_mfr_result = self._execute_step(
             "EBA Manufacturer",
             EbaManufacturerAnalyzer(),
-            [EbaManufacturerVisualizer(), EbaLossVisualizer()],
+            [EbaManufacturerVisualizer(output_dir=self.output_dir), EbaLossVisualizer(output_dir=self.output_dir)],
             [EbaManufacturerTabler(), EbaLossTabler()],
         )
         all_results["eba_manufacturer"] = eba_mfr_result
@@ -215,7 +223,7 @@ class ScadaWorkflow(BaseWorkflow):
         tba_cutin_result = self._execute_step(
             "TBA Cut-In/Cut-Out",
             TbACutInCutOutAnalyzer(),
-            [TbaCutInCutOutVisualizer()],
+            [TbaCutInCutOutVisualizer(output_dir=self.output_dir)],
             [TbaCutInCutOutTabler()],
         )
         all_results["tba_cut_in_cut_out"] = tba_cutin_result
@@ -228,7 +236,7 @@ class ScadaWorkflow(BaseWorkflow):
         tba_mfr_result = self._execute_step(
             "TBA Manufacturer",
             TbaManufacturerAnalyzer(),
-            [TbaManufacturerVisualizer()],
+            [TbaManufacturerVisualizer(output_dir=self.output_dir)],
             [TbaManufacturerTabler()],
         )
         all_results["tba_manufacturer"] = tba_mfr_result
@@ -239,7 +247,7 @@ class ScadaWorkflow(BaseWorkflow):
         error_codes_result = self._execute_step(
             "Code Error Analysis",
             CodeErrorAnalyzer(),
-            [TopErrorCodeFrequencyVisualizer(), TreemapErrorCodeVisualizer()],
+            [TopErrorCodeFrequencyVisualizer(output_dir=self.output_dir), TreemapErrorCodeVisualizer(output_dir=self.output_dir)],
             [ErrorCodeParetoFrequencyTabler(), ErrorCodeParetoDurationTabler()],
         )
         all_results["error_codes"] = error_codes_result
@@ -248,7 +256,7 @@ class ScadaWorkflow(BaseWorkflow):
         availability_result = self._execute_step(
             "Data Availability",
             DataAvailabilityAnalyzer(),
-            [DataAvailabilityVisualizer()],
+            [DataAvailabilityVisualizer(output_dir=self.output_dir)],
             [DataAvailabilityTabler()],
         )
         all_results["data_availability"] = availability_result
@@ -262,9 +270,9 @@ class ScadaWorkflow(BaseWorkflow):
             "Wind Calibration",
             WindDirectionCalibrationAnalyzer(),
             [
-                WindDirectionCalibrationVisualizer(),
-                PowerRoseChartVisualizer(),
-                WindRoseChartVisualizer(),
+                WindDirectionCalibrationVisualizer(output_dir=self.output_dir),
+                PowerRoseChartVisualizer(output_dir=self.output_dir),
+                WindRoseChartVisualizer(output_dir=self.output_dir),
             ],
             [WindDirectionCalibrationTabler()],
         )
@@ -278,7 +286,7 @@ class ScadaWorkflow(BaseWorkflow):
         tsr_result = self._execute_step(
             "Tip Speed Ratio",
             TipSpeedRatioAnalyzer(),
-            [RPMVisualizer()],
+            [RPMVisualizer(output_dir=self.output_dir)],
             [TipSpeedRatioTabler()],
         )
         all_results["tip_speed_ratio"] = tsr_result
@@ -289,7 +297,7 @@ class ScadaWorkflow(BaseWorkflow):
         normative_result = self._execute_step(
             "Normative Yield",
             NormativeYieldAnalyzer(),
-            [PowerCurveChartVisualizer()],
+            [PowerCurveChartVisualizer(output_dir=self.output_dir)],
             [NormativeYieldTabler()],
         )
         all_results["normative_yield"] = normative_result
@@ -299,7 +307,7 @@ class ScadaWorkflow(BaseWorkflow):
         pitch_analyzer_result = self._execute_step(
             "Pitch Analysis",
             PitchAnalyzer(),
-            [PitchVisualizer()],
+            [PitchVisualizer(output_dir=self.output_dir)],
             [PitchTabler()],
         )
         all_results["pitch_angle"] = pitch_analyzer_result
@@ -310,7 +318,7 @@ class ScadaWorkflow(BaseWorkflow):
         performance_level_result = self._execute_step(
             "Performance Level",
             PerformanceLevelAnalyzer(),
-            [PerformanceLevelVisualizer()],
+            [PerformanceLevelVisualizer(output_dir=self.output_dir)],
             [PerformanceLevelTabler()],
         )
         all_results["performance_level"] = performance_level_result
