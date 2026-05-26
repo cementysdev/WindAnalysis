@@ -58,3 +58,5 @@ frontend/.env.production
 .databricks/project.json
 .databricks
 frontend/*.md
+*.md
+!README.md
