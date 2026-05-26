@@ -41,7 +41,7 @@ class ColoredFormatter(logging.Formatter):
 
 
 def setup_logger(
-    name: str, level: int = logging.ERROR, log_file: Optional[str] = None
+    name: str, level: int = logging.DEBUG, log_file: Optional[str] = None
 ) -> logging.Logger:
     """
     Configure and return a logger with colored console output.

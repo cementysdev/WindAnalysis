@@ -65,4 +65,4 @@ experiments/real_run_test/config.yml
 experiments/scada_analyse/config.yml
 experiments/scada_analyse/scada_analyse.py
 install_kaleido_deps.sh
-static_frontend/
+# static_frontend/ - REMOVED: needed for Databricks deployment

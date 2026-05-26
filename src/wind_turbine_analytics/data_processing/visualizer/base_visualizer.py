@@ -6,7 +6,15 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 from src.logger_config import get_logger
 import plotly.graph_objects as go
-import os
+import matplotlib.pyplot as plt
+import matplotlib.figure
+
+# Imports du nouveau système ChartSpec
+from src.wind_turbine_analytics.data_processing.visualizer.chart_spec import ChartSpec
+from src.wind_turbine_analytics.data_processing.visualizer.renderers import (
+    PlotlyRenderer,
+    MatplotlibRenderer,
+)
 
 logger = get_logger(__name__)
 
@@ -69,20 +77,46 @@ class BaseVisualizer(ABC):
 
         # Sauvegarder selon le type
         if self.use_plotly:
-            # Plotly: sauvegarder JSON uniquement (PNG nécessite Chrome/Kaleido)
-            try:
-                # Tenter d'exporter PNG si possible (local avec Kaleido installé)
-                fig.write_image(str(png_path), width=1200, height=800)
-                png_saved = True
-                logger.debug(f"✅ PNG exporté: {png_path}")
-            except Exception as e:
-                # Sur Databricks ou sans Chrome, ignorer l'erreur PNG
-                logger.warning(f"Export PNG ignoré (Chrome/Kaleido non disponible): {e}")
-                png_saved = False
-
             # JSON toujours sauvegardé (pas besoin de Chrome)
             fig.write_json(str(json_path))
             logger.debug(f"✅ Graphique Plotly JSON sauvegardé: {json_path}")
+
+            # PNG: essayer Kaleido d'abord, sinon convertir en Matplotlib
+            png_saved = False
+            try:
+                # Méthode 1: Kaleido (si disponible en local)
+                fig.write_image(str(png_path), width=1200, height=800)
+                png_saved = True
+                logger.debug(f"✅ PNG exporté via Kaleido: {png_path}")
+            except Exception as e_kaleido:
+                # Méthode 2: Conversion Plotly → Matplotlib (Databricks)
+                try:
+                    from src.wind_turbine_analytics.data_processing.visualizer.plotly_to_matplotlib_converter import (
+                        PlotlyToMatplotlibConverter,
+                    )
+
+                    logger.debug(
+                        "Kaleido non disponible, conversion Plotly→Matplotlib..."
+                    )
+                    mpl_fig = PlotlyToMatplotlibConverter.convert(fig)
+                    mpl_fig.savefig(str(png_path), dpi=150, bbox_inches="tight")
+                    plt.close(mpl_fig)
+                    png_saved = True
+                    logger.debug(
+                        f"✅ PNG exporté via Matplotlib: {png_path}"
+                    )
+                except Exception as e_matplotlib:
+                    import traceback
+                    logger.error(
+                        f"Échec export PNG - Kaleido error: {e_kaleido}"
+                    )
+                    logger.error(
+                        f"Matplotlib conversion error: {e_matplotlib}"
+                    )
+                    logger.error(
+                        f"Matplotlib traceback:\n{traceback.format_exc()}"
+                    )
+                    png_saved = False
 
             # Stocker les chemins dans metadata
             self._store_in_metadata(
@@ -129,12 +163,85 @@ class BaseVisualizer(ABC):
 
         result.metadata["charts"][self.chart_name] = chart_info
 
+    def generate_with_chartspec(
+        self, result: AnalysisResult, render_png: bool = True
+    ) -> Dict[str, Optional[str]]:
+        """
+        Génère la visualisation en utilisant le système ChartSpec.
+        Produit JSON Plotly (pour web) + PNG Matplotlib (pour Word).
+
+        Args:
+            result: Résultat d'analyse contenant les données
+            render_png: Si True, génère PNG Matplotlib (pour rapports Word)
+
+        Returns:
+            Dict avec chemins des fichiers:
+            {"json_path": "...", "png_path": "..." or None}
+        """
+        # Créer le répertoire de sortie
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+        logger.debug(
+            f"Génération du graphique '{self.chart_name}' "
+            f"(ChartSpec mode)..."
+        )
+
+        # ÉTAPE 1: Préparer les données (logique métier)
+        chart_spec = self._prepare_chart_data(result)
+
+        # ÉTAPE 2a: Générer JSON Plotly (toujours, pour web)
+        plotly_fig = PlotlyRenderer.render(chart_spec)
+        json_path = self.output_dir / f"{self.chart_name}.json"
+        plotly_fig.write_json(str(json_path))
+        logger.debug(f"✅ Plotly JSON: {json_path}")
+
+        # ÉTAPE 2b: Générer PNG Matplotlib (conditionnel, pour Word)
+        png_path_str = None
+        if render_png:
+            try:
+                mpl_fig = MatplotlibRenderer.render(chart_spec)
+                png_path = self.output_dir / f"{self.chart_name}.png"
+                mpl_fig.savefig(
+                    str(png_path), dpi=150, bbox_inches="tight"
+                )
+                plt.close(mpl_fig)
+                png_path_str = str(png_path)
+                logger.debug(f"✅ Matplotlib PNG: {png_path}")
+            except Exception as e:
+                logger.warning(
+                    f"Échec génération PNG Matplotlib: {e}"
+                )
+
+        # Stocker dans metadata
+        self._store_in_metadata(result, png_path_str, str(json_path))
+
+        return {"json_path": str(json_path), "png_path": png_path_str}
+
+    def _prepare_chart_data(self, result: AnalysisResult) -> ChartSpec:
+        """
+        Prépare les données du graphique (logique métier).
+        À implémenter dans les sous-classes utilisant ChartSpec.
+
+        Args:
+            result: Résultat d'analyse
+
+        Returns:
+            ChartSpec standardisée
+
+        Raises:
+            NotImplementedError: Si la sous-classe n'implémente pas
+        """
+        raise NotImplementedError(
+            f"ChartSpec preparation for '{self.chart_name}' "
+            f"not implemented. Implement _prepare_chart_data()."
+        )
+
     @abstractmethod
     def _create_figure(
         self, result: AnalysisResult
-    ) -> Union[go.Figure, "matplotlib.figure.Figure"]:
+    ) -> Union[go.Figure, matplotlib.figure.Figure]:
         """
-        Méthode abstraite pour créer la figure.
+        Méthode abstraite pour créer la figure (ancien système).
 
         À implémenter dans chaque sous-classe.
 

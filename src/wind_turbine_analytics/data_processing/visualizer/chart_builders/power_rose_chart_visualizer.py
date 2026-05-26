@@ -35,7 +35,7 @@ class PowerRoseChartVisualizer(BaseVisualizer):
         if not result.detailed_results:
             fig = go.Figure()
             fig.update_layout(
-                title="Rose des Puissances - Fréquence par Direction",
+                title="<b>Rose des Puissances</b>",
                 template="plotly_white",
             )
             fig.add_annotation(
@@ -180,16 +180,10 @@ class PowerRoseChartVisualizer(BaseVisualizer):
 
         # --- Layout Global ---
         fig.update_layout(
-            title=(
-                "<b>Rose des Puissances - Fréquence par Direction</b><br>"
-                "<span style='font-size:12px; color:gray;'>"
-                "Puissance active selon direction du vent - "
-                "Détecte les problèmes de calibration nacelle"
-                "</span>"
-            ),
+            title="<b>Rose des Puissances</b>",
             template="plotly_white",
-            legend=dict(title="Puissance active (kW)", x=1.1),
-            margin=dict(t=100, b=20, l=20, r=20),
+            legend=dict(title="Puissance (kW)", x=1.05),
+            margin=dict(t=80, b=20, l=20, r=20),
         )
 
         # --- Configuration des axes polaires ---

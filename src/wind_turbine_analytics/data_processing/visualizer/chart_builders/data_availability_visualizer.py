@@ -97,44 +97,39 @@ class DataAvailabilityVisualizer(BaseVisualizer):
 
         fig.update_layout(
             title={
-                "text": (
-                    "<b>SCADA Data Availability - Operational Parameters</b><br>"
-                    "<span style='font-size:12px; color:gray;'>Availability computed as proportion of valid 1-hour data points</span>"
-                ),
+                "text": "<b>SCADA Data Availability - Operational Parameters</b>",
                 "x": 0.5,
-                "y": 0.95,
                 "xanchor": "center",
-                "yanchor": "top",
+                "font": {"size": 16},
             },
             xaxis_title="Time",
-            yaxis_title=None,  # On peut enlever le titre Y car les labels sont explicites
+            yaxis_title=None,
             barmode="overlay",
-            # On réduit bargap pour rendre les barres plus épaisses
-            bargap=0.05,
-            height=max(600, len(y_labels) * 30),
+            bargap=0.1,
+            height=max(400, len(y_labels) * 25),  # Reduced height multiplier
             showlegend=True,
-            # Légende centrée en haut
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
                 y=1.02,
                 xanchor="center",
                 x=0.5,
-                font=dict(size=12),
+                font=dict(size=11),
             ),
-            # Marges ajustées
-            margin=dict(l=120, r=40, t=140, b=80),
-            plot_bgcolor="rgba(240,240,240,0.5)",  # Un fond gris très léger pour mieux voir les trous
+            margin=dict(l=120, r=40, t=100, b=80),
+            plot_bgcolor="white",
             yaxis=dict(
                 categoryorder="array",
                 categoryarray=y_labels,
-                gridcolor="white",
+                gridcolor="lightgray",
                 showgrid=True,
+                tickfont=dict(size=10),
             ),
             xaxis=dict(
                 type="date",
                 showgrid=True,
-                gridcolor="white",
+                gridcolor="lightgray",
+                tickfont=dict(size=10),
                 **self._calculate_optimal_tickformat(
                     pd.concat(
                         [
@@ -143,7 +138,7 @@ class DataAvailabilityVisualizer(BaseVisualizer):
                             if "availability_table" in turbine_results[tid]
                         ]
                     ) if any("availability_table" in turbine_results[tid] for tid in turbine_ids)
-                    else pd.Series(dtype='datetime64[ns]')  # Series vide si pas de données
+                    else pd.Series(dtype='datetime64[ns]')
                 ),
             ),
         )
@@ -167,15 +162,15 @@ class DataAvailabilityVisualizer(BaseVisualizer):
             if segment_value == 1:
                 color = "#2ca02c"  # Vert
                 legend_group = "good"
-                legend_name = "Good (>95%)"
+                legend_name = "Good"
             elif segment_value == 0:
                 color = "#FFA500"  # Orange
                 legend_group = "unavailable"
-                legend_name = "Unavailable (0%)"
+                legend_name = "Unavailable"
             else:
                 color = "#ff7f0e"
                 legend_group = "partial"
-                legend_name = "Partial (30-95%)"
+                legend_name = "Partial"
 
             show_legend = not any(
                 getattr(trace, "legendgroup", None) == legend_group for trace in traces
