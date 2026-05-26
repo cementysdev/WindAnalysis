@@ -57,4 +57,4 @@ frontend/.env.production
 # Databricks config (keep .example files)
 .databricks/project.json
 .databricks
-frontent/*.md
+frontend/*.md
