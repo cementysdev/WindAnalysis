@@ -83,11 +83,20 @@ class BaseVisualizer(ABC):
 
             # PNG: essayer Kaleido d'abord, sinon convertir en Matplotlib
             png_saved = False
+            kaleido_error = None
             try:
                 # Méthode 1: Kaleido (si disponible en local)
                 fig.write_image(str(png_path), width=1200, height=800)
-                png_saved = True
-                logger.debug(f"✅ PNG exporté via Kaleido: {png_path}")
+
+                # Vérifier que le fichier a réellement été créé
+                if png_path.exists() and png_path.stat().st_size > 0:
+                    png_saved = True
+                    logger.debug(f"✅ PNG exporté via Kaleido: {png_path}")
+                else:
+                    # Kaleido n'a pas levé d'exception mais n'a pas créé le fichier
+                    kaleido_error = Exception("Kaleido: PNG file not created or empty")
+                    logger.warning(f"Kaleido failed silently for {self.chart_name}, trying Matplotlib...")
+                    raise kaleido_error
             except Exception as e_kaleido:
                 # Méthode 2: Conversion Plotly → Matplotlib (Databricks)
                 try:

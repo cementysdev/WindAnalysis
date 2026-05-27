@@ -752,19 +752,34 @@ class PlotlyToMatplotlibConverter:
             logger.warning("Treemap vide, données manquantes")
             return
 
-        # Construire hiérarchie (niveau 0 = root)
-        root_items = [
-            (l, v) for l, p, v in zip(labels, parents, values) if p == ""
-        ]
+        # Identifier les feuilles (éléments qui ne sont parents de personne)
+        parents_set = set(parents)  # Tous les IDs qui sont parents
+
+        # Une feuille est un élément dont l'ID n'apparaît PAS dans la liste des parents
+        # ET qui a une valeur > 0 (pour exclure les placeholders)
+        leaf_items = []
+        for i, (label_val, parent_val, value_val) in enumerate(zip(labels, parents, values)):
+            # Récupérer l'ID de cet élément (si existe dans ids, sinon utiliser label)
+            if hasattr(trace, 'ids') and trace.ids and i < len(trace.ids):
+                element_id = trace.ids[i]
+            else:
+                element_id = label_val
+
+            # C'est une feuille si :
+            # 1. Son ID n'est parent de personne (pas dans parents_set)
+            # 2. Elle a une valeur > 0
+            # 3. Elle n'est pas le root (parent != "")
+            if element_id not in parents_set and value_val > 0 and parent_val != "":
+                leaf_items.append((label_val, value_val))
 
         # Trier par valeur décroissante
-        root_items.sort(key=lambda x: x[1], reverse=True)
+        leaf_items.sort(key=lambda x: x[1], reverse=True)
 
         # Limiter au top 10 pour lisibilité
-        top_items = root_items[:10]
+        top_items = leaf_items[:10]
 
         if not top_items:
-            logger.warning("Aucun élément racine dans treemap")
+            logger.warning("Aucun code d'erreur (feuille) trouvé dans treemap")
             return
 
         # Extraire labels et valeurs
