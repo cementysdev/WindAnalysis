@@ -163,10 +163,8 @@ class EbaManufacturerVisualizer(BaseVisualizer):
         # Mise en page
         fig.update_layout(
             title={
-                "text": "Energy-based Availability (EbA) - Manufacturer<br>"
-                "<sub>Monthly evolution per WTG and wind farm average "
-                "(includes all downtimes)</sub>",
-                "font": {"size": 14},
+                "text": "EbA - Manufacturer",
+                "font": {"size": 16},
                 "x": 0.5,
                 "xanchor": "center",
             },

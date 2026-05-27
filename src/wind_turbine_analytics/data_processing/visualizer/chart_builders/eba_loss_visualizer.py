@@ -170,10 +170,8 @@ class EbaLossVisualizer(BaseVisualizer):
         # Mise en page
         fig.update_layout(
             title={
-                "text": "Monthly Energy Loss - EBA Manufacturer<br>"
-                "<sub>Energy loss percentage per WTG and period "
-                "(color scale: blue = low loss, red = high loss)</sub>",
-                "font": {"size": 14},
+                "text": "Monthly Energy Loss",
+                "font": {"size": 16},
                 "x": 0.5,
                 "xanchor": "center",
             },

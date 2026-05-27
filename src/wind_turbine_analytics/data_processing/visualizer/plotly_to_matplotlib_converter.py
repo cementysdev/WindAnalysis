@@ -21,6 +21,31 @@ class PlotlyToMatplotlibConverter:
     """
 
     @staticmethod
+    def _clean_html_tags(text: str) -> str:
+        """
+        Nettoie les balises HTML d'un texte.
+
+        Args:
+            text: Texte potentiellement avec balises HTML
+
+        Returns:
+            Texte sans balises HTML
+        """
+        if not text:
+            return text
+
+        # Supprimer les balises HTML courantes
+        text = text.replace('<b>', '').replace('</b>', '')
+        text = text.replace('<i>', '').replace('</i>', '')
+        text = text.replace('<br>', ' ').replace('<br/>', ' ')
+        text = text.replace('<sub>', '').replace('</sub>', '')
+        text = text.replace('<sup>', '').replace('</sup>', '')
+        text = text.replace('<span style=\'font-size:12px; color:gray;\'>', '')
+        text = text.replace('</span>', '')
+
+        return text.strip()
+
+    @staticmethod
     def convert(plotly_fig: go.Figure) -> matplotlib.figure.Figure:
         """
         Convertit une figure Plotly en Matplotlib.
@@ -77,11 +102,9 @@ class PlotlyToMatplotlibConverter:
                     # Appliquer le titre du subplot si disponible
                     subplot_key = (row, col)
                     if subplot_key in subplot_titles:
-                        # Nettoyer le titre HTML si présent
-                        title = subplot_titles[subplot_key]
-                        title = title.replace('<b>', '').replace('</b>', '')
-                        title = title.replace('<br>', ' ')
-                        ax.set_title(title, fontsize=11, fontweight='bold', pad=8)
+                        # Nettoyer le titre HTML
+                        title = PlotlyToMatplotlibConverter._clean_html_tags(subplot_titles[subplot_key])
+                        ax.set_title(title, fontsize=13, fontweight='bold', pad=10)
 
             # Appliquer layout global (titre principal)
             PlotlyToMatplotlibConverter._apply_layout(
@@ -337,6 +360,8 @@ class PlotlyToMatplotlibConverter:
             PlotlyToMatplotlibConverter._add_histogram(ax, trace)
         elif trace_type == "barpolar":
             PlotlyToMatplotlibConverter._add_barpolar(ax, trace)
+        elif trace_type == "treemap":
+            PlotlyToMatplotlibConverter._add_treemap(ax, trace)
         else:
             logger.warning(
                 f"Type de trace '{trace_type}' non implémenté, rendu basique"
@@ -602,7 +627,7 @@ class PlotlyToMatplotlibConverter:
             import matplotlib.dates as mdates
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%d %b'))
             ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-            plt.setp(ax.xaxis.get_majorticklabels(), rotation=0, ha='center', fontsize=9)
+            plt.setp(ax.xaxis.get_majorticklabels(), rotation=0, ha='center', fontsize=10)
 
     @staticmethod
     def _add_histogram(ax, trace):
@@ -704,7 +729,7 @@ class PlotlyToMatplotlibConverter:
                       "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
 
         ax.set_xticks(np.deg2rad(directions_deg))
-        ax.set_xticklabels(dir_labels, fontsize=8)
+        ax.set_xticklabels(dir_labels, fontsize=10)
 
         # Format radial axis (pourcentage pour Wind Rose)
         ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.0f}%'))
@@ -713,18 +738,74 @@ class PlotlyToMatplotlibConverter:
         ax.grid(True, color='gray', alpha=0.3, linewidth=0.5)
 
     @staticmethod
+    def _add_treemap(ax, trace):
+        """
+        Convertit un Treemap Plotly en barres horizontales Matplotlib.
+        Fallback car Matplotlib ne supporte pas nativement les treemaps.
+        """
+        # Extraire données hiérarchiques
+        labels = trace.labels if hasattr(trace, 'labels') else []
+        parents = trace.parents if hasattr(trace, 'parents') else []
+        values = trace.values if hasattr(trace, 'values') else []
+
+        if not labels or not values:
+            logger.warning("Treemap vide, données manquantes")
+            return
+
+        # Construire hiérarchie (niveau 0 = root)
+        root_items = [
+            (l, v) for l, p, v in zip(labels, parents, values) if p == ""
+        ]
+
+        # Trier par valeur décroissante
+        root_items.sort(key=lambda x: x[1], reverse=True)
+
+        # Limiter au top 10 pour lisibilité
+        top_items = root_items[:10]
+
+        if not top_items:
+            logger.warning("Aucun élément racine dans treemap")
+            return
+
+        # Extraire labels et valeurs
+        item_labels = [item[0] for item in top_items]
+        item_values = [item[1] for item in top_items]
+
+        # Extraire couleurs depuis marker si disponibles
+        colors = None
+        if trace.marker and hasattr(trace.marker, 'colors'):
+            colors = trace.marker.colors[:10]
+
+        # Créer barres horizontales
+        y_pos = np.arange(len(item_labels))
+        ax.barh(y_pos, item_values, color=colors, alpha=0.8)
+
+        # Configuration axes
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(item_labels, fontsize=10)
+        ax.set_xlabel("Count", fontsize=12)
+        ax.set_title(
+            "Error Distribution (Top 10)", fontsize=14, fontweight='bold'
+        )
+        ax.grid(True, axis='x', alpha=0.3)
+
+        # Inverser Y pour avoir le plus grand en haut
+        ax.invert_yaxis()
+
+    @staticmethod
     def _apply_layout(fig, ax, layout, is_subplot=False, axes=None):
         """Applique le layout Plotly à la figure Matplotlib."""
 
         # Titre global
         if layout.title:
             title_text = layout.title.text if hasattr(layout.title, 'text') else str(layout.title)
+            title_text = PlotlyToMatplotlibConverter._clean_html_tags(title_text)
             if is_subplot:
                 # Pour subplots, utiliser suptitle
-                fig.suptitle(title_text, fontsize=14, fontweight='bold')
+                fig.suptitle(title_text, fontsize=16, fontweight='bold')
             else:
                 # Pour figure simple, utiliser set_title sur l'axe
-                ax.set_title(title_text, fontsize=14, fontweight='bold')
+                ax.set_title(title_text, fontsize=16, fontweight='bold')
 
         # Pour subplots, pas de labels globaux (chaque subplot gère ses propres axes)
         if not is_subplot and ax is not None:
@@ -732,23 +813,39 @@ class PlotlyToMatplotlibConverter:
             if layout.xaxis and hasattr(layout.xaxis, 'title'):
                 xaxis_title = layout.xaxis.title
                 if hasattr(xaxis_title, 'text'):
-                    ax.set_xlabel(xaxis_title.text, fontsize=11)
+                    ax.set_xlabel(xaxis_title.text, fontsize=12)
                 elif isinstance(xaxis_title, str):
-                    ax.set_xlabel(xaxis_title, fontsize=11)
+                    ax.set_xlabel(xaxis_title, fontsize=12)
 
             if layout.yaxis and hasattr(layout.yaxis, 'title'):
                 yaxis_title = layout.yaxis.title
                 if hasattr(yaxis_title, 'text'):
-                    ax.set_ylabel(yaxis_title.text, fontsize=11)
+                    ax.set_ylabel(yaxis_title.text, fontsize=12)
                 elif isinstance(yaxis_title, str):
-                    ax.set_ylabel(yaxis_title, fontsize=11)
+                    ax.set_ylabel(yaxis_title, fontsize=12)
 
             # Légende
             if layout.showlegend:
                 # Vérifier qu'il y a des labels
                 handles, labels = ax.get_legend_handles_labels()
                 if labels:
-                    ax.legend(loc='best', fontsize=9)
+                    ax.legend(loc='best', fontsize=10)
+
+            # Ticks
+            ax.tick_params(axis='both', labelsize=10)
+
+            # Appliquer rotation des ticks X si configurée
+            if layout.xaxis and hasattr(layout.xaxis, 'tickangle'):
+                tickangle = layout.xaxis.tickangle
+                if tickangle:
+                    ax.tick_params(axis='x', rotation=tickangle, labelsize=10)
+                    # Ajuster alignement pour angles négatifs
+                    if tickangle < 0:
+                        for label in ax.get_xticklabels():
+                            label.set_ha('right')
+                    elif tickangle > 0:
+                        for label in ax.get_xticklabels():
+                            label.set_ha('left')
 
             # Grille
             ax.grid(True, alpha=0.3, linestyle='--')

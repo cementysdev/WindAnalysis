@@ -160,9 +160,8 @@ class EbaCutInCutOutVisualizer(BaseVisualizer):
         # Mise en page
         fig.update_layout(
             title={
-                "text": "Energy-based Availability (EbA) - Cut-in / Cut-out period<br>"
-                "<sub>Monthly evolution per WTG and wind farm average</sub>",
-                "font": {"size": 14},
+                "text": "EbA - Cut-in/Cut-out Period",
+                "font": {"size": 16},
                 "x": 0.5,
                 "xanchor": "center",
             },

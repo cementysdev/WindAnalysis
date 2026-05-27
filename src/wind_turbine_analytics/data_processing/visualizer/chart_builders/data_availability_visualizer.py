@@ -106,7 +106,7 @@ class DataAvailabilityVisualizer(BaseVisualizer):
             yaxis_title=None,
             barmode="overlay",
             bargap=0.1,
-            height=max(400, len(y_labels) * 25),  # Reduced height multiplier
+            height=max(600, len(y_labels) * 40),  # Increased for better bar visibility
             showlegend=True,
             legend=dict(
                 orientation="h",
