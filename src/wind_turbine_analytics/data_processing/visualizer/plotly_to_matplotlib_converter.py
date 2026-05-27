@@ -136,7 +136,7 @@ class PlotlyToMatplotlibConverter:
                         else:
                             unique_y.add(trace.y)
                 n_categories = len(unique_y)
-                height = max(400, n_categories * 25)  # 25px par ligne
+                height = max(600, n_categories * 50)  # 50px par ligne (barres épaisses)
                 figsize = (15, height / 100)
             else:
                 # Standard
