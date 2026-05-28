@@ -60,104 +60,118 @@ class PlotlyToMatplotlibConverter:
         Raises:
             NotImplementedError: Si le type de graphique n'est pas supporté
         """
-        # Extraire les dimensions du layout
-        layout = plotly_fig.layout
+        try:
+            logger.debug("🔄 Conversion Plotly→Matplotlib démarrée")
 
-        # Détecter présence de subplots
-        if PlotlyToMatplotlibConverter._has_subplots(plotly_fig):
-            logger.debug("Subplots détectés, conversion en grille Matplotlib")
+            # Extraire les dimensions du layout
+            layout = plotly_fig.layout
 
-            # Calculer grille (UNE SEULE FOIS)
-            rows, cols, subplot_types = (
-                PlotlyToMatplotlibConverter._detect_subplot_grid(plotly_fig)
-            )
-            logger.debug(f"Grille détectée: {rows} rows × {cols} cols")
+            # Détecter présence de subplots
+            has_subplots = PlotlyToMatplotlibConverter._has_subplots(plotly_fig)
+            logger.debug(f"  Type détecté: {'subplot' if has_subplots else 'simple'}")
 
-            # Calculer figsize APRÈS rows/cols
-            figsize = (7 * cols, 5 * rows)
+            if has_subplots:
+                logger.debug("Subplots détectés, conversion en grille Matplotlib")
 
-            fig, axes = PlotlyToMatplotlibConverter._create_matplotlib_grid(
-                rows, cols, subplot_types, figsize
-            )
+                # Calculer grille (UNE SEULE FOIS)
+                rows, cols, subplot_types = (
+                    PlotlyToMatplotlibConverter._detect_subplot_grid(plotly_fig)
+                )
+                logger.debug(f"Grille détectée: {rows} rows × {cols} cols")
 
-            # Extraire et appliquer les titres des subplots de Plotly
-            subplot_titles = PlotlyToMatplotlibConverter._extract_subplot_titles(plotly_fig)
+                # Calculer figsize APRÈS rows/cols
+                figsize = (7 * cols, 5 * rows)
 
-            # Tracker pour éviter les doublons de légende dans les subplots
-            legend_groups_shown = set()
-
-            # Router chaque trace vers son subplot
-            for trace in plotly_fig.data:
-                row, col, _ = PlotlyToMatplotlibConverter._get_trace_position(
-                    trace, cols
+                fig, axes = PlotlyToMatplotlibConverter._create_matplotlib_grid(
+                    rows, cols, subplot_types, figsize
                 )
 
-                # Gérer le cas d'un seul subplot ou grille
-                if rows == 1 and cols == 1:
-                    ax = axes[0, 0]
-                else:
-                    ax = axes[row, col]
+                # Extraire et appliquer les titres des subplots de Plotly
+                subplot_titles = PlotlyToMatplotlibConverter._extract_subplot_titles(plotly_fig)
 
-                # Ne traiter que si l'axe existe (pas None)
-                if ax is not None:
+                # Tracker pour éviter les doublons de légende dans les subplots
+                legend_groups_shown = set()
+
+                # Router chaque trace vers son subplot
+                for trace in plotly_fig.data:
+                    row, col, _ = PlotlyToMatplotlibConverter._get_trace_position(
+                        trace, cols
+                    )
+
+                    # Gérer le cas d'un seul subplot ou grille
+                    if rows == 1 and cols == 1:
+                        ax = axes[0, 0]
+                    else:
+                        ax = axes[row, col]
+
+                    # Ne traiter que si l'axe existe (pas None)
+                    if ax is not None:
+                        PlotlyToMatplotlibConverter._add_trace(ax, trace, legend_groups_shown)
+
+                        # Appliquer le titre du subplot si disponible
+                        subplot_key = (row, col)
+                        if subplot_key in subplot_titles:
+                            # Nettoyer le titre HTML
+                            title = PlotlyToMatplotlibConverter._clean_html_tags(subplot_titles[subplot_key])
+                            ax.set_title(title, fontsize=13, fontweight='bold', pad=10)
+
+                # Appliquer layout global (titre principal)
+                PlotlyToMatplotlibConverter._apply_layout(
+                    fig, None, layout, is_subplot=True, axes=axes
+                )
+            else:
+                # Chemin simple
+                # Détecter Data Availability (beaucoup de barres horizontales)
+                n_horizontal_bars = sum(
+                    1 for trace in plotly_fig.data
+                    if getattr(trace, 'orientation', 'v') == 'h'
+                )
+
+                # Utiliser les dimensions du layout Plotly si disponibles
+                width = layout.width if layout.width else 1200
+                height = layout.height if layout.height else 800
+
+                # Data Availability: Respecter la hauteur Plotly
+                if n_horizontal_bars > 20 and height > 800:
+                    # Plotly a déjà calculé la hauteur optimale
+                    figsize = (width / 100, height / 100)
+                elif n_horizontal_bars > 20:
+                    # Fallback: hauteur dynamique basée sur nombre de catégories Y
+                    unique_y = set()
+                    for trace in plotly_fig.data:
+                        if hasattr(trace, 'y') and trace.y is not None:
+                            if hasattr(trace.y, '__iter__'):
+                                unique_y.update(trace.y)
+                            else:
+                                unique_y.add(trace.y)
+                    n_categories = len(unique_y)
+                    height = max(600, n_categories * 50)  # 50px par ligne (barres épaisses)
+                    figsize = (15, height / 100)
+                else:
+                    # Standard
+                    figsize = (width / 100, height / 100)
+
+                fig, ax = plt.subplots(figsize=figsize)
+
+                # Tracker pour éviter les doublons de légende
+                legend_groups_shown = set()
+
+                for trace in plotly_fig.data:
                     PlotlyToMatplotlibConverter._add_trace(ax, trace, legend_groups_shown)
 
-                    # Appliquer le titre du subplot si disponible
-                    subplot_key = (row, col)
-                    if subplot_key in subplot_titles:
-                        # Nettoyer le titre HTML
-                        title = PlotlyToMatplotlibConverter._clean_html_tags(subplot_titles[subplot_key])
-                        ax.set_title(title, fontsize=13, fontweight='bold', pad=10)
+                PlotlyToMatplotlibConverter._apply_layout(
+                    fig, ax, layout, is_subplot=False
+                )
 
-            # Appliquer layout global (titre principal)
-            PlotlyToMatplotlibConverter._apply_layout(
-                fig, None, layout, is_subplot=True, axes=axes
-            )
-        else:
-            # Chemin simple
-            # Détecter Data Availability (beaucoup de barres horizontales)
-            n_horizontal_bars = sum(
-                1 for trace in plotly_fig.data
-                if getattr(trace, 'orientation', 'v') == 'h'
-            )
+            logger.debug("✅ Conversion Matplotlib réussie")
+            return fig
 
-            # Utiliser les dimensions du layout Plotly si disponibles
-            width = layout.width if layout.width else 1200
-            height = layout.height if layout.height else 800
-
-            # Data Availability: Respecter la hauteur Plotly
-            if n_horizontal_bars > 20 and height > 800:
-                # Plotly a déjà calculé la hauteur optimale
-                figsize = (width / 100, height / 100)
-            elif n_horizontal_bars > 20:
-                # Fallback: hauteur dynamique basée sur nombre de catégories Y
-                unique_y = set()
-                for trace in plotly_fig.data:
-                    if hasattr(trace, 'y') and trace.y is not None:
-                        if hasattr(trace.y, '__iter__'):
-                            unique_y.update(trace.y)
-                        else:
-                            unique_y.add(trace.y)
-                n_categories = len(unique_y)
-                height = max(600, n_categories * 50)  # 50px par ligne (barres épaisses)
-                figsize = (15, height / 100)
-            else:
-                # Standard
-                figsize = (width / 100, height / 100)
-
-            fig, ax = plt.subplots(figsize=figsize)
-
-            # Tracker pour éviter les doublons de légende
-            legend_groups_shown = set()
-
-            for trace in plotly_fig.data:
-                PlotlyToMatplotlibConverter._add_trace(ax, trace, legend_groups_shown)
-
-            PlotlyToMatplotlibConverter._apply_layout(
-                fig, ax, layout, is_subplot=False
-            )
-
-        return fig
+        except Exception as e:
+            logger.error(f"❌ ÉCHEC conversion Plotly→Matplotlib: {e}")
+            logger.error(f"   Type exception: {type(e).__name__}")
+            import traceback
+            logger.error(f"   Traceback:\n{traceback.format_exc()}")
+            raise  # Re-raise pour que base_visualizer catch
 
     @staticmethod
     def _extract_subplot_titles(plotly_fig: go.Figure) -> Dict[Tuple[int, int], str]:
@@ -765,6 +779,11 @@ class PlotlyToMatplotlibConverter:
         # Identifier les feuilles (éléments qui ne sont parents de personne)
         parents_set = set(parents)  # Tous les IDs qui sont parents
 
+        # Extraire couleurs Plotly (indexées sur TOUTE la hiérarchie)
+        plotly_colors = None
+        if trace.marker and hasattr(trace.marker, 'colors'):
+            plotly_colors = trace.marker.colors
+
         # Une feuille est un élément dont l'ID n'apparaît PAS dans la liste des parents
         # ET qui a une valeur > 0 (pour exclure les placeholders)
         leaf_items = []
@@ -779,7 +798,11 @@ class PlotlyToMatplotlibConverter:
             if element_id not in parents_set and value_val > 0 and parent_val != "":
                 # Nettoyer les balises HTML du label
                 clean_label = PlotlyToMatplotlibConverter._clean_html_tags(str(label_val))
-                leaf_items.append((clean_label, value_val))
+
+                # Extraire la couleur correspondante (même index que dans Plotly)
+                item_color = plotly_colors[i] if plotly_colors and i < len(plotly_colors) else None
+
+                leaf_items.append((clean_label, value_val, item_color, i))
 
         # Trier par valeur décroissante
         leaf_items.sort(key=lambda x: x[1], reverse=True)
@@ -793,11 +816,13 @@ class PlotlyToMatplotlibConverter:
                 f"Total items: {len(labels)}, Parents: {len(set(parents))}"
             )
             # Fallback: afficher les 10 premiers éléments non-root avec valeur > 0
-            fallback_items = [
-                (PlotlyToMatplotlibConverter._clean_html_tags(str(labels[i])), values[i])
-                for i in range(len(labels))
-                if values[i] > 0 and parents[i] != ""
-            ]
+            fallback_items = []
+            for i in range(len(labels)):
+                if values[i] > 0 and parents[i] != "":
+                    clean_label = PlotlyToMatplotlibConverter._clean_html_tags(str(labels[i]))
+                    item_color = plotly_colors[i] if plotly_colors and i < len(plotly_colors) else None
+                    fallback_items.append((clean_label, values[i], item_color, i))
+
             fallback_items.sort(key=lambda x: x[1], reverse=True)
             top_items = fallback_items[:10]
 
@@ -805,19 +830,22 @@ class PlotlyToMatplotlibConverter:
                 logger.error("Treemap: no valid data to display")
                 return
 
-        # Extraire labels et valeurs
+        # Extraire labels, valeurs et couleurs
         item_labels = [item[0] for item in top_items]
         item_values = [item[1] for item in top_items]
+        item_colors = [item[2] for item in top_items]
 
-        # Extraire couleurs depuis marker si disponibles
-        colors = None
-        if trace.marker and hasattr(trace.marker, 'colors'):
-            # Adapter le nombre de couleurs au nombre d'items
-            colors = trace.marker.colors[:len(top_items)]
+        # Vérifier que les couleurs sont valides (pas None)
+        # Si certaines couleurs sont None, utiliser palette par défaut
+        if None in item_colors or not all(item_colors):
+            logger.debug("Certaines couleurs manquantes, utilisation palette par défaut")
+            import matplotlib.cm as cm
+            cmap = cm.get_cmap('tab10')
+            item_colors = [cmap(i % 10) for i in range(len(item_labels))]
 
         # Créer barres horizontales
         y_pos = np.arange(len(item_labels))
-        ax.barh(y_pos, item_values, color=colors, alpha=0.8)
+        ax.barh(y_pos, item_values, color=item_colors, alpha=0.8, edgecolor='white', linewidth=0.5)
 
         # Configuration axes
         ax.set_yticks(y_pos)
