@@ -46,6 +46,43 @@ class PlotlyToMatplotlibConverter:
         return text.strip()
 
     @staticmethod
+    def _convert_plotly_color_to_matplotlib(color_str):
+        """
+        Convertit une couleur Plotly (format 'rgb(r, g, b)') vers Matplotlib (tuple normalisé).
+
+        Args:
+            color_str: Couleur Plotly au format 'rgb(127, 60, 141)' ou '#7F3C8D' ou nom
+
+        Returns:
+            Tuple RGBA normalisé (r, g, b, a) avec valeurs entre 0 et 1
+            ou None si format invalide
+        """
+        if not color_str:
+            return None
+
+        # Si déjà un tuple/liste, retourner tel quel
+        if isinstance(color_str, (tuple, list)):
+            return color_str
+
+        # Si c'est un nom de couleur ou hex, Matplotlib le gère
+        if not color_str.startswith('rgb'):
+            return color_str
+
+        # Parser 'rgb(r, g, b)' ou 'rgba(r, g, b, a)'
+        import re
+        match = re.match(r'rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)', color_str)
+
+        if not match:
+            logger.warning(f"Format couleur Plotly invalide: {color_str}")
+            return None
+
+        r, g, b = int(match.group(1)), int(match.group(2)), int(match.group(3))
+        a = float(match.group(4)) if match.group(4) else 1.0
+
+        # Normaliser 0-255 → 0-1
+        return (r / 255.0, g / 255.0, b / 255.0, a)
+
+    @staticmethod
     def convert(plotly_fig: go.Figure) -> matplotlib.figure.Figure:
         """
         Convertit une figure Plotly en Matplotlib.
@@ -424,6 +461,7 @@ class PlotlyToMatplotlibConverter:
             elif hasattr(trace.marker, 'colorscale') and trace.marker.colorscale:
                 # Utiliser matplotlib colormap au lieu de colorscale Plotly
                 import matplotlib.cm as cm
+                import matplotlib.pyplot as plt_local
                 import numpy as np
 
                 # Mapper colorscale Plotly vers matplotlib
@@ -440,7 +478,7 @@ class PlotlyToMatplotlibConverter:
                     colors_array = np.array(colors)
                     # Vérifier que la variance n'est pas nulle (évite crash Normalize)
                     if colors_array.std() > 0:
-                        norm = plt.Normalize(vmin=colors_array.min(), vmax=colors_array.max())
+                        norm = plt_local.Normalize(vmin=colors_array.min(), vmax=colors_array.max())
                         cmap = cm.get_cmap(cmap_name)
                         colors = [cmap(norm(val)) for val in colors]
                     else:
@@ -833,12 +871,22 @@ class PlotlyToMatplotlibConverter:
         # Extraire labels, valeurs et couleurs
         item_labels = [item[0] for item in top_items]
         item_values = [item[1] for item in top_items]
-        item_colors = [item[2] for item in top_items]
+        item_colors_plotly = [item[2] for item in top_items]
+
+        # Convertir les couleurs Plotly vers Matplotlib
+        item_colors = []
+        for color_plotly in item_colors_plotly:
+            if color_plotly is None:
+                item_colors.append(None)
+            else:
+                # Convertir 'rgb(r, g, b)' → (r/255, g/255, b/255, 1.0)
+                color_mpl = PlotlyToMatplotlibConverter._convert_plotly_color_to_matplotlib(color_plotly)
+                item_colors.append(color_mpl)
 
         # Vérifier que les couleurs sont valides (pas None)
         # Si certaines couleurs sont None, utiliser palette par défaut
         if None in item_colors or not all(item_colors):
-            logger.debug("Certaines couleurs manquantes, utilisation palette par défaut")
+            logger.debug("Certaines couleurs manquantes ou invalides, utilisation palette par défaut")
             import matplotlib.cm as cm
             cmap = cm.get_cmap('tab10')
             item_colors = [cmap(i % 10) for i in range(len(item_labels))]

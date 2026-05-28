@@ -84,46 +84,56 @@ class BaseVisualizer(ABC):
             # PNG: essayer Kaleido d'abord, sinon convertir en Matplotlib
             png_saved = False
             kaleido_error = None
+
+            logger.info(f"🔄 [{self.chart_name}] Tentative export PNG (Kaleido → Matplotlib fallback)...")
+
             try:
                 # Méthode 1: Kaleido (si disponible en local)
+                logger.debug(f"  → Essai Kaleido pour {self.chart_name}...")
                 fig.write_image(str(png_path), width=1200, height=800)
 
                 # Vérifier que le fichier a réellement été créé
                 if png_path.exists() and png_path.stat().st_size > 0:
                     png_saved = True
-                    logger.debug(f"✅ PNG exporté via Kaleido: {png_path}")
+                    logger.info(f"✅ [{self.chart_name}] PNG exporté via Kaleido: {png_path}")
                 else:
                     # Kaleido n'a pas levé d'exception mais n'a pas créé le fichier
                     kaleido_error = Exception("Kaleido: PNG file not created or empty")
-                    logger.warning(f"Kaleido failed silently for {self.chart_name}, trying Matplotlib...")
+                    logger.warning(f"  ⚠️ Kaleido failed silently for {self.chart_name}, trying Matplotlib...")
                     raise kaleido_error
             except Exception as e_kaleido:
                 # Méthode 2: Conversion Plotly → Matplotlib (Databricks)
+                logger.info(f"  → Fallback Matplotlib pour {self.chart_name} (Kaleido error: {type(e_kaleido).__name__})")
+
                 try:
                     from src.wind_turbine_analytics.data_processing.visualizer.plotly_to_matplotlib_converter import (
                         PlotlyToMatplotlibConverter,
                     )
 
-                    logger.debug(
-                        "Kaleido non disponible, conversion Plotly→Matplotlib..."
+                    logger.info(
+                        f"  → Conversion Plotly→Matplotlib en cours pour {self.chart_name}..."
                     )
                     mpl_fig = PlotlyToMatplotlibConverter.convert(fig)
+                    logger.debug(f"  → Sauvegarde PNG Matplotlib: {png_path}")
                     mpl_fig.savefig(str(png_path), dpi=150, bbox_inches="tight")
                     plt.close(mpl_fig)
                     png_saved = True
-                    logger.debug(
-                        f"✅ PNG exporté via Matplotlib: {png_path}"
+                    logger.info(
+                        f"✅ [{self.chart_name}] PNG exporté via Matplotlib: {png_path}"
                     )
                 except Exception as e_matplotlib:
                     import traceback
                     logger.error(
-                        f"Échec export PNG - Kaleido error: {e_kaleido}"
+                        f"❌ [{self.chart_name}] Échec export PNG complet"
                     )
                     logger.error(
-                        f"Matplotlib conversion error: {e_matplotlib}"
+                        f"  → Kaleido error: {type(e_kaleido).__name__}: {e_kaleido}"
                     )
                     logger.error(
-                        f"Matplotlib traceback:\n{traceback.format_exc()}"
+                        f"  → Matplotlib error: {type(e_matplotlib).__name__}: {e_matplotlib}"
+                    )
+                    logger.error(
+                        f"  → Traceback:\n{traceback.format_exc()}"
                     )
                     png_saved = False
 
