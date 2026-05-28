@@ -260,9 +260,13 @@ class RunTestWorkflow(BaseWorkflow):
             for analysis_name, result in all_results.items():
                 if result.metadata and "charts" in result.metadata:
                     for chart_name, chart_info in result.metadata["charts"].items():
-                        if "png_path" in chart_info:
-                            chart_paths[chart_name] = chart_info["png_path"]
-                            logger.debug(f"Chemin d'image collecté: {chart_name} -> {chart_info['png_path']}")
+                        # Vérifier que png_path existe ET n'est pas None
+                        png_path = chart_info.get("png_path")
+                        if png_path is not None:
+                            chart_paths[chart_name] = png_path
+                            logger.debug(f"  ✅ Chart collected: {chart_name} -> {png_path}")
+                        else:
+                            logger.warning(f"  ⚠️ Chart {chart_name} has no PNG (Kaleido failed)")
 
             # Log diagnostic PNG disponibilité
             png_available = sum(
