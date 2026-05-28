@@ -83,6 +83,9 @@ class PlotlyToMatplotlibConverter:
             # Extraire et appliquer les titres des subplots de Plotly
             subplot_titles = PlotlyToMatplotlibConverter._extract_subplot_titles(plotly_fig)
 
+            # Tracker pour éviter les doublons de légende dans les subplots
+            legend_groups_shown = set()
+
             # Router chaque trace vers son subplot
             for trace in plotly_fig.data:
                 row, col, _ = PlotlyToMatplotlibConverter._get_trace_position(
@@ -97,7 +100,7 @@ class PlotlyToMatplotlibConverter:
 
                 # Ne traiter que si l'axe existe (pas None)
                 if ax is not None:
-                    PlotlyToMatplotlibConverter._add_trace(ax, trace)
+                    PlotlyToMatplotlibConverter._add_trace(ax, trace, legend_groups_shown)
 
                     # Appliquer le titre du subplot si disponible
                     subplot_key = (row, col)
@@ -421,9 +424,15 @@ class PlotlyToMatplotlibConverter:
                 # Normaliser les valeurs
                 if len(colors) > 0:
                     colors_array = np.array(colors)
-                    norm = plt.Normalize(vmin=colors_array.min(), vmax=colors_array.max())
-                    cmap = cm.get_cmap(cmap_name)
-                    colors = [cmap(norm(val)) for val in colors]
+                    # Vérifier que la variance n'est pas nulle (évite crash Normalize)
+                    if colors_array.std() > 0:
+                        norm = plt.Normalize(vmin=colors_array.min(), vmax=colors_array.max())
+                        cmap = cm.get_cmap(cmap_name)
+                        colors = [cmap(norm(val)) for val in colors]
+                    else:
+                        # Toutes les valeurs sont identiques, utiliser couleur médiane
+                        cmap = cm.get_cmap(cmap_name)
+                        colors = [cmap(0.5)] * len(colors)
 
         # Détecter orientation (Timeline utilise orientation="h")
         orientation = getattr(trace, 'orientation', 'v')
@@ -747,6 +756,7 @@ class PlotlyToMatplotlibConverter:
         labels = trace.labels if hasattr(trace, 'labels') else []
         parents = trace.parents if hasattr(trace, 'parents') else []
         values = trace.values if hasattr(trace, 'values') else []
+        ids = trace.ids if hasattr(trace, 'ids') and trace.ids else labels
 
         if not labels or not values:
             logger.warning("Treemap vide, données manquantes")
@@ -759,18 +769,17 @@ class PlotlyToMatplotlibConverter:
         # ET qui a une valeur > 0 (pour exclure les placeholders)
         leaf_items = []
         for i, (label_val, parent_val, value_val) in enumerate(zip(labels, parents, values)):
-            # Récupérer l'ID de cet élément (si existe dans ids, sinon utiliser label)
-            if hasattr(trace, 'ids') and trace.ids and i < len(trace.ids):
-                element_id = trace.ids[i]
-            else:
-                element_id = label_val
+            # Récupérer l'ID de cet élément
+            element_id = ids[i] if i < len(ids) else label_val
 
             # C'est une feuille si :
             # 1. Son ID n'est parent de personne (pas dans parents_set)
             # 2. Elle a une valeur > 0
             # 3. Elle n'est pas le root (parent != "")
             if element_id not in parents_set and value_val > 0 and parent_val != "":
-                leaf_items.append((label_val, value_val))
+                # Nettoyer les balises HTML du label
+                clean_label = PlotlyToMatplotlibConverter._clean_html_tags(str(label_val))
+                leaf_items.append((clean_label, value_val))
 
         # Trier par valeur décroissante
         leaf_items.sort(key=lambda x: x[1], reverse=True)
@@ -779,8 +788,22 @@ class PlotlyToMatplotlibConverter:
         top_items = leaf_items[:10]
 
         if not top_items:
-            logger.warning("Aucun code d'erreur (feuille) trouvé dans treemap")
-            return
+            logger.error(
+                f"Treemap conversion failed: no leaf items found. "
+                f"Total items: {len(labels)}, Parents: {len(set(parents))}"
+            )
+            # Fallback: afficher les 10 premiers éléments non-root avec valeur > 0
+            fallback_items = [
+                (PlotlyToMatplotlibConverter._clean_html_tags(str(labels[i])), values[i])
+                for i in range(len(labels))
+                if values[i] > 0 and parents[i] != ""
+            ]
+            fallback_items.sort(key=lambda x: x[1], reverse=True)
+            top_items = fallback_items[:10]
+
+            if not top_items:
+                logger.error("Treemap: no valid data to display")
+                return
 
         # Extraire labels et valeurs
         item_labels = [item[0] for item in top_items]
@@ -789,7 +812,8 @@ class PlotlyToMatplotlibConverter:
         # Extraire couleurs depuis marker si disponibles
         colors = None
         if trace.marker and hasattr(trace.marker, 'colors'):
-            colors = trace.marker.colors[:10]
+            # Adapter le nombre de couleurs au nombre d'items
+            colors = trace.marker.colors[:len(top_items)]
 
         # Créer barres horizontales
         y_pos = np.arange(len(item_labels))
